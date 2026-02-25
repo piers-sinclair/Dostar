@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dostar.Api (http)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: Dostar.Api",
+      "program": "${workspaceFolder}/backend/Dostar.Api/bin/Debug/net10.0/Dostar.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/backend/Dostar.Api",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5000"
+      },
+      "launchBrowser": {
+        "enabled": true,
+        "args": "http://localhost:5000/scalar/v1",
+        "windows": {
+          "command": "cmd.exe",
+          "args": "/C start http://localhost:5000/scalar/v1"
+        },
+        "osx": {
+          "command": "open",
+          "args": "http://localhost:5000/scalar/v1"
+        },
+        "linux": {
+          "command": "xdg-open",
+          "args": "http://localhost:5000/scalar/v1"
+        }
+      }
+    }
+  ],
+  "compounds": []
+}
