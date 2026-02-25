@@ -133,3 +133,16 @@ M1 (Foundation) → M2 (Modular Architecture) ─┬→ M3 (CLI)
                                                └→ M9 (Frontend Patterns)
                                     M7 (AI Agents) and M8 (Docs) — any time after M2
 ```
+
+---
+
+## Keeping this file up to date
+
+**Update `CLAUDE.md` whenever you:**
+- Add a new module or change the module pattern
+- Change a port, URL, or default environment setting
+- Introduce a new library or swap an existing one
+- Add a new `dostar` CLI command
+- Add a new Claude Code skill in `.claude/commands/`
+
+A reminder to do this is also in `CONTRIBUTING.md`.
