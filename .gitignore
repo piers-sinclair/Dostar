@@ -6,6 +6,7 @@
 ## has more thorough IDE-specific entries.
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/Dotnet.gitignore
+## Node/pnpm entries appended below
 
 # Build results
 [Dd]ebug/
@@ -52,3 +53,14 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Node / pnpm
+node_modules/
+dist/
+.pnpm-store/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
