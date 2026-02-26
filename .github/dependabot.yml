@@ -1,0 +1,57 @@
+version: 2
+updates:
+  # NuGet (.NET backend)
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    assignees:
+      - "piers-sinclair"
+    reviewers:
+      - "piers-sinclair"
+    groups:
+      nuget-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      nuget-major:
+        update-types:
+          - "major"
+
+  # npm / pnpm (React + Vite frontend)
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    assignees:
+      - "piers-sinclair"
+    reviewers:
+      - "piers-sinclair"
+    groups:
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+      npm-major:
+        update-types:
+          - "major"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    assignees:
+      - "piers-sinclair"
+    reviewers:
+      - "piers-sinclair"
+    groups:
+      github-actions-all:
+        patterns:
+          - "*"
