@@ -1,0 +1,35 @@
+# Build artifacts
+**/obj/
+**/bin/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Frontend (separate build)
+frontend/
+
+# CLI tool
+tools/
+
+# Infrastructure templates
+infra/
+
+# Tests
+tests/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.user
+
+# CI
+.github/
+
+# Documentation
+*.md
+docs/
+
+# Exclude SDK pin to avoid version conflicts inside the build container
+global.json
