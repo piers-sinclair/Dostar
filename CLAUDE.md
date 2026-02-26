@@ -82,13 +82,18 @@ dotnet run --project backend/Dostar.Api --launch-profile http
 # → http://localhost:5000/healthz        (health check)
 # → http://localhost:5000/scalar/v1      (API docs)
 
-# Frontend — once scaffolded (issue #3)
+# Frontend — from repo root
 cd frontend && pnpm dev
 # → http://localhost:5173
+
+# Frontend build / lint / format
+cd frontend && pnpm build
+cd frontend && pnpm lint
+cd frontend && pnpm format
 ```
 
 **VS Code**: press `F5` — builds and starts `Dostar.Api`, auto-opens Scalar.
-A compound launch config (backend + frontend together) will be added in issue #3.
+A compound launch config (backend + frontend together) is tracked separately.
 
 ---
 
@@ -101,7 +106,7 @@ dotnet test tests/Dostar.<Module>.Tests
 # Integration tests (real PostgreSQL via Testcontainers)
 dotnet test tests/Dostar.IntegrationTests
 
-# E2E (Playwright — once frontend exists)
+# E2E (Playwright)
 cd tests && pnpm exec playwright test
 ```
 
