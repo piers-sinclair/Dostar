@@ -9,6 +9,7 @@ A production-ready fullstack starter — .NET modular monolith backend + React/V
 | .NET SDK | 10 (`global.json` pins the exact version) |
 | Node.js | 20+ |
 | pnpm | 10+ (`npm install -g pnpm`) |
+| Docker Desktop | Latest |
 
 ## Quick start
 
@@ -17,10 +18,13 @@ A production-ready fullstack starter — .NET modular monolith backend + React/V
 git clone https://github.com/piers-sinclair/Dostar.git
 cd Dostar
 
-# 2. Backend
+# 2. Database (runs in background)
+docker compose up -d
+
+# 3. Backend
 dotnet run --project backend/Dostar.Api --launch-profile http
 
-# 3. Frontend (new terminal)
+# 4. Frontend (new terminal)
 cd frontend
 pnpm install
 pnpm dev
