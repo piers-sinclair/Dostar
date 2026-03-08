@@ -13,7 +13,7 @@ A production-ready fullstack starter — .NET modular monolith backend + React/V
 
 ## Quick start
 
-```bash
+```sh
 # 1. Clone
 git clone https://github.com/piers-sinclair/Dostar.git
 cd Dostar
@@ -22,11 +22,8 @@ cd Dostar
 docker compose up -d
 
 # 3. Apply migrations (first time, and after pulling new migrations)
-dotnet tool install --global dotnet-ef   # skip if already installed
-dotnet ef database update \
-  --project backend/Modules/Todos/Dostar.Todos.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context TodosDbContext
+dotnet tool install --global dotnet-ef
+dotnet ef database update --project backend/Modules/Todos/Dostar.Todos.Implementation --startup-project backend/Dostar.Api --context TodosDbContext
 
 # 4. Start the backend
 dotnet run --project backend/Dostar.Api --launch-profile http

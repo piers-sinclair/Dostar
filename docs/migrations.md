@@ -28,29 +28,20 @@ public void RegisterServices(IServiceCollection services, IConfiguration configu
 
 ## Adding a migration
 
-```bash
-dotnet ef migrations add <MigrationName> \
-  --project backend/Modules/<Name>/Dostar.<Name>.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context <Name>DbContext
+```sh
+dotnet ef migrations add <MigrationName> --project backend/Modules/<Name>/Dostar.<Name>.Implementation --startup-project backend/Dostar.Api --context <Name>DbContext
 ```
 
 Migrations are written into the `.Implementation` project under `Infrastructure/Migrations/`.
 
 ## Applying migrations
 
-```bash
+```sh
 # Apply a specific module's migrations
-dotnet ef database update \
-  --project backend/Modules/<Name>/Dostar.<Name>.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context <Name>DbContext
+dotnet ef database update --project backend/Modules/<Name>/Dostar.<Name>.Implementation --startup-project backend/Dostar.Api --context <Name>DbContext
 
 # Remove the last migration (before it's applied)
-dotnet ef migrations remove \
-  --project backend/Modules/<Name>/Dostar.<Name>.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context <Name>DbContext
+dotnet ef migrations remove --project backend/Modules/<Name>/Dostar.<Name>.Implementation --startup-project backend/Dostar.Api --context <Name>DbContext
 ```
 
 ## Connection string
