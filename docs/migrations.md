@@ -1,5 +1,7 @@
 # EF Core Migrations
 
+Dostar uses **code-first migrations**: domain entities (C# classes) define the schema, and `dotnet ef migrations add` generates SQL from them. Never write SQL by hand or modify migration files after they are applied.
+
 Each module owns its own `DbContext` and migrations. They are fully independent — migrating one module has no effect on another.
 
 ## Setup per module
