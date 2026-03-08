@@ -6,7 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-var modules = DiscoverModules();
+IModule[] modules = [];
+
 foreach (var module in modules)
     module.RegisterServices(builder.Services, builder.Configuration);
 
@@ -20,14 +21,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthChecks("/healthz");
 
-foreach (var module in modules)
+foreach (var module in modules.OfType<IEndpointModule>())
     module.MapEndpoints(app);
 
 app.Run();
-
-static IReadOnlyList<IModule> DiscoverModules() =>
-    AppDomain.CurrentDomain.GetAssemblies()
-        .SelectMany(a => a.GetTypes())
-        .Where(t => t is { IsAbstract: false, IsInterface: false } && t.IsAssignableTo(typeof(IModule)))
-        .Select(t => (IModule)Activator.CreateInstance(t)!)
-        .ToList();

@@ -1,38 +1,77 @@
 # Module Pattern
 
-Dostar uses a **modular monolith** structure. Each feature is a self-contained module that registers its own services and maps its own endpoints. `Program.cs` never needs to change when a module is added or removed.
+Dostar uses a **modular monolith** structure. Each feature is a self-contained module that registers its own services and optionally maps its own endpoints.
 
-## IModule interface
+## Interfaces
 
-Every module implements `IModule` from `Dostar.SharedKernel`:
+Two interfaces live in `Dostar.SharedKernel`:
 
+**`IModule`** — every module implements this, including infrastructure modules with no HTTP surface:
 ```csharp
 public interface IModule
 {
     void RegisterServices(IServiceCollection services, IConfiguration config);
+}
+```
+
+**`IEndpointModule`** — extends `IModule` for modules that expose HTTP endpoints:
+```csharp
+public interface IEndpointModule : IModule
+{
     void MapEndpoints(IEndpointRouteBuilder app);
 }
 ```
 
-## Auto-discovery
+## Registration
 
-`Program.cs` scans all loaded assemblies at startup for concrete `IModule` implementations and calls them in order:
+Modules are registered explicitly in `Program.cs`:
 
-1. `RegisterServices` — runs before `builder.Build()` to register DI services.
-2. `MapEndpoints` — runs after `app` is built to map route handlers.
+```csharp
+IModule[] modules =
+[
+    new AzureStorageModule(),   // infrastructure — IModule only
+    new TodosModule(),          // feature — IEndpointModule
+];
 
-Because module assemblies are **project references** of `Dostar.Api`, they are guaranteed to be loaded when the scan runs.
+foreach (var module in modules)
+    module.RegisterServices(builder.Services, builder.Configuration);
+
+var app = builder.Build();
+
+foreach (var module in modules.OfType<IEndpointModule>())
+    module.MapEndpoints(app);
+```
+
+Order matters: infrastructure modules that register shared services should appear before feature modules that depend on them.
+
+## Project structure per module
+
+Each module lives under `backend/Modules/<Name>/` and consists of two projects:
+
+```
+backend/Modules/Todos/
+  Dostar.Todos.Contracts/        ← public API: interfaces + shared models only
+  Dostar.Todos.Implementation/   ← implementation: DbContext, handlers, IModule impl
+```
+
+**References:**
+- `Dostar.Todos.Implementation` → `Dostar.Todos.Contracts` (owns its public API)
+- `Dostar.Todos.Implementation` → `Dostar.SharedKernel` (IModule / IEndpointModule)
+- `Dostar.Api` → `Dostar.Todos.Implementation` (to get the module registered at startup)
+- Other modules that need Todos services → `Dostar.Todos.Contracts` only — never the Implementation project
 
 ## Adding a module
 
-1. Create a new class library under `backend/Modules/<Name>/Dostar.<Name>/`.
-2. Add a project reference to `Dostar.SharedKernel`.
-3. Implement `IModule`:
+### Feature module (with endpoints)
+
+1. Create `Dostar.<Name>.Contracts` class library — add interfaces and models consumed by other modules.
+2. Create `Dostar.<Name>.Implementation` class library — reference Contracts and SharedKernel.
+3. Implement `IEndpointModule`:
 
 ```csharp
-namespace Dostar.Todos;
+namespace Dostar.Todos.Implementation;
 
-public class TodosModule : IModule
+public class TodosModule : IEndpointModule
 {
     public void RegisterServices(IServiceCollection services, IConfiguration config)
     {
@@ -46,13 +85,17 @@ public class TodosModule : IModule
 }
 ```
 
-4. Add a project reference from `Dostar.Api` to `Dostar.<Name>`.
+4. Add `Dostar.Api` → `Dostar.<Name>.Implementation` project reference.
 5. Add both projects to the solution (`dotnet sln add`).
+6. Register the module in `Program.cs`.
 
-No changes to `Program.cs` are needed — auto-discovery picks up the new `IModule` automatically.
+### Infrastructure module (no endpoints)
+
+Same steps, but implement `IModule` instead of `IEndpointModule` — no `MapEndpoints` needed.
 
 ## Module conventions
 
 - Each module owns its own `DbContext` and EF Core migrations.
-- Modules communicate **in-process** via shared interfaces — no HTTP calls between modules.
-- Place shared contracts (events, value objects) in `Dostar.SharedKernel`, not in individual modules.
+- Modules communicate **in-process** via Contracts interfaces — no HTTP calls between modules.
+- `Dostar.SharedKernel` is for framework-level contracts (`IModule`, `IEndpointModule`) only — not module-specific interfaces.
+- A module's `.Contracts` project must have no implementation dependencies (no EF Core, no HTTP, no business logic).
