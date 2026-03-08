@@ -27,10 +27,11 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 ```
 backend/                ← all .NET projects (not src/ — decoupling is explicit)
   Dostar.Api/           ← host/entry-point only; no business logic
-  Dostar.Shared/        ← IModule interface, shared types (future)
-  Modules/              ← one project per business module (future)
+  Dostar.SharedKernel/  ← IModule + IEndpointModule interfaces, framework-level shared types
+  Modules/              ← one module per business feature or infrastructure concern
     Todos/
-      Dostar.Todos/
+      Dostar.Todos.Contracts/        ← public API: interfaces + models (no implementation)
+      Dostar.Todos.Implementation/   ← implementation: DbContext, handlers, IModule impl
 frontend/               ← React + Vite; standalone, separate toolchain
 tests/                  ← test projects (unit + integration + E2E)
 tools/                  ← dostar CLI source
@@ -56,21 +57,19 @@ CLAUDE.md               ← this file
 
 ## Module pattern
 
-Each feature module implements `IModule` with two methods:
+Two interfaces live in `backend/Dostar.SharedKernel/IModule.cs`:
 
-```csharp
-public interface IModule
-{
-    void RegisterServices(IServiceCollection services, IConfiguration config);
-    void MapEndpoints(IEndpointRouteBuilder app);
-}
-```
+- **`IModule`** — all modules (service registration only)
+- **`IEndpointModule : IModule`** — feature modules that expose HTTP endpoints
 
-`Program.cs` discovers and registers all modules at startup. Each module owns its own
-`DbContext` and EF Core migrations. Modules communicate in-process via shared interfaces —
-no HTTP between modules.
+Modules are registered **explicitly** in `Program.cs` (no reflection/auto-discovery). Each module
+consists of two projects: `<Name>.Contracts` (public interfaces + models) and `<Name>.Implementation`.
+Consuming modules reference only `.Contracts` — never `.Implementation`.
 
-> The pattern is scaffolded once implemented in M2. Update this section then.
+Each module owns its own `DbContext` and EF Core migrations. Modules communicate in-process via
+Contracts interfaces — no HTTP between modules.
+
+See `docs/module-pattern.md` for the full guide.
 
 ---
 
