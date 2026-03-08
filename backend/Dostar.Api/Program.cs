@@ -1,4 +1,5 @@
 using Dostar.SharedKernel;
+using Dostar.Todos.Implementation;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,7 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-IModule[] modules = [];
+IModule[] modules =
+[
+    new TodosModule(),
+];
 foreach (var module in modules)
     module.RegisterServices(builder.Services, builder.Configuration);
 

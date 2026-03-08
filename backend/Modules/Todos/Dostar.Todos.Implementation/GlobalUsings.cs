@@ -1,0 +1,11 @@
+global using Dostar.SharedKernel;
+global using Dostar.Todos.Contracts;
+global using Dostar.Todos.Implementation.Application;
+global using Dostar.Todos.Implementation.Domain;
+global using Dostar.Todos.Implementation.Infrastructure;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Routing;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
