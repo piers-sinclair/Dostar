@@ -4,6 +4,7 @@ public class TodosModule : IEndpointModule
 {
     private const string ConnectionStringName = "Default";
     private const string RoutePrefix = "/api/todos";
+    private const string RootRoute = "/";
     private const string IdRoute = "/{id:guid}";
 
     public void RegisterServices(IServiceCollection services, IConfiguration config)
@@ -17,7 +18,7 @@ public class TodosModule : IEndpointModule
     {
         var group = app.MapGroup(RoutePrefix);
 
-        group.MapGet("/", async (ITodoService service) =>
+        group.MapGet(RootRoute, async (ITodoService service) =>
             Results.Ok(await service.GetAllAsync()));
 
         group.MapGet(IdRoute, async (Guid id, ITodoService service) =>
@@ -26,7 +27,7 @@ public class TodosModule : IEndpointModule
             return todo is null ? Results.NotFound() : Results.Ok(todo);
         });
 
-        group.MapPost("/", async (CreateTodoRequest request, ITodoService service) =>
+        group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service) =>
         {
             var todo = await service.CreateAsync(request.Title);
             return Results.Created($"{RoutePrefix}/{todo.Id}", todo);
