@@ -7,7 +7,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
 IModule[] modules = [];
-
 foreach (var module in modules)
     module.RegisterServices(builder.Services, builder.Configuration);
 
@@ -20,7 +19,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthChecks("/healthz");
-
 foreach (var module in modules.OfType<IEndpointModule>())
     module.MapEndpoints(app);
 
