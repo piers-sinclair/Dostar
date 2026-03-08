@@ -85,9 +85,10 @@ public class TodosModule : IEndpointModule
 }
 ```
 
-4. Add `Dostar.Api` → `Dostar.<Name>.Implementation` project reference.
-5. Add both projects to the solution (`dotnet sln add`).
-6. Register the module in `Program.cs`.
+4. If the module needs a database, add `Npgsql.EntityFrameworkCore.PostgreSQL` to the `.Implementation` project and place the `DbContext` at `Infrastructure/<Name>DbContext.cs`. See `docs/migrations.md` for the full migration workflow.
+5. Add `Dostar.Api` → `Dostar.<Name>.Implementation` project reference.
+6. Add both projects to the solution (`dotnet sln add`).
+7. Register the module in `Program.cs`.
 
 ### Infrastructure module (no endpoints)
 
