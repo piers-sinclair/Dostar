@@ -27,7 +27,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 ```
 backend/                ← all .NET projects (not src/ — decoupling is explicit)
   Dostar.Api/           ← host/entry-point only; no business logic
-  Dostar.Shared/        ← IModule interface, shared types (future)
+  Dostar.SharedKernel/  ← IModule interface, shared types
   Modules/              ← one project per business module (future)
     Todos/
       Dostar.Todos/
@@ -70,7 +70,7 @@ public interface IModule
 `DbContext` and EF Core migrations. Modules communicate in-process via shared interfaces —
 no HTTP between modules.
 
-> The pattern is scaffolded once implemented in M2. Update this section then.
+The contract lives in `backend/Dostar.SharedKernel/IModule.cs`. See `docs/module-pattern.md` for the full guide.
 
 ---
 
