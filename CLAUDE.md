@@ -52,6 +52,7 @@ CLAUDE.md               ← this file
 - **API docs (dev)**: Scalar UI at `http://localhost:5000/scalar/v1`.
 - **.NET projects**: always created via CLI (`dotnet new`, `dotnet sln add`), never by hand.
 - **AI agents**: Claude Code skills in `.claude/commands/`, not a .NET project.
+- **Global usings**: each `.Implementation` project has a `GlobalUsings.cs` at its root declaring `global using` directives for namespaces used across multiple files in that project. Avoid repeating `using` statements inside individual files.
 
 ---
 

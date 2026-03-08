@@ -1,5 +1,7 @@
 # EF Core Migrations
 
+Dostar uses **code-first migrations**: domain entities (C# classes) define the schema, and `dotnet ef migrations add` generates SQL from them. Never write SQL by hand or modify migration files after they are applied.
+
 Each module owns its own `DbContext` and migrations. They are fully independent — migrating one module has no effect on another.
 
 ## Setup per module
@@ -28,29 +30,20 @@ public void RegisterServices(IServiceCollection services, IConfiguration configu
 
 ## Adding a migration
 
-```bash
-dotnet ef migrations add <MigrationName> \
-  --project backend/Modules/<Name>/Dostar.<Name>.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context <Name>DbContext
+```sh
+dotnet ef migrations add <MigrationName> --project backend/Modules/<Name>/Dostar.<Name>.Implementation --startup-project backend/Dostar.Api --context <Name>DbContext
 ```
 
 Migrations are written into the `.Implementation` project under `Infrastructure/Migrations/`.
 
 ## Applying migrations
 
-```bash
+```sh
 # Apply a specific module's migrations
-dotnet ef database update \
-  --project backend/Modules/<Name>/Dostar.<Name>.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context <Name>DbContext
+dotnet ef database update --project backend/Modules/<Name>/Dostar.<Name>.Implementation --startup-project backend/Dostar.Api --context <Name>DbContext
 
 # Remove the last migration (before it's applied)
-dotnet ef migrations remove \
-  --project backend/Modules/<Name>/Dostar.<Name>.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context <Name>DbContext
+dotnet ef migrations remove --project backend/Modules/<Name>/Dostar.<Name>.Implementation --startup-project backend/Dostar.Api --context <Name>DbContext
 ```
 
 ## Connection string

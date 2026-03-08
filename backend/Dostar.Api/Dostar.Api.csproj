@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Dostar.SharedKernel\Dostar.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\Todos\Dostar.Todos.Implementation\Dostar.Todos.Implementation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
