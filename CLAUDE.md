@@ -176,6 +176,7 @@ All dependencies (NuGet, npm) must be **free for commercial use in closed-source
 Acceptable licences: MIT, Apache 2.0, BSD-2, BSD-3, ISC, and equivalently permissive licences.
 Avoid: GPL, LGPL, AGPL, SSPL, BSL, or any licence that restricts commercial or proprietary use.
 Before adding a new package, confirm its licence meets this requirement.
+Use the `/add-package` Claude skill — it fetches the licence, validates it, and only then installs.
 
 ---
 
