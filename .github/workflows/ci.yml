@@ -78,14 +78,16 @@ jobs:
   opengrep-scan:
     name: Security — OpenGrep SAST
     runs-on: ubuntu-latest
-    container:
-      image: opengrep/opengrep:latest
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Run OpenGrep
+      - name: Install OpenGrep
         # OpenGrep is a fully LGPL 2.1 fork of Semgrep with no commercial restrictions.
+        # No official Docker image exists; the project distributes signed binaries via GitHub releases.
+        run: curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+
+      - name: Run OpenGrep
         # --config auto uses the OpenGrep community rule-set (LGPL 2.1).
         # --error exits non-zero when findings are present.
         run: opengrep ci --config auto --error
