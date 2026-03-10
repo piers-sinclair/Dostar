@@ -1,6 +1,6 @@
-# Semgrep path-level suppressions
+# OpenGrep path-level suppressions
 #
-# Add paths here to exclude entire files or directories from Semgrep scans.
+# Add paths here to exclude entire files or directories from OpenGrep scans.
 # For single-line suppressions within a file, add a trailing comment instead:
 #
 #   some_code()  # nosemgrep: rule-id

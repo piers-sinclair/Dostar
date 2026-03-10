@@ -75,17 +75,17 @@ jobs:
         # vulnerability, add its CVE ID to .trivyignore at the repo root.
         run: trivy fs --exit-code 1 .
 
-  semgrep-scan:
-    name: Security — Semgrep SAST
+  opengrep-scan:
+    name: Security — OpenGrep SAST
     runs-on: ubuntu-latest
     container:
-      image: semgrep/semgrep
+      image: opengrep/opengrep:latest
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Run Semgrep OSS
-        # --config=auto downloads the recommended open-source rule-set from the
-        # Semgrep registry. No SEMGREP_APP_TOKEN = no cloud upload (OSS-only mode).
+      - name: Run OpenGrep
+        # OpenGrep is a fully LGPL 2.1 fork of Semgrep with no commercial restrictions.
+        # --config auto uses the OpenGrep community rule-set (LGPL 2.1).
         # --error exits non-zero when findings are present.
-        run: semgrep scan --config=auto --error
+        run: opengrep ci --config auto --error
