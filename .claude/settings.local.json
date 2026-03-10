@@ -5,7 +5,12 @@
       "Bash(dotnet add backend/Dostar.Api/Dostar.Api.csproj package Serilog.AspNetCore)",
       "Bash(dotnet build backend/Dostar.Api/Dostar.Api.csproj)",
       "Bash(dotnet remove backend/Dostar.Api/Dostar.Api.csproj package Serilog.AspNetCore)",
-      "Bash(dotnet build backend/Dostar.Api)"
+      "Bash(dotnet build backend/Dostar.Api)",
+      "Bash(gh issue list --repo piers-sinclair/Dostar --limit 100 --json number,title,state)",
+      "Bash(jq '.[] | select\\(.title | test\\(\"\"sonar|snyk|quality|security scan|sast|lint|code analysis\"\"; \"\"i\"\"\\)\\)')",
+      "Bash(gh issue list --repo piers-sinclair/Dostar --limit 100 --search \"sonar OR snyk OR security scan OR code quality OR SAST\")",
+      "Bash(gh milestone list --repo piers-sinclair/Dostar)",
+      "Bash(gh api repos/piers-sinclair/Dostar/milestones --jq '.[] | \"\"\\\\\\(.number\\) \\\\\\(.title\\)\"\"')",
     ]
   }
 }
