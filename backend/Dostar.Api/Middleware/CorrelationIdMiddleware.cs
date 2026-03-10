@@ -11,7 +11,7 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
 
         context.Response.Headers[HeaderName] = correlationId;
 
-        using (logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId }))
+        using (logger.BeginScope("CorrelationId: {CorrelationId}", correlationId))
         {
             await next(context);
         }
