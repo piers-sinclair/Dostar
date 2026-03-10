@@ -19,6 +19,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | AI dev tooling | Claude Code skills in `.claude/commands/` |
 | Auth | None in template |
 | Test assertions | **Shouldly** — never FluentAssertions |
+| Validation | **FluentValidation** via `ValidationFilter<T>` in SharedKernel |
 
 ---
 
@@ -166,6 +167,16 @@ Every issue must be implemented on a dedicated feature branch and merged via a p
    ```
 
 Only open the PR once the build and relevant tests pass locally.
+
+---
+
+## Licensing policy
+
+All dependencies (NuGet, npm) must be **free for commercial use in closed-source projects**.
+Acceptable licences: MIT, Apache 2.0, BSD-2, BSD-3, ISC, and equivalently permissive licences.
+Avoid: GPL, LGPL, AGPL, SSPL, BSL, or any licence that restricts commercial or proprietary use.
+Before adding a new package, confirm its licence meets this requirement.
+Use the `/add-package` Claude skill — it fetches the licence, validates it, and only then installs.
 
 ---
 
