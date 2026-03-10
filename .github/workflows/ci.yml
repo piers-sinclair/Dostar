@@ -52,3 +52,34 @@ jobs:
 
       - name: Verify formatting
         run: dotnet format --verify-no-changes
+
+  trivy-scan:
+    name: Security — Trivy vulnerability scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Trivy (filesystem — NuGet + npm)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          format: table
+
+  semgrep-scan:
+    name: Security — Semgrep SAST
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Semgrep OSS
+        # --config=auto downloads the recommended open-source rule-set from the
+        # Semgrep registry. No SEMGREP_APP_TOKEN = no cloud upload (OSS-only mode).
+        # --error exits non-zero when findings are present.
+        run: semgrep scan --config=auto --error
