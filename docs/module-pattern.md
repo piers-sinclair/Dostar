@@ -100,3 +100,36 @@ Same steps, but implement `IModule` instead of `IEndpointModule` — no `MapEndp
 - Modules communicate **in-process** via Contracts interfaces — no HTTP calls between modules.
 - `Dostar.SharedKernel` is for framework-level contracts (`IModule`, `IEndpointModule`) only — not module-specific interfaces.
 - A module's `.Contracts` project must have no implementation dependencies (no EF Core, no HTTP, no business logic).
+
+## Request validation
+
+Dostar uses `FluentValidation` for request validation via a shared `ValidationFilter<T>` endpoint filter in `Dostar.SharedKernel`. Invalid requests receive a `422 Unprocessable Entity` response with a `errors` object keyed by field name (standard `ValidationProblemDetails`).
+
+### Adding a validator for a new module
+
+1. Create a validator in your `.Implementation` project (conventionally in `Application/`):
+
+```csharp
+public class CreateWidgetRequestValidator : AbstractValidator<CreateWidgetRequest>
+{
+    public CreateWidgetRequestValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+    }
+}
+```
+
+2. Register the validator in `RegisterServices`:
+
+```csharp
+services.AddScoped<IValidator<CreateWidgetRequest>, CreateWidgetRequestValidator>();
+```
+
+3. Attach the filter to the relevant endpoint in `MapEndpoints`:
+
+```csharp
+group.MapPost("/", handler)
+    .AddEndpointFilter<ValidationFilter<CreateWidgetRequest>>();
+```
+
+No additional package references are needed — `FluentValidation` flows through `Dostar.SharedKernel`.

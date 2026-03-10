@@ -1,5 +1,6 @@
 global using Dostar.SharedKernel;
 global using Dostar.Todos.Contracts;
+global using FluentValidation;
 global using Dostar.Todos.Implementation.Application;
 global using Dostar.Todos.Implementation.Domain;
 global using Dostar.Todos.Implementation.Infrastructure;

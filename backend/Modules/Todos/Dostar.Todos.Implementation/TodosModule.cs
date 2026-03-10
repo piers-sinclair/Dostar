@@ -12,6 +12,8 @@ public class TodosModule : IEndpointModule
         services.AddDbContext<TodosDbContext>(options =>
             options.UseNpgsql(config.GetConnectionString(ConnectionStringName)));
         services.AddScoped<ITodoService, TodoService>();
+        services.AddScoped<IValidator<CreateTodoRequest>, CreateTodoRequestValidator>();
+        services.AddScoped<IValidator<UpdateTodoRequest>, UpdateTodoRequestValidator>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder app)
@@ -31,13 +33,13 @@ public class TodosModule : IEndpointModule
         {
             var todo = await service.CreateAsync(request.Title);
             return Results.Created($"{RoutePrefix}/{todo.Id}", todo);
-        });
+        }).AddEndpointFilter<ValidationFilter<CreateTodoRequest>>();
 
         group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service) =>
         {
             var todo = await service.UpdateAsync(id, request.Title, request.IsComplete);
             return todo is null ? Results.NotFound() : Results.Ok(todo);
-        });
+        }).AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>();
 
         group.MapDelete(IdRoute, async (Guid id, ITodoService service) =>
         {
