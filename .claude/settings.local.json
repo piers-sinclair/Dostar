@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /c/repos/Dostar/Dostar/*.slnx)",
+      "Bash(dotnet add backend/Dostar.Api/Dostar.Api.csproj package Serilog.AspNetCore)",
+      "Bash(dotnet build backend/Dostar.Api/Dostar.Api.csproj)",
+      "Bash(dotnet remove backend/Dostar.Api/Dostar.Api.csproj package Serilog.AspNetCore)"
+    ]
+  }
+}
