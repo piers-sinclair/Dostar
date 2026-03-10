@@ -3,7 +3,9 @@ namespace Dostar.Api.Middleware;
 public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
 {
     private const string HeaderName = "X-Correlation-ID";
-    private const string ScopeTemplate = "CorrelationId: {CorrelationId}";
+
+    private static readonly Func<ILogger, string, IDisposable?> BeginCorrelationScope =
+        LoggerMessage.DefineScope<string>("CorrelationId: {CorrelationId}");
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -12,7 +14,7 @@ public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationId
 
         context.Response.Headers[HeaderName] = correlationId;
 
-        using var scope = logger.BeginScope(ScopeTemplate, correlationId);
+        using var scope = BeginCorrelationScope(logger, correlationId);
         await next(context);
     }
 }

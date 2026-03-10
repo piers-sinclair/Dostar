@@ -1,0 +1,10 @@
+# Trivy vulnerability suppressions
+#
+# Add CVE IDs here to suppress known/accepted vulnerabilities that have been
+# reviewed and accepted. Always include a comment explaining the rationale.
+#
+# Format:
+#   CVE-YYYY-NNNNN  # <reason> — reviewed by <name> on <date>
+#
+# Example:
+#   CVE-2024-12345  # No fix available; not exploitable in our threat model — reviewed by piers on 2026-01-01

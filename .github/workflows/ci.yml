@@ -52,3 +52,44 @@ jobs:
 
       - name: Verify formatting
         run: dotnet format --verify-no-changes
+
+  trivy-scan:
+    name: Security — Trivy vulnerability scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+            | gpg --dearmor \
+            | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+            | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -qq
+          sudo apt-get install -y trivy
+
+      - name: Run Trivy (filesystem — NuGet + npm)
+        # Fails on any CVE at any severity. To suppress a known/accepted
+        # vulnerability, add its CVE ID to .trivyignore at the repo root.
+        run: trivy fs --exit-code 1 .
+
+  opengrep-scan:
+    name: Security — OpenGrep SAST
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install OpenGrep
+        run: |
+          latest=$(curl -sf "https://api.github.com/repos/opengrep/opengrep/releases/latest" \
+            | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+          curl -fsSL "https://github.com/opengrep/opengrep/releases/download/${latest}/opengrep_manylinux_x86" \
+            -o opengrep
+          chmod +x opengrep
+          sudo mv opengrep /usr/local/bin/opengrep
+
+      - name: Run OpenGrep
+        run: opengrep ci --config auto
