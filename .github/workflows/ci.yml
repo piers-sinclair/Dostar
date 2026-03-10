@@ -71,7 +71,9 @@ jobs:
           sudo apt-get install -y trivy
 
       - name: Run Trivy (filesystem — NuGet + npm)
-        run: trivy fs --severity CRITICAL,HIGH --exit-code 1 .
+        # Fails on any CVE at any severity. To suppress a known/accepted
+        # vulnerability, add its CVE ID to .trivyignore at the repo root.
+        run: trivy fs --exit-code 1 .
 
   semgrep-scan:
     name: Security — Semgrep SAST

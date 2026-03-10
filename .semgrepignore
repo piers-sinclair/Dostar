@@ -1,0 +1,13 @@
+# Semgrep path-level suppressions
+#
+# Add paths here to exclude entire files or directories from Semgrep scans.
+# For single-line suppressions within a file, add a trailing comment instead:
+#
+#   some_code()  # nosemgrep: rule-id
+#
+# Format (one glob per line):
+#   path/to/file.cs
+#   path/to/directory/
+#
+# Example:
+#   tests/Fixtures/InsecureSampleForTesting.cs  # intentionally insecure test fixture
