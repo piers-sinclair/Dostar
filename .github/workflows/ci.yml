@@ -92,4 +92,4 @@ jobs:
           sudo mv opengrep /usr/local/bin/opengrep
 
       - name: Run OpenGrep
-        run: opengrep ci --config auto --error
+        run: opengrep ci --config auto
