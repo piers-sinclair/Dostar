@@ -83,7 +83,13 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install OpenGrep
-        run: curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+        run: |
+          latest=$(curl -sf "https://api.github.com/repos/opengrep/opengrep/releases/latest" \
+            | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+          curl -fsSL "https://github.com/opengrep/opengrep/releases/download/${latest}/opengrep_manylinux_x86" \
+            -o opengrep
+          chmod +x opengrep
+          sudo mv opengrep /usr/local/bin/opengrep
 
       - name: Run OpenGrep
         run: opengrep ci --config auto --error
