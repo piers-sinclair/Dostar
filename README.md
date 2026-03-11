@@ -1,5 +1,7 @@
 # Dostar
 
+[![PR Checks](https://github.com/piers-sinclair/Dostar/actions/workflows/pr-checks.yml/badge.svg)](https://github.com/piers-sinclair/Dostar/actions/workflows/pr-checks.yml)
+
 A production-ready fullstack starter — .NET modular monolith backend + React/Vite frontend.
 
 ## Prerequisites
