@@ -108,6 +108,18 @@ cd frontend && pnpm format
 **VS Code**: press `F5` — builds and starts `Dostar.Api`, auto-opens Scalar.
 A compound launch config (backend + frontend together) is tracked separately.
 
+### CORS
+
+Two named policies are registered in `Program.cs`:
+
+| Policy | Used when | Allowed origins |
+|--------|-----------|-----------------|
+| `DevelopmentCors` | `IsDevelopment()` is true | `http://localhost:5173` (hardcoded) |
+| `ProductionCors` | all other environments | `Cors:AllowedOrigins` array from `appsettings.json` |
+
+`appsettings.Development.json` pre-populates `Cors:AllowedOrigins` with `http://localhost:5173` so `pnpm dev` works out of the box.
+In production, set `Cors:AllowedOrigins` to your Azure Static Web App hostname (or via env var `Cors__AllowedOrigins__0`).
+
 ---
 
 ## Testing

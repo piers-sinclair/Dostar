@@ -1,3 +1,4 @@
+using Dostar.Api.Cors;
 using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
 using Dostar.Todos.Implementation;
@@ -9,6 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+
+var allowedOrigins = builder.Configuration.GetSection(CorsPolicy.ConfigSection).Get<string[]>() ?? [];
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(CorsPolicy.Development, policy =>
+        policy.WithOrigins(CorsPolicy.DevOrigin)
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+
+    options.AddPolicy(CorsPolicy.Production, policy =>
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 builder.Services.AddHttpLogging(options =>
 {
     options.LoggingFields = HttpLoggingFields.RequestMethod
@@ -30,6 +45,8 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseHttpLogging();
+
+app.UseCors(app.Environment.IsDevelopment() ? CorsPolicy.Development : CorsPolicy.Production);
 
 if (app.Environment.IsDevelopment())
 {
