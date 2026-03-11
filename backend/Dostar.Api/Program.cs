@@ -82,6 +82,7 @@ foreach (var module in modules)
 
 var app = builder.Build();
 
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseMiddleware<CorrelationIdMiddleware>();
