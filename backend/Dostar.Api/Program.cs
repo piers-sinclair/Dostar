@@ -1,7 +1,9 @@
 using Dostar.Api.Cors;
+using Dostar.Api.HealthChecks;
 using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
 using Dostar.Todos.Implementation;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpLogging;
 using Scalar.AspNetCore;
 
@@ -54,7 +56,15 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-app.MapHealthChecks("/healthz");
+app.MapHealthChecks("/healthz/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
+app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
+{
+    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+});
 foreach (var module in modules.OfType<IEndpointModule>())
     module.MapEndpoints(app);
 
