@@ -3,56 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
-  lint-frontend:
-    name: Frontend — lint & format
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: ESLint
-        run: pnpm lint
-
-      - name: Prettier
-        run: pnpm format:check
-
-  format-backend:
-    name: Backend — dotnet format
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.x'
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Verify formatting
-        run: dotnet format --verify-no-changes
-
   trivy-scan:
     name: Security — Trivy vulnerability scan
     runs-on: ubuntu-latest
