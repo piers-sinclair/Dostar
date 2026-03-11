@@ -133,3 +133,17 @@ group.MapPost("/", handler)
 ```
 
 No additional package references are needed — `FluentValidation` flows through `Dostar.SharedKernel`.
+
+## Unit tests
+
+Unit tests for a module live under `tests/Dostar.<Name>.Tests/` — not alongside the module in `backend/`. All test types (unit, integration, E2E) are co-located in the root `tests/` folder so that `backend/` remains pure production code and CI can run the full suite with a single `dotnet test tests/` invocation.
+
+```
+tests/
+  Dostar.Todos.Tests/          ← unit tests for the Todos module
+  Dostar.IntegrationTests/     ← cross-module integration tests (Testcontainers)
+```
+
+Test projects are grouped under the `/tests/` solution folder in `Dostar.slnx`.
+
+**Stack:** xUnit + Shouldly + NSubstitute. Use `Microsoft.EntityFrameworkCore.InMemory` for DbContext isolation in unit tests.
