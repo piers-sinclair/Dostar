@@ -3,6 +3,7 @@ namespace Dostar.Todos.Implementation;
 public class TodosModule : IEndpointModule
 {
     private const string ConnectionStringName = "Default";
+    private const string HealthCheckName = "todos-db";
     private const string RoutePrefix = "/api/todos";
     private const string RootRoute = "/";
     private const string IdRoute = "/{id:guid}";
@@ -14,8 +15,9 @@ public class TodosModule : IEndpointModule
 
     public void RegisterServices(IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<TodosDbContext>(options =>
-            options.UseNpgsql(config.GetConnectionString(ConnectionStringName)));
+        var connectionString = config.GetConnectionString(ConnectionStringName) ?? string.Empty;
+        services.AddDbContext<TodosDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddHealthChecks().AddNpgSql(connectionString, name: HealthCheckName);
         services.AddScoped<ITodoService, TodoService>();
         services.AddScoped<IValidator<CreateTodoRequest>, CreateTodoRequestValidator>();
         services.AddScoped<IValidator<UpdateTodoRequest>, UpdateTodoRequestValidator>();
