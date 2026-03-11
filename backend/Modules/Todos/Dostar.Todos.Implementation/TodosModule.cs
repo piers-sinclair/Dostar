@@ -3,6 +3,7 @@ namespace Dostar.Todos.Implementation;
 public class TodosModule : IEndpointModule
 {
     private const string ConnectionStringName = "Default";
+    private const string HealthCheckName = "todos-db";
     private const string RoutePrefix = "/todos";
     private const string ResourceRoute = "/api/v1/todos";
     private const string RootRoute = "/";
@@ -15,8 +16,9 @@ public class TodosModule : IEndpointModule
 
     public void RegisterServices(IServiceCollection services, IConfiguration config)
     {
-        services.AddDbContext<TodosDbContext>(options =>
-            options.UseNpgsql(config.GetConnectionString(ConnectionStringName)));
+        var connectionString = config.GetConnectionString(ConnectionStringName) ?? string.Empty;
+        services.AddDbContext<TodosDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddHealthChecks().AddNpgSql(connectionString, name: HealthCheckName);
         services.AddScoped<ITodoService, TodoService>();
         services.AddScoped<IValidator<CreateTodoRequest>, CreateTodoRequestValidator>();
         services.AddScoped<IValidator<UpdateTodoRequest>, UpdateTodoRequestValidator>();
@@ -41,6 +43,7 @@ public class TodosModule : IEndpointModule
             var todo = await service.CreateAsync(request.Title);
             return Results.Created($"{ResourceRoute}/{todo.Id}", todo);
         }).AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
+          .RequireRateLimiting(RateLimitPolicy.Strict)
           .WithName(CreateTodoOperationId);
 
         group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service) =>
