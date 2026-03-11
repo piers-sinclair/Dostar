@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Dostar.Api.Cors;
 using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
@@ -7,9 +8,15 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1");
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = false;
+    options.ReportApiVersions = true;
+});
 
 var allowedOrigins = builder.Configuration.GetSection(CorsPolicy.ConfigSection).Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
@@ -50,12 +57,22 @@ app.UseCors(app.Environment.IsDevelopment() ? CorsPolicy.Development : CorsPolic
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi("/openapi/{documentName}.json");
+    app.MapScalarApiReference(options => options.AddDocument("v1"));
 }
 
 app.MapHealthChecks("/healthz");
-foreach (var module in modules.OfType<IEndpointModule>())
-    module.MapEndpoints(app);
+
+var endpointModules = modules.OfType<IEndpointModule>().ToArray();
+var versionSetBuilder = app.NewApiVersionSet();
+foreach (var module in endpointModules)
+    versionSetBuilder = versionSetBuilder.HasApiVersion(module.Version);
+var apiVersionSet = versionSetBuilder.ReportApiVersions().Build();
+
+var versionedGroup = app.MapGroup("/api/v{version:apiVersion}")
+    .WithApiVersionSet(apiVersionSet);
+
+foreach (var module in endpointModules)
+    module.MapEndpoints(versionedGroup);
 
 app.Run();

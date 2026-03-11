@@ -1,3 +1,5 @@
+using Asp.Versioning;
+
 namespace Dostar.SharedKernel;
 
 public interface IModule
@@ -7,5 +9,6 @@ public interface IModule
 
 public interface IEndpointModule : IModule
 {
+    ApiVersion Version => new(1, 0);
     void MapEndpoints(IEndpointRouteBuilder app);
 }
