@@ -7,5 +7,6 @@ public interface IModule
 
 public interface IEndpointModule : IModule
 {
+    ApiVersion Version => new(1, 0);
     void MapEndpoints(IEndpointRouteBuilder app);
 }

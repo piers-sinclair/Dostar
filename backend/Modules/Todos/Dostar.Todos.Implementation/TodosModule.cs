@@ -4,7 +4,8 @@ public class TodosModule : IEndpointModule
 {
     private const string ConnectionStringName = "Default";
     private const string HealthCheckName = "todos-db";
-    private const string RoutePrefix = "/api/todos";
+    private const string RoutePrefix = "/todos";
+    private const string ResourceRoute = "/api/v1/todos";
     private const string RootRoute = "/";
     private const string IdRoute = "/{id:guid}";
     private const string GetTodosOperationId = "GetTodos";
@@ -40,7 +41,7 @@ public class TodosModule : IEndpointModule
         group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service) =>
         {
             var todo = await service.CreateAsync(request.Title);
-            return Results.Created($"{RoutePrefix}/{todo.Id}", todo);
+            return Results.Created($"{ResourceRoute}/{todo.Id}", todo);
         }).AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
           .RequireRateLimiting(RateLimitPolicy.Strict)
           .WithName(CreateTodoOperationId);
