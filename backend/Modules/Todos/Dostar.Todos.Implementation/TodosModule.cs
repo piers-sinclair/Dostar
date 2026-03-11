@@ -6,6 +6,11 @@ public class TodosModule : IEndpointModule
     private const string RoutePrefix = "/api/todos";
     private const string RootRoute = "/";
     private const string IdRoute = "/{id:guid}";
+    private const string GetTodosOperationId = "GetTodos";
+    private const string GetTodoOperationId = "GetTodo";
+    private const string CreateTodoOperationId = "CreateTodo";
+    private const string UpdateTodoOperationId = "UpdateTodo";
+    private const string DeleteTodoOperationId = "DeleteTodo";
 
     public void RegisterServices(IServiceCollection services, IConfiguration config)
     {
@@ -22,33 +27,33 @@ public class TodosModule : IEndpointModule
 
         group.MapGet(RootRoute, async (ITodoService service) =>
             Results.Ok(await service.GetAllAsync()))
-            .WithName("GetTodos");
+            .WithName(GetTodosOperationId);
 
         group.MapGet(IdRoute, async (Guid id, ITodoService service) =>
         {
             var todo = await service.GetByIdAsync(id);
             return todo is null ? Results.NotFound() : Results.Ok(todo);
-        }).WithName("GetTodo");
+        }).WithName(GetTodoOperationId);
 
         group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service) =>
         {
             var todo = await service.CreateAsync(request.Title);
             return Results.Created($"{RoutePrefix}/{todo.Id}", todo);
         }).AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
-          .WithName("CreateTodo");
+          .WithName(CreateTodoOperationId);
 
         group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service) =>
         {
             var todo = await service.UpdateAsync(id, request.Title, request.IsComplete);
             return todo is null ? Results.NotFound() : Results.Ok(todo);
         }).AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
-          .WithName("UpdateTodo");
+          .WithName(UpdateTodoOperationId);
 
         group.MapDelete(IdRoute, async (Guid id, ITodoService service) =>
         {
             var deleted = await service.DeleteAsync(id);
             return deleted ? Results.NoContent() : Results.NotFound();
-        }).WithName("DeleteTodo");
+        }).WithName(DeleteTodoOperationId);
     }
 }
 
