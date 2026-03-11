@@ -40,6 +40,7 @@ public class TodosModule : IEndpointModule
             var todo = await service.CreateAsync(request.Title);
             return Results.Created($"{RoutePrefix}/{todo.Id}", todo);
         }).AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
+          .RequireRateLimiting(RateLimitPolicy.Strict)
           .WithName(CreateTodoOperationId);
 
         group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service) =>

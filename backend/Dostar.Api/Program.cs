@@ -1,8 +1,11 @@
+using System.Globalization;
+using System.Threading.RateLimiting;
 using Dostar.Api.Cors;
 using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
 using Dostar.Todos.Implementation;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +13,40 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+
+var isTestEnvironment = builder.Environment.IsEnvironment("Test");
+builder.Services.AddRateLimiter(options =>
+{
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        isTestEnvironment
+            ? RateLimitPartition.GetNoLimiter("test")
+            : RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromSeconds(60),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+
+    options.AddFixedWindowLimiter(RateLimitPolicy.Strict, o =>
+    {
+        o.PermitLimit = isTestEnvironment ? int.MaxValue : 10;
+        o.Window = TimeSpan.FromMinutes(1);
+        o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        o.QueueLimit = 0;
+    });
+
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers.RetryAfter =
+                ((int)retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", token);
+    };
+});
 
 var allowedOrigins = builder.Configuration.GetSection(CorsPolicy.ConfigSection).Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
@@ -47,6 +84,7 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseHttpLogging();
 
 app.UseCors(app.Environment.IsDevelopment() ? CorsPolicy.Development : CorsPolicy.Production);
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {
