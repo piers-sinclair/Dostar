@@ -1,5 +1,7 @@
 # Dostar
 
+[![CI](https://github.com/piers-sinclair/Dostar/actions/workflows/ci.yml/badge.svg)](https://github.com/piers-sinclair/Dostar/actions/workflows/ci.yml)
+
 A production-ready fullstack starter — .NET modular monolith backend + React/Vite frontend.
 
 ## Prerequisites

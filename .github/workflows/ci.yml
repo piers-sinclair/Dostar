@@ -1,14 +1,43 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  lint-frontend:
-    name: Frontend — lint & format
+  backend-checks:
+    name: Backend — build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes
+
+      - name: Test
+        run: dotnet test tests/Dostar.Todos.Tests --no-build -c Release
+
+  frontend-checks:
+    name: Frontend — build & lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,22 +65,8 @@ jobs:
       - name: Prettier
         run: pnpm format:check
 
-  format-backend:
-    name: Backend — dotnet format
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.x'
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Verify formatting
-        run: dotnet format --verify-no-changes
+      - name: Build
+        run: pnpm build
 
   trivy-scan:
     name: Security — Trivy vulnerability scan
