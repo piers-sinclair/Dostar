@@ -14,14 +14,16 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 
-var isTestEnvironment = builder.Environment.IsEnvironment("Test");
+const string TestEnvironmentName = "Test";
+const string RateLimitRejectionMessage = "Too many requests. Please try again later.";
+var isTestEnvironment = builder.Environment.IsEnvironment(TestEnvironmentName);
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         isTestEnvironment
-            ? RateLimitPartition.GetNoLimiter("test")
+            ? RateLimitPartition.GetNoLimiter(RateLimitPolicy.TestPartition)
             : RateLimitPartition.GetFixedWindowLimiter(
-                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? RateLimitPolicy.UnknownIpPartition,
                 factory: _ => new FixedWindowRateLimiterOptions
                 {
                     PermitLimit = 100,
@@ -44,7 +46,7 @@ builder.Services.AddRateLimiter(options =>
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
             context.HttpContext.Response.Headers.RetryAfter =
                 ((int)retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
-        await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", token);
+        await context.HttpContext.Response.WriteAsync(RateLimitRejectionMessage, token);
     };
 });
 
