@@ -6,9 +6,13 @@ using Dostar.Todos.Implementation;
 using Microsoft.AspNetCore.HttpLogging;
 using Scalar.AspNetCore;
 
+const string V1DocumentName = "v1";
+const string OpenApiRouteTemplate = "/openapi/{documentName}.json";
+const string VersionedRoutePrefix = "/api/v{version:apiVersion}";
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi("v1");
+builder.Services.AddOpenApi(V1DocumentName);
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddApiVersioning(options =>
@@ -57,8 +61,8 @@ app.UseCors(app.Environment.IsDevelopment() ? CorsPolicy.Development : CorsPolic
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi("/openapi/{documentName}.json");
-    app.MapScalarApiReference(options => options.AddDocument("v1"));
+    app.MapOpenApi(OpenApiRouteTemplate);
+    app.MapScalarApiReference(options => options.AddDocument(V1DocumentName));
 }
 
 app.MapHealthChecks("/healthz");
@@ -69,7 +73,7 @@ foreach (var module in endpointModules)
     versionSetBuilder = versionSetBuilder.HasApiVersion(module.Version);
 var apiVersionSet = versionSetBuilder.ReportApiVersions().Build();
 
-var versionedGroup = app.MapGroup("/api/v{version:apiVersion}")
+var versionedGroup = app.MapGroup(VersionedRoutePrefix)
     .WithApiVersionSet(apiVersionSet);
 
 foreach (var module in endpointModules)

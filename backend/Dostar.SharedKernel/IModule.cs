@@ -1,5 +1,3 @@
-using Asp.Versioning;
-
 namespace Dostar.SharedKernel;
 
 public interface IModule
