@@ -138,6 +138,24 @@ cd tests && pnpm exec playwright test
 Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
 **Playwright TypeScript** (E2E).
 
+> CLI tool tests (`tools/`) are tracked separately — see M3 (issue #15).
+
+### Unit test conventions
+
+**Project location**: `tests/Dostar.<Module>.Tests/` — one project per module, referencing `.Implementation` directly.
+
+**Method naming**: `MethodName_Condition_ExpectedOutcome`
+- `GetAllAsync_WhenEmpty_ReturnsEmptyList`
+- `DeleteAsync_WhenNotFound_ReturnsFalse`
+
+**Assertions**: always use **Shouldly** (`result.ShouldBe(...)`, `result.ShouldBeNull()`, etc.) — never `Assert.*` or FluentAssertions.
+
+**Dependencies**:
+- EF Core `DbContext` → use `Microsoft.EntityFrameworkCore.InMemory`; create a new in-memory database per test via `Guid.NewGuid().ToString()` as the DB name to keep tests isolated.
+- Other dependencies → use NSubstitute (`Substitute.For<T>()`).
+
+Each test must be fully self-contained — no shared mutable state between tests.
+
 ---
 
 ## CLI tool
