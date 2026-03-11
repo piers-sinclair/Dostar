@@ -45,6 +45,18 @@ CLAUDE.md               ← this file
 
 ---
 
+## Claude Code skills
+
+| Skill | File | Purpose |
+|-------|------|---------|
+| `/add-package` | `.claude/commands/add-package.md` | Add NuGet/npm package with licence check |
+| `/scaffold-module` | `.claude/commands/scaffold-module.md` | Scaffold a full feature module (Contracts + Implementation + unit tests) |
+| `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
+
+> Future (build after M4): `/integration-tests`, `/playwright`, `/scaffold-page` (M9)
+
+---
+
 ## Key conventions
 
 - **Folder names**: `backend/` and `frontend/` at root — not `src/` — to make the deployment boundary obvious.
