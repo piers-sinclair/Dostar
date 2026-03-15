@@ -41,6 +41,25 @@ jobs:
         timeout-minutes: 10
         run: dotnet test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release --logger trx --settings backend/Modules/Todos/Dostar.Todos.IntegrationTests/coverage.runsettings --results-directory TestResults/integration
 
+      - name: Enforce coverage threshold
+        run: |
+          python3 - <<'EOF'
+          import xml.etree.ElementTree as ET, glob, sys
+          files = glob.glob("TestResults/**/coverage.cobertura.xml", recursive=True)
+          if not files:
+              print("No coverage files found")
+              sys.exit(1)
+          failed = False
+          for path in files:
+              rate = float(ET.parse(path).getroot().attrib["line-rate"])
+              pct = rate * 100
+              print(f"{path}: {pct:.1f}%")
+              if pct < 80:
+                  print(f"FAIL: {pct:.1f}% is below the 80% line coverage threshold")
+                  failed = True
+          sys.exit(1 if failed else 0)
+          EOF
+
       - name: Generate coverage report
         if: always()
         continue-on-error: true
@@ -58,7 +77,7 @@ jobs:
           path: TestResults/coverage-report/
 
       - name: Upload test results
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
