@@ -33,11 +33,41 @@ jobs:
       - name: Verify formatting
         run: dotnet format --verify-no-changes
 
+      - name: Install coverlet
+        run: dotnet tool install coverlet.console --tool-path ./tools
+
       - name: Unit tests
-        run: dotnet test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release
+        timeout-minutes: 5
+        run: |
+          ./tools/coverlet \
+            backend/Modules/Todos/Dostar.Todos.UnitTests/bin/Release/net10.0/Dostar.Todos.UnitTests.dll \
+            --target dotnet \
+            --targetargs "test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release --logger trx --results-directory TestResults/unit" \
+            --format cobertura \
+            --output TestResults/unit/coverage.cobertura.xml \
+            --include "[Dostar.Todos.*]*" \
+            --exclude-by-file "**/Migrations/**" \
+            --threshold 80 --threshold-type line --threshold-stat total
 
       - name: Integration tests
-        run: dotnet test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release
+        timeout-minutes: 10
+        run: |
+          ./tools/coverlet \
+            backend/Modules/Todos/Dostar.Todos.IntegrationTests/bin/Release/net10.0/Dostar.Todos.IntegrationTests.dll \
+            --target dotnet \
+            --targetargs "test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release --logger trx --results-directory TestResults/integration" \
+            --format cobertura \
+            --output TestResults/integration/coverage.cobertura.xml \
+            --include "[Dostar.Todos.*]*" \
+            --exclude-by-file "**/Migrations/**" \
+            --threshold 80 --threshold-type line --threshold-stat total
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
 
   frontend-checks:
     name: Frontend — build & lint

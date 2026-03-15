@@ -1,6 +1,6 @@
 import path from 'path';
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { coverageConfigDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
     plugins: [react()],
@@ -13,6 +13,13 @@ export default defineConfig({
                 target: 'http://localhost:5000',
                 rewrite: (path) => path.replace(/^\/api/, ''),
             },
+        },
+    },
+    test: {
+        coverage: {
+            provider: 'v8',
+            reporter: ['text', 'html', 'cobertura'],
+            exclude: [...coverageConfigDefaults.exclude, 'src/main.tsx'],
         },
     },
 });
