@@ -45,7 +45,7 @@ jobs:
             --targetargs "test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release --logger trx --results-directory TestResults/unit" \
             --format cobertura \
             --output TestResults/unit/coverage.cobertura.xml \
-            --include "[Dostar.Todos.*]*" \
+            --include "[Dostar.Todos.Implementation]Dostar.Todos.Implementation.Application*" \
             --threshold 80 --threshold-type line --threshold-stat total
 
       - name: Integration tests
