@@ -55,7 +55,7 @@ jobs:
             --targetargs "test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release --logger trx --results-directory TestResults/integration" \
             --format cobertura \
             --output TestResults/integration/coverage.cobertura.xml \
-            --exclude "[Dostar.Api]*" --exclude "[Dostar.SharedKernel]*" \
+            --include "[Dostar.Todos.*]*" \
             --threshold 80 --threshold-type line --threshold-stat total
 
       - name: Generate coverage report
