@@ -58,7 +58,7 @@ jobs:
           path: TestResults/coverage-report/
 
       - name: Upload test results
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
