@@ -33,14 +33,22 @@ jobs:
       - name: Verify formatting
         run: dotnet format --verify-no-changes
 
+      - name: Install coverlet
+        run: dotnet tool install coverlet.console --tool-path ./tools
+
       - name: Unit tests
         timeout-minutes: 5
-        run: dotnet test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release --logger trx --collect:"XPlat Code Coverage" --results-directory TestResults/unit
+        run: |
+          ./tools/coverlet \
+            backend/Modules/Todos/Dostar.Todos.UnitTests/bin/Release/net10.0/Dostar.Todos.UnitTests.dll \
+            --target dotnet \
+            --targetargs "test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release --logger trx --results-directory TestResults/unit" \
+            --format cobertura \
+            --output TestResults/unit/coverage.cobertura.xml
 
       - name: Integration tests
         timeout-minutes: 10
         run: |
-          dotnet tool install coverlet.console --tool-path ./tools
           ./tools/coverlet \
             backend/Modules/Todos/Dostar.Todos.IntegrationTests/bin/Release/net10.0/Dostar.Todos.IntegrationTests.dll \
             --target dotnet \
