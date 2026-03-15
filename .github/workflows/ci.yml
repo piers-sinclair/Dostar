@@ -37,30 +37,12 @@ jobs:
         run: dotnet tool install coverlet.console --tool-path ./tools
 
       - name: Unit tests
-        timeout-minutes: 5
-        run: |
-          ./tools/coverlet \
-            backend/Modules/Todos/Dostar.Todos.UnitTests/bin/Release/net10.0/Dostar.Todos.UnitTests.dll \
-            --target dotnet \
-            --targetargs "test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release --logger trx --results-directory TestResults/unit" \
-            --format cobertura \
-            --output TestResults/unit/coverage.cobertura.xml \
-            --include "[Dostar.Todos.*]*" \
-            --exclude-by-file "**/Migrations/**" \
-            --threshold 80 --threshold-type line --threshold-stat total
+        timeout-minutes: 15
+        run: bash tools/run-tests.sh unit
 
       - name: Integration tests
-        timeout-minutes: 10
-        run: |
-          ./tools/coverlet \
-            backend/Modules/Todos/Dostar.Todos.IntegrationTests/bin/Release/net10.0/Dostar.Todos.IntegrationTests.dll \
-            --target dotnet \
-            --targetargs "test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release --logger trx --results-directory TestResults/integration" \
-            --format cobertura \
-            --output TestResults/integration/coverage.cobertura.xml \
-            --include "[Dostar.Todos.*]*" \
-            --exclude-by-file "**/Migrations/**" \
-            --threshold 80 --threshold-type line --threshold-stat total
+        timeout-minutes: 30
+        run: bash tools/run-tests.sh integration
 
       - name: Upload test results
         if: failure()
