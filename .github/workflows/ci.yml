@@ -33,8 +33,11 @@ jobs:
       - name: Verify formatting
         run: dotnet format --verify-no-changes
 
-      - name: Test
-        run: dotnet test tests/Dostar.Todos.Tests --no-build -c Release
+      - name: Unit tests
+        run: dotnet test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release
+
+      - name: Integration tests
+        run: dotnet test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release
 
   frontend-checks:
     name: Frontend — build & lint
