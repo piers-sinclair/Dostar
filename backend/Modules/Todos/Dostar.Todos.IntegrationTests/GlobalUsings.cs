@@ -1,0 +1,13 @@
+global using System.Net;
+global using System.Net.Http.Json;
+global using System.Text.Json;
+global using Dostar.Todos.Contracts;
+global using Dostar.Todos.Implementation.Infrastructure;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Shouldly;
+global using Testcontainers.PostgreSql;
+global using Xunit;

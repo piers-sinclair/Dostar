@@ -16,9 +16,11 @@ public class TodosModule : IEndpointModule
 
     public void RegisterServices(IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString(ConnectionStringName) ?? string.Empty;
-        services.AddDbContext<TodosDbContext>(options => options.UseNpgsql(connectionString));
-        services.AddHealthChecks().AddNpgSql(connectionString, name: HealthCheckName);
+        services.AddDbContext<TodosDbContext>((sp, options) =>
+            options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName)));
+        services.AddHealthChecks().AddNpgSql(
+            connectionStringFactory: sp => sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName)!,
+            name: HealthCheckName);
         services.AddScoped<ITodoService, TodoService>();
         services.AddScoped<IValidator<CreateTodoRequest>, CreateTodoRequestValidator>();
         services.AddScoped<IValidator<UpdateTodoRequest>, UpdateTodoRequestValidator>();

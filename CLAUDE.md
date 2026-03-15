@@ -31,10 +31,12 @@ backend/                ← all .NET projects (not src/ — decoupling is explic
   Dostar.SharedKernel/  ← IModule + IEndpointModule interfaces, framework-level shared types
   Modules/              ← one module per business feature or infrastructure concern
     Todos/
-      Dostar.Todos.Contracts/        ← public API: interfaces + models (no implementation)
-      Dostar.Todos.Implementation/   ← implementation: DbContext, handlers, IModule impl
+      Dostar.Todos.Contracts/           ← public API: interfaces + models (no implementation)
+      Dostar.Todos.Implementation/      ← implementation: DbContext, handlers, IModule impl
+      Dostar.Todos.UnitTests/           ← unit tests (in-memory EF Core, NSubstitute)
+      Dostar.Todos.IntegrationTests/    ← integration tests (WebApplicationFactory + Testcontainers)
 frontend/               ← React + Vite; standalone, separate toolchain
-tests/                  ← test projects (unit + integration + E2E)
+tests/                  ← cross-cutting tests only (E2E, multi-module); currently empty
 tools/                  ← dostar CLI source
 infra/                  ← Bicep templates
 .claude/
@@ -65,7 +67,7 @@ CLAUDE.md               ← this file
 - **API docs (dev)**: Scalar UI at `http://localhost:5000/scalar/v1`.
 - **.NET projects**: always created via CLI (`dotnet new`, `dotnet sln add`), never by hand.
 - **AI agents**: Claude Code skills in `.claude/commands/`, not a .NET project.
-- **Global usings**: each `.Implementation` project has a `GlobalUsings.cs` at its root declaring `global using` directives for namespaces used across multiple files in that project. Avoid repeating `using` statements inside individual files.
+- **Global usings**: each project has a `GlobalUsings.cs` at its root declaring `global using` directives for namespaces used across multiple files in that project. Avoid repeating `using` statements inside individual files.
 
 ---
 
@@ -77,7 +79,9 @@ Two interfaces live in `backend/Dostar.SharedKernel/IModule.cs`:
 - **`IEndpointModule : IModule`** — feature modules that expose HTTP endpoints
 
 Modules are registered **explicitly** in `Program.cs` (no reflection/auto-discovery). Each module
-consists of two projects: `<Name>.Contracts` (public interfaces + models) and `<Name>.Implementation`.
+consists of four projects: `<Name>.Contracts`, `<Name>.Implementation`, `<Name>.UnitTests`, and
+`<Name>.IntegrationTests`. All four live together under `backend/Modules/<Name>/` so the entire
+module can be extracted into a microservice as a unit.
 Consuming modules reference only `.Contracts` — never `.Implementation`.
 
 Each module owns its own `DbContext` and EF Core migrations. Modules communicate in-process via
@@ -125,11 +129,11 @@ In production, set `Cors:AllowedOrigins` to your Azure Static Web App hostname (
 ## Testing
 
 ```bash
-# Unit tests (per module)
-dotnet test tests/Dostar.<Module>.Tests
+# Unit tests (per module — colocated with module code)
+dotnet test backend/Modules/<Module>/Dostar.<Module>.UnitTests
 
-# Integration tests (real PostgreSQL via Testcontainers)
-dotnet test tests/Dostar.IntegrationTests
+# Integration tests (per module — real PostgreSQL via Testcontainers)
+dotnet test backend/Modules/<Module>/Dostar.<Module>.IntegrationTests
 
 # E2E (Playwright)
 cd tests && pnpm exec playwright test
@@ -142,7 +146,7 @@ Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers**
 
 ### Unit test conventions
 
-**Project location**: `tests/Dostar.<Module>.Tests/` — one project per module, referencing `.Implementation` directly.
+**Project location**: `backend/Modules/<Module>/Dostar.<Module>.UnitTests/` — colocated with the module, referencing `.Implementation` directly. All four module projects travel together to support microservice extraction.
 
 **Method naming**: `MethodName_Condition_ExpectedOutcome`
 - `GetAllAsync_WhenEmpty_ReturnsEmptyList`
