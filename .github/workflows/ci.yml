@@ -41,24 +41,8 @@ jobs:
         timeout-minutes: 10
         run: dotnet test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release --logger trx --settings backend/Modules/Todos/Dostar.Todos.IntegrationTests/coverage.runsettings --results-directory TestResults/integration
 
-      - name: Generate coverage report
-        if: always()
-        continue-on-error: true
-        uses: danielpalme/ReportGenerator-GitHub-Action@v5
-        with:
-          reports: 'TestResults/**/coverage.cobertura.xml'
-          targetdir: 'TestResults/coverage-report'
-          reporttypes: 'Html'
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: TestResults/coverage-report/
-
       - name: Upload test results
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
