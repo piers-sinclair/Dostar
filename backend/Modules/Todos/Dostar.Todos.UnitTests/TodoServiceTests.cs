@@ -1,9 +1,4 @@
-using Dostar.Todos.Implementation.Application;
-using Dostar.Todos.Implementation.Infrastructure;
-using Microsoft.EntityFrameworkCore;
-using Shouldly;
-
-namespace Dostar.Todos.Tests;
+namespace Dostar.Todos.UnitTests;
 
 public class TodoServiceTests
 {

@@ -4,8 +4,7 @@
     <Project Path="backend/Dostar.SharedKernel/Dostar.SharedKernel.csproj" />
     <Project Path="backend/Modules/Todos/Dostar.Todos.Contracts/Dostar.Todos.Contracts.csproj" />
     <Project Path="backend/Modules/Todos/Dostar.Todos.Implementation/Dostar.Todos.Implementation.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Dostar.Todos.Tests/Dostar.Todos.Tests.csproj" />
+    <Project Path="backend/Modules/Todos/Dostar.Todos.IntegrationTests/Dostar.Todos.IntegrationTests.csproj" />
+    <Project Path="backend/Modules/Todos/Dostar.Todos.UnitTests/Dostar.Todos.UnitTests.csproj" />
   </Folder>
 </Solution>

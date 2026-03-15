@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\backend\Modules\Todos\Dostar.Todos.Implementation\Dostar.Todos.Implementation.csproj" />
+    <ProjectReference Include="..\Dostar.Todos.Implementation\Dostar.Todos.Implementation.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,8 +22,5 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
 
 </Project>

@@ -131,3 +131,5 @@ foreach (var module in endpointModules)
     module.MapEndpoints(versionedGroup);
 
 app.Run();
+
+public partial class Program { }
