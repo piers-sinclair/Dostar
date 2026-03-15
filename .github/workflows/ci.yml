@@ -34,10 +34,37 @@ jobs:
         run: dotnet format --verify-no-changes
 
       - name: Unit tests
-        run: dotnet test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release
+        timeout-minutes: 5
+        run: dotnet test backend/Modules/Todos/Dostar.Todos.UnitTests --no-build -c Release --logger trx --collect:"XPlat Code Coverage" --results-directory TestResults/unit
 
       - name: Integration tests
-        run: dotnet test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release
+        timeout-minutes: 10
+        run: dotnet test backend/Modules/Todos/Dostar.Todos.IntegrationTests --no-build -c Release --logger trx --collect:"XPlat Code Coverage" --results-directory TestResults/integration
+
+      - name: Generate coverage report
+        if: always()
+        continue-on-error: true
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltools
+          # TODO: enforce a minimum coverage threshold once a baseline has been established
+          reportgenerator \
+            -reports:"TestResults/**/coverage.cobertura.xml" \
+            -targetdir:TestResults/coverage-report \
+            -reporttypes:Html
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TestResults/coverage-report/
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/
 
   frontend-checks:
     name: Frontend — build & lint
