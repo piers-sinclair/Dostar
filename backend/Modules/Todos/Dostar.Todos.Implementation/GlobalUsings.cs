@@ -1,3 +1,4 @@
+global using System.Diagnostics.CodeAnalysis;
 global using Dostar.SharedKernel;
 global using Dostar.Todos.Contracts;
 global using FluentValidation;

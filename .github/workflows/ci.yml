@@ -46,6 +46,7 @@ jobs:
             --format cobertura \
             --output TestResults/unit/coverage.cobertura.xml \
             --include "[Dostar.Todos.*]*" \
+            --exclude-by-file "**/Migrations/**" \
             --threshold 80 --threshold-type line --threshold-stat total
 
       - name: Integration tests
@@ -58,6 +59,7 @@ jobs:
             --format cobertura \
             --output TestResults/integration/coverage.cobertura.xml \
             --include "[Dostar.Todos.*]*" \
+            --exclude-by-file "**/Migrations/**" \
             --threshold 80 --threshold-type line --threshold-stat total
 
       - name: Upload test results

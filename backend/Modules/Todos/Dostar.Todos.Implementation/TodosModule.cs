@@ -1,5 +1,6 @@
 namespace Dostar.Todos.Implementation;
 
+[ExcludeFromCodeCoverage]
 public class TodosModule : IEndpointModule
 {
     private const string ConnectionStringName = "Default";
