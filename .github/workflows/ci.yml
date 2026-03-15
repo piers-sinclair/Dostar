@@ -58,22 +58,6 @@ jobs:
             --include "[Dostar.Todos.*]*" \
             --threshold 80 --threshold-type line --threshold-stat total
 
-      - name: Generate coverage report
-        if: always()
-        continue-on-error: true
-        uses: danielpalme/ReportGenerator-GitHub-Action@v5
-        with:
-          reports: 'TestResults/**/coverage.cobertura.xml'
-          targetdir: 'TestResults/coverage-report'
-          reporttypes: 'Html'
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: TestResults/coverage-report/
-
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@v4
