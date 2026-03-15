@@ -45,8 +45,8 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          dotnet tool install -g dotnet-reportgenerator-globaltools
-          reportgenerator \
+          dotnet tool install dotnet-reportgenerator-globaltools --tool-path ./tools
+          ./tools/reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:TestResults/coverage-report \
             -reporttypes:Html
