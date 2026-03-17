@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/backend/">
     <Project Path="backend/Dostar.Api/Dostar.Api.csproj" />
+    <Project Path="backend/Dostar.SharedKernel.UnitTests/Dostar.SharedKernel.UnitTests.csproj" />
     <Project Path="backend/Dostar.SharedKernel/Dostar.SharedKernel.csproj" />
     <Project Path="backend/Modules/Todos/Dostar.Todos.Contracts/Dostar.Todos.Contracts.csproj" />
     <Project Path="backend/Modules/Todos/Dostar.Todos.Implementation/Dostar.Todos.Implementation.csproj" />

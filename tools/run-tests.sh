@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Discovers and runs all module unit or integration tests with coverlet coverage.
+# Discovers and runs all unit or integration tests with coverlet coverage.
 # Usage: bash tools/run-tests.sh <unit|integration>
 #
-# For each matching test assembly under backend/Modules/:
+# For each matching test assembly under backend/Modules/ and backend/Dostar.SharedKernel.UnitTests/:
 #   - Runs coverlet wrapping dotnet test
 #   - Scopes coverage to the module's assemblies only
 #   - Enforces 80% line coverage threshold
 #
-# Exits non-zero if any module fails its tests or threshold.
+# Exits non-zero if any project fails its tests or threshold.
 
 set -uo pipefail
 
@@ -25,10 +25,15 @@ else
   results_dir="TestResults/integration"
 fi
 
-mapfile -t dlls < <(find backend/Modules -path "*/bin/Release/net10.0/*.${suffix}.dll" | sort)
+mapfile -t dlls < <(
+  {
+    find backend/Modules -path "*/bin/Release/net10.0/*.${suffix}.dll"
+    find backend -maxdepth 2 -path "*/bin/Release/net10.0/*.${suffix}.dll" ! -path "*/Modules/*"
+  } | sort -u
+)
 
 if [[ ${#dlls[@]} -eq 0 ]]; then
-  echo "No ${suffix} assemblies found under backend/Modules/." >&2
+  echo "No ${suffix} assemblies found." >&2
   exit 1
 fi
 
@@ -39,9 +44,10 @@ exit_code=0
 for dll in "${dlls[@]}"; do
   dll_name=$(basename "$dll" .dll)
   project_dir="${dll%%/bin/Release/*}"
-  # e.g. Dostar.Todos.UnitTests -> Dostar.Todos  -> [Dostar.Todos.*]*
+  # e.g. Dostar.Todos.UnitTests -> Dostar.Todos  -> [Dostar.Todos*]*
+  # e.g. Dostar.SharedKernel.UnitTests -> Dostar.SharedKernel -> [Dostar.SharedKernel*]*
   module_prefix="${dll_name%.${suffix}}"
-  include="[${module_prefix}.*]*"
+  include="[${module_prefix}*]*"
   output="${results_dir}/${dll_name}/coverage.cobertura.xml"
 
   echo ""
