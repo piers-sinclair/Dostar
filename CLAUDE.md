@@ -96,7 +96,7 @@ See `docs/module-pattern.md` for the full guide.
 ```bash
 # Backend — from repo root
 dotnet run --project backend/Dostar.Api --launch-profile http
-# → http://localhost:5000/healthz        (health check)
+# → http://localhost:5000/healthz/live   (health check)
 # → http://localhost:5000/scalar/v1      (API docs)
 
 # Frontend — from repo root
