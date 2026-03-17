@@ -4,7 +4,6 @@ public sealed record TestRequest(string Name);
 
 public class ValidationFilterTests
 {
-
     private static EndpointFilterInvocationContext CreateContext(params object?[] arguments)
     {
         var httpContext = Substitute.For<HttpContext>();
@@ -22,7 +21,7 @@ public class ValidationFilterTests
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
         var filter = new ValidationFilter<TestRequest>(validator);
-        var context = CreateContext("not a TestRequest");
+        var context = CreateContext(42);
         var nextCalled = false;
         EndpointFilterDelegate next = _ => { nextCalled = true; return ValueTask.FromResult<object?>("ok"); };
 
@@ -33,7 +32,7 @@ public class ValidationFilterTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenValidationSucceeds_CallsNextWithRequestAbortedTokenAndReturnsItsResult()
+    public async Task InvokeAsync_WhenValidationSucceeds_CallsNextAndReturnsItsResult()
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
         validator
@@ -54,11 +53,11 @@ public class ValidationFilterTests
     public async Task InvokeAsync_WhenValidationFails_ReturnsValidationProblemWithErrorsAndDoesNotCallNext()
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
-        var failures = new List<ValidationFailure>
-        {
+        List<ValidationFailure> failures =
+        [
             new("Name", "Name is required"),
             new("Name", "Name is too short"),
-        };
+        ];
         validator
             .ValidateAsync(Arg.Any<TestRequest>(), CancellationToken.None)
             .Returns(new ValidationResult(failures));
@@ -71,7 +70,7 @@ public class ValidationFilterTests
         var result = await filter.InvokeAsync(context, next);
 
         nextCalled.ShouldBeFalse();
-        var problemResult = result.ShouldBeAssignableTo<Microsoft.AspNetCore.Http.HttpResults.ProblemHttpResult>();
+        var problemResult = result.ShouldBeAssignableTo<ProblemHttpResult>();
         var validationDetails = problemResult!.ProblemDetails.ShouldBeOfType<HttpValidationProblemDetails>();
         validationDetails.Errors["Name"].ShouldContain("Name is required");
         validationDetails.Errors["Name"].ShouldContain("Name is too short");
