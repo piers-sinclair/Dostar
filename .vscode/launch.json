@@ -30,7 +30,24 @@
           "args": "http://localhost:5000/scalar/v1"
         }
       }
+    },
+    {
+      "name": "Frontend (Vite)",
+      "type": "node",
+      "request": "launch",
+      "preLaunchTask": "run: frontend",
+      "serverReadyAction": {
+        "pattern": "Local:.*http://localhost:([0-9]+)",
+        "uriFormat": "http://localhost:%s",
+        "action": "openExternally"
+      }
     }
   ],
-  "compounds": []
+  "compounds": [
+    {
+      "name": "Dostar (API + Frontend)",
+      "configurations": ["Dostar.Api (http)", "Frontend (Vite)"],
+      "stopAll": true
+    }
+  ]
 }

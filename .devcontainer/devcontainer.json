@@ -1,0 +1,47 @@
+{
+  "name": "Dostar",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {}
+  },
+  "onCreateCommand": "npm install -g pnpm",
+  "postCreateCommand": "az bicep install && dotnet tool restore && docker compose up -d && dotnet restore && cd frontend && pnpm install",
+  "postStartCommand": "docker compose up -d",
+  "forwardPorts": [5000, 5173, 5432],
+  "portsAttributes": {
+    "5000": {
+      "label": "API (Dostar.Api)",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Frontend (Vite)",
+      "onAutoForward": "openBrowser"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-bicep",
+        "eamodio.gitlens",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[csharp]": {
+          "editor.defaultFormatter": "ms-dotnettools.csdevkit"
+        }
+      }
+    }
+  }
+}
