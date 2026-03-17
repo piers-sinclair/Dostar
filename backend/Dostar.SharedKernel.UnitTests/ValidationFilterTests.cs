@@ -18,11 +18,11 @@ public class ValidationFilterTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenArgumentNotFound_CallsNext()
+    public async Task InvokeAsync_WhenNoArgumentOfTypeT_CallsNextWithoutValidating()
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
         var filter = new ValidationFilter<TestRequest>(validator);
-        var context = CreateContext();
+        var context = CreateContext("not a TestRequest");
         var nextCalled = false;
         EndpointFilterDelegate next = _ => { nextCalled = true; return ValueTask.FromResult<object?>("ok"); };
 
@@ -33,30 +33,11 @@ public class ValidationFilterTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenValidationFails_ReturnsValidationProblemAndDoesNotCallNext()
+    public async Task InvokeAsync_WhenValidationSucceeds_CallsNextWithRequestAbortedTokenAndReturnsItsResult()
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
         validator
-            .ValidateAsync(Arg.Any<TestRequest>(), Arg.Any<CancellationToken>())
-            .Returns(new ValidationResult([new ValidationFailure("Name", "Name is required")]));
-
-        var filter = new ValidationFilter<TestRequest>(validator);
-        var context = CreateContext(new TestRequest(""));
-        var nextCalled = false;
-        EndpointFilterDelegate next = _ => { nextCalled = true; return ValueTask.FromResult<object?>("ok"); };
-
-        var result = await filter.InvokeAsync(context, next);
-
-        nextCalled.ShouldBeFalse();
-        result.ShouldBeAssignableTo<IResult>();
-    }
-
-    [Fact]
-    public async Task InvokeAsync_WhenValidationSucceeds_CallsNextAndReturnsItsResult()
-    {
-        var validator = Substitute.For<IValidator<TestRequest>>();
-        validator
-            .ValidateAsync(Arg.Any<TestRequest>(), Arg.Any<CancellationToken>())
+            .ValidateAsync(Arg.Any<TestRequest>(), CancellationToken.None)
             .Returns(new ValidationResult());
 
         var filter = new ValidationFilter<TestRequest>(validator);
@@ -66,11 +47,11 @@ public class ValidationFilterTests
         var result = await filter.InvokeAsync(context, next);
 
         result.ShouldBe("next-result");
-        await validator.Received(1).ValidateAsync(Arg.Any<TestRequest>(), Arg.Any<CancellationToken>());
+        await validator.Received(1).ValidateAsync(Arg.Any<TestRequest>(), CancellationToken.None);
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenValidationFails_PassesErrorsToDictionary()
+    public async Task InvokeAsync_WhenValidationFails_ReturnsValidationProblemWithErrorsAndDoesNotCallNext()
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
         var failures = new List<ValidationFailure>
@@ -79,15 +60,17 @@ public class ValidationFilterTests
             new("Name", "Name is too short"),
         };
         validator
-            .ValidateAsync(Arg.Any<TestRequest>(), Arg.Any<CancellationToken>())
+            .ValidateAsync(Arg.Any<TestRequest>(), CancellationToken.None)
             .Returns(new ValidationResult(failures));
 
         var filter = new ValidationFilter<TestRequest>(validator);
         var context = CreateContext(new TestRequest(""));
-        EndpointFilterDelegate next = _ => ValueTask.FromResult<object?>(null);
+        var nextCalled = false;
+        EndpointFilterDelegate next = _ => { nextCalled = true; return ValueTask.FromResult<object?>(null); };
 
         var result = await filter.InvokeAsync(context, next);
 
+        nextCalled.ShouldBeFalse();
         var problemResult = result.ShouldBeAssignableTo<Microsoft.AspNetCore.Http.HttpResults.ProblemHttpResult>();
         var validationDetails = problemResult!.ProblemDetails.ShouldBeOfType<HttpValidationProblemDetails>();
         validationDetails.Errors["Name"].ShouldContain("Name is required");
