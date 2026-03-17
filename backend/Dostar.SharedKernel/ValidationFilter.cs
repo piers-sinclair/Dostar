@@ -5,8 +5,7 @@ public class ValidationFilter<T>(IValidator<T> validator) : IEndpointFilter
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
-        if (context.Arguments.OfType<T>().FirstOrDefault() is not T argument)
-            return await next(context);
+        var argument = context.Arguments.OfType<T>().First();
 
         var result = await validator.ValidateAsync(argument, context.HttpContext.RequestAborted);
 

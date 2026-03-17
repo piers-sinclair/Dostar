@@ -17,21 +17,6 @@ public class ValidationFilterTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenNoArgumentOfTypeT_CallsNextWithoutValidating()
-    {
-        var validator = Substitute.For<IValidator<TestRequest>>();
-        var filter = new ValidationFilter<TestRequest>(validator);
-        var context = CreateContext(42);
-        var nextCalled = false;
-        EndpointFilterDelegate next = _ => { nextCalled = true; return ValueTask.FromResult<object?>("ok"); };
-
-        await filter.InvokeAsync(context, next);
-
-        nextCalled.ShouldBeTrue();
-        await validator.DidNotReceive().ValidateAsync(Arg.Any<TestRequest>(), Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task InvokeAsync_WhenValidationSucceeds_CallsNextAndReturnsItsResult()
     {
         var validator = Substitute.For<IValidator<TestRequest>>();
