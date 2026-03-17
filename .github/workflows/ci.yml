@@ -83,6 +83,65 @@ jobs:
       - name: Build
         run: pnpm build
 
+  e2e:
+    name: E2E — Playwright
+    runs-on: ubuntu-latest
+    needs: frontend-checks
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: frontend
+        run: pnpm build
+
+      - name: Install E2E dependencies
+        working-directory: tests/Dostar.E2ETests
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: tests/Dostar.E2ETests
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Start frontend preview server
+        working-directory: frontend
+        run: pnpm preview --port 5173 &
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:5173 > /dev/null && break
+            sleep 1
+          done
+
+      - name: Run E2E tests
+        working-directory: tests/Dostar.E2ETests
+        env:
+          CI: true
+          E2E_BASE_URL: http://localhost:5173
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: tests/Dostar.E2ETests/playwright-report/
+
   trivy-scan:
     name: Security — Trivy vulnerability scan
     runs-on: ubuntu-latest
