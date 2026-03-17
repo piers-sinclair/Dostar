@@ -39,5 +39,5 @@ pnpm dev
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
-| Backend health | http://localhost:5000/healthz |
+| Backend health | http://localhost:5000/healthz/live |
 | API docs (Scalar) | http://localhost:5000/scalar/v1 |

@@ -22,10 +22,12 @@ internal sealed class SecurityHeadersMiddleware(RequestDelegate next, IWebHostEn
         context.Response.Headers[FrameOptionsHeader] = FrameOptionsValue;
         context.Response.Headers[ReferrerPolicyHeader] = ReferrerPolicyValue;
         context.Response.Headers[XssProtectionHeader] = XssProtectionValue;
-        context.Response.Headers[ContentSecurityPolicyHeader] = ContentSecurityPolicyValue;
 
         if (!env.IsDevelopment())
+        {
+            context.Response.Headers[ContentSecurityPolicyHeader] = ContentSecurityPolicyValue;
             context.Response.Headers[StrictTransportSecurityHeader] = StrictTransportSecurityValue;
+        }
 
         await next(context);
     }
