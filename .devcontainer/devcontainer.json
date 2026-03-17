@@ -1,16 +1,27 @@
 {
   "name": "Dostar",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0.200"
+    },
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
     },
-    "ghcr.io/devcontainers/features/azure-cli:1": {}
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "onCreateCommand": "npm install -g pnpm",
-  "postCreateCommand": "az bicep install && dotnet tool restore && docker compose up -d && dotnet restore && cd frontend && pnpm install",
+  "postCreateCommand": "find . -name obj -type d -not -path '*/.git/*' -exec rm -rf {} + 2>/dev/null; find . -name bin -type d -not -path '*/.git/*' -exec rm -rf {} + 2>/dev/null; az bicep install && dotnet tool install -g dotnet-ef && docker compose up -d && dotnet restore && cd frontend && pnpm install",
   "postStartCommand": "docker compose up -d",
-  "forwardPorts": [5000, 5173, 5432],
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
+  },
+  "forwardPorts": [
+    5000,
+    5173,
+    5432
+  ],
   "portsAttributes": {
     "5000": {
       "label": "API (Dostar.Api)",
@@ -32,15 +43,11 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-bicep",
-        "eamodio.gitlens",
+        "anthropic.claude-code",
         "humao.rest-client"
       ],
       "settings": {
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "[csharp]": {
-          "editor.defaultFormatter": "ms-dotnettools.csdevkit"
-        }
+        "editor.formatOnSave": true
       }
     }
   }
