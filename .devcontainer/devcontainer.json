@@ -13,7 +13,7 @@
   },
   "mounts": [
     "source=dostar-frontend-node-modules,target=/workspaces/Dostar/frontend/node_modules,type=volume",
-    "source=${localEnv:USERPROFILE}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached"
+    "source=dostar-claude-config,target=/home/vscode/.claude,type=volume"
   ],
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
