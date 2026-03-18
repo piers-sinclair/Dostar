@@ -1,0 +1,13 @@
+<Project>
+  <!--
+    When inside a devcontainer, redirect build output outside the bind-mounted
+    workspace so Windows-generated obj/bin files never interfere with Linux builds.
+    Also exclude the Windows obj/bin dirs from compilation.
+
+    /var/devcontainer is created by the devcontainer infrastructure on container start.
+  -->
+  <PropertyGroup Condition="Exists('/var/devcontainer')">
+    <BaseIntermediateOutputPath>/home/vscode/.dotnet-build/$(MSBuildProjectName)/obj/</BaseIntermediateOutputPath>
+    <DefaultItemExcludesInProjectFolder>obj/**;bin/**</DefaultItemExcludesInProjectFolder>
+  </PropertyGroup>
+</Project>
