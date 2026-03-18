@@ -33,7 +33,7 @@
     },
     "5173": {
       "label": "Frontend (Vite)",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "notify"
     },
     "5432": {
       "label": "PostgreSQL",
