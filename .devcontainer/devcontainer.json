@@ -9,7 +9,8 @@
       "version": "lts"
     },
     "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "mounts": [
     "source=dostar-frontend-node-modules,target=/workspaces/Dostar/frontend/node_modules,type=volume",
