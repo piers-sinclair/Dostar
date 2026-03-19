@@ -1,0 +1,8 @@
+global using System.Net;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Shouldly;
+global using Testcontainers.PostgreSql;
+global using Xunit;

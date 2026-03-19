@@ -1,0 +1,16 @@
+namespace Dostar.{{ name }}.IntegrationTests;
+
+public class {{ name }}ModuleIntegrationTests(ApiFactory factory) : IClassFixture<ApiFactory>
+{
+    private const string LiveEndpoint = "/healthz/live";
+
+    private readonly HttpClient _client = factory.CreateClient();
+
+    [Fact]
+    public async Task LiveEndpoint_ReturnsHealthy()
+    {
+        var response = await _client.GetAsync(LiveEndpoint);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+}
