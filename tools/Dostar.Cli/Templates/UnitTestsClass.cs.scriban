@@ -1,0 +1,16 @@
+namespace Dostar.{{ name }}.UnitTests;
+
+public class {{ name }}ModuleTests
+{
+    [Fact]
+    public void RegisterServices_DoesNotThrow()
+    {
+        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var config = new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build();
+        var module = new Dostar.{{ name }}.Implementation.{{ name }}Module();
+
+        var exception = Record.Exception(() => module.RegisterServices(services, config));
+
+        exception.ShouldBeNull();
+    }
+}

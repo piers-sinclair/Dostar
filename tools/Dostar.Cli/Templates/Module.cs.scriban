@@ -1,0 +1,12 @@
+namespace Dostar.{{ name }}.Implementation;
+
+public class {{ name }}Module : IEndpointModule
+{
+    public void RegisterServices(IServiceCollection services, IConfiguration config)
+    {
+    }
+
+    public void MapEndpoints(IEndpointRouteBuilder app)
+    {
+    }
+}
