@@ -19,23 +19,13 @@
         "pattern": "Now listening on: http://localhost:([0-9]+)",
         "uriFormat": "http://localhost:%s/scalar/v1"
       }
-    },
-    {
-      "name": "Frontend (Vite)",
-      "type": "node",
-      "request": "launch",
-      "preLaunchTask": "run: frontend",
-      "serverReadyAction": {
-        "pattern": "Local:.*http://localhost:([0-9]+)",
-        "uriFormat": "http://localhost:%s",
-        "action": "openExternally"
-      }
     }
   ],
   "compounds": [
     {
       "name": "Dostar (API + Frontend)",
-      "configurations": ["Dostar.Api (http)", "Frontend (Vite)"],
+      "configurations": ["Dostar.Api (http)"],
+      "preLaunchTask": "run: frontend",
       "stopAll": true
     }
   ]

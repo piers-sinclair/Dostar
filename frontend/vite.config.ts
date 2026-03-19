@@ -9,6 +9,7 @@ export default defineConfig({
     },
     server: {
         host: true,
+        open: true,
         allowedHosts: true,
         proxy: {
             '/api': {

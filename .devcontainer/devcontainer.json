@@ -16,6 +16,9 @@
     "source=dostar-frontend-node-modules,target=/workspaces/Dostar/frontend/node_modules,type=volume",
     "source=dostar-claude-config,target=/home/vscode/.claude,type=volume"
   ],
+  "containerEnv": {
+    "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar"
+  },
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "postStartCommand": "docker compose up -d && docker network connect dostar_default $(cat /etc/hostname) 2>/dev/null; true",
