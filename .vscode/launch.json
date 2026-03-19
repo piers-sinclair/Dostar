@@ -14,23 +14,19 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:5000"
       },
-      "launchBrowser": {
-        "enabled": true,
-        "args": "http://localhost:5000/scalar/v1",
-        "windows": {
-          "command": "cmd.exe",
-          "args": "/C start http://localhost:5000/scalar/v1"
-        },
-        "osx": {
-          "command": "open",
-          "args": "http://localhost:5000/scalar/v1"
-        },
-        "linux": {
-          "command": "xdg-open",
-          "args": "http://localhost:5000/scalar/v1"
-        }
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on: http://localhost:([0-9]+)",
+        "uriFormat": "http://localhost:%s/scalar/v1"
       }
     }
   ],
-  "compounds": []
+  "compounds": [
+    {
+      "name": "Dostar (API + Frontend)",
+      "configurations": ["Dostar.Api (http)"],
+      "preLaunchTask": "run: frontend",
+      "stopAll": true
+    }
+  ]
 }

@@ -1,0 +1,59 @@
+{
+  "name": "Dostar",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "10.0.200"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "mounts": [
+    "source=dostar-frontend-node-modules,target=/workspaces/Dostar/frontend/node_modules,type=volume",
+    "source=dostar-claude-config,target=/home/vscode/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar"
+  },
+  "onCreateCommand": "npm install -g pnpm",
+  "postCreateCommand": "bash .devcontainer/postCreate.sh",
+  "postStartCommand": "docker compose up -d && docker network connect dostar_default $(cat /etc/hostname) 2>/dev/null; true",
+  "forwardPorts": [
+    5000,
+    5173,
+    5432
+  ],
+  "portsAttributes": {
+    "5000": {
+      "label": "API (Dostar.Api)",
+      "onAutoForward": "notify"
+    },
+    "5173": {
+      "label": "Frontend (Vite)",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-bicep",
+        "anthropic.claude-code",
+        "humao.rest-client"
+      ],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}
