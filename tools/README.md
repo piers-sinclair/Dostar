@@ -11,7 +11,7 @@ Source lives in `tools/Dostar.Cli/`.
 dotnet pack tools/Dostar.Cli
 
 # Install globally from the local nupkg
-dotnet tool install -g Dostar.Cli --add-source tools/Dostar.Cli/bin/Debug/
+dotnet tool install -g Dostar.Cli --add-source tools/Dostar.Cli/bin/Release/
 ```
 
 After installation, the `dostar` command is available on your PATH.
