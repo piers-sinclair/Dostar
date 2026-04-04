@@ -8,7 +8,4 @@
     <Project Path="backend/Modules/Todos/Dostar.Todos.IntegrationTests/Dostar.Todos.IntegrationTests.csproj" />
     <Project Path="backend/Modules/Todos/Dostar.Todos.UnitTests/Dostar.Todos.UnitTests.csproj" />
   </Folder>
-  <Folder Name="/tools/">
-    <Project Path="tools/Dostar.Cli/Dostar.Cli.csproj" />
-  </Folder>
 </Solution>

@@ -15,7 +15,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | Database | PostgreSQL via EF Core (Azure Flexible Server in prod) |
 | IaC | Bicep |
 | Compute | Azure App Service (backend) + Azure Static Web Apps (frontend) |
-| CLI tool | `dostar` — .NET global tool using System.CommandLine |
+| CLI tool | `dostar` — .NET global tool in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) |
 | AI dev tooling | Claude Code skills in `.claude/commands/` |
 | Auth | None in template |
 | Test assertions | **Shouldly** — never FluentAssertions |
@@ -37,7 +37,6 @@ backend/                ← all .NET projects (not src/ — decoupling is explic
       Dostar.Todos.IntegrationTests/    ← integration tests (WebApplicationFactory + Testcontainers)
 frontend/               ← React + Vite; standalone, separate toolchain
 tests/                  ← cross-cutting tests only (E2E, multi-module); currently empty
-tools/                  ← dostar CLI source
 infra/                  ← Bicep templates
 .claude/
   commands/             ← Claude Code skills (scaffold-module, playwright, etc.)
@@ -142,8 +141,6 @@ cd tests && pnpm exec playwright test
 Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
 **Playwright TypeScript** (E2E).
 
-> CLI tool tests (`tools/`) are tracked separately — see M3 (issue #15).
-
 ### Unit test conventions
 
 **Project location**: `backend/Modules/<Module>/Dostar.<Module>.UnitTests/` — colocated with the module, referencing `.Implementation` directly. All four module projects travel together to support microservice extraction.
@@ -164,13 +161,13 @@ Each test must be fully self-contained — no shared mutable state between tests
 
 ## CLI tool
 
+The `dostar` CLI lives in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli).
+
 ```bash
 dostar add-module <Name>     # scaffold a new module
 dostar remove-module <Name>  # remove a module (with dry-run flag)
 dostar new-project <name>    # clone + rename template
 ```
-
-Source lives in `tools/Dostar.Cli/`.
 
 ---
 
@@ -232,7 +229,6 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 - Add a new module or change the module pattern
 - Change a port, URL, or default environment setting
 - Introduce a new library or swap an existing one
-- Add a new `dostar` CLI command
 - Add a new Claude Code skill in `.claude/commands/`
 
 A reminder to do this is also in `CONTRIBUTING.md`.
