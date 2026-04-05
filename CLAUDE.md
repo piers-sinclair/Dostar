@@ -163,6 +163,13 @@ Each test must be fully self-contained — no shared mutable state between tests
 
 The `dostar` CLI lives in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli).
 
+> **Cross-repo dependency:** Changes to this repo can require corresponding updates to Dostar.Cli. Examples:
+> - New parameters added to `infra/main.bicep` or parameter files → CLI scaffolding may need to inject or placeholder those values
+> - New files added to the template that contain project-name tokens → `ProjectService` token replacement may need updating
+> - New module structure conventions → `add-module` scaffolding templates may need updating
+>
+> When making such changes, open an issue on [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) if a CLI update is needed.
+
 ```bash
 dostar add-module <Name>     # scaffold a new module
 dostar remove-module <Name>  # remove a module (with dry-run flag)

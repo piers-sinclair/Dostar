@@ -23,6 +23,12 @@ param location string
 @description('Principal ID of the Container App managed identity. Leave empty until the Container App module is added (#27).')
 param appServicePrincipalId string = ''
 
+@description('GitHub repository URL for automatic Static Web App deployments.')
+param repositoryUrl string
+
+@description('Branch to auto-deploy from.')
+param branch string = 'main'
+
 // ---------------------------------------------------------------------------
 // Abbreviations (following Azure CAF conventions — see modules/abbreviations.bicep)
 // ---------------------------------------------------------------------------
@@ -98,6 +104,24 @@ module vnet 'modules/vnet.bicep' = {
 }
 
 // ---------------------------------------------------------------------------
+// Static Web App (React frontend)
+// ---------------------------------------------------------------------------
+
+module staticWebApp 'modules/staticwebapp.bicep' = {
+  name: 'staticwebapp'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+    repositoryUrl: repositoryUrl
+    branch: branch
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Outputs
 // ---------------------------------------------------------------------------
 
@@ -109,3 +133,6 @@ output containerAppSubnetId string = vnet.outputs.containerAppSubnetId
 
 @description('Resource ID of the PostgreSQL subnet.')
 output postgresSubnetId string = vnet.outputs.postgresSubnetId
+
+@description('Default hostname of the Static Web App hosting the React frontend.')
+output staticWebAppHostname string = staticWebApp.outputs.hostname
