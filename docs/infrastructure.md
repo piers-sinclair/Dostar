@@ -146,6 +146,64 @@ This means every pull request gets an ephemeral frontend environment at no addit
 
 ---
 
+## Container Apps — scaling
+
+### Default configuration
+
+The `containerapp.bicep` module sets replica limits based on environment:
+
+| Environment | `minReplicas` | `maxReplicas` | Effect |
+|-------------|---------------|---------------|--------|
+| dev | 0 | 3 | Scales to zero when idle — no charge |
+| prod | 1 | 10 | Always 1 warm replica; scales out on load |
+
+Each replica is allocated **0.5 vCPU / 1 GiB memory** (Consumption plan).
+
+### Changing replica limits
+
+To increase max replicas without redeploying infrastructure:
+
+```bash
+az containerapp update \
+  --name ca-dostar-prod-aue-001 \
+  --resource-group rg-dostar-prod-aue-001 \
+  --max-replicas 20
+```
+
+### HTTP scaling rule (default, built-in)
+
+ACA's built-in HTTP scaler triggers scale-out at **10 concurrent requests per replica** by default — no explicit rule is needed in the Bicep. To override this threshold, add a `rules` block to the `scale` section in `infra/modules/containerapp.bicep`:
+
+```bicep
+scale: {
+  minReplicas: 1
+  maxReplicas: 10
+  rules: [
+    {
+      name: 'http-scaling'
+      http: { metadata: { concurrentRequests: '20' } }
+    }
+  ]
+}
+```
+
+### Cost reference
+
+| Scenario | Estimated monthly cost |
+|----------|------------------------|
+| Dev (scale-to-zero, Consumption plan) | $0 when idle; free monthly grants cover light usage |
+| Prod (min 1 replica, 0.5 vCPU / 1 GiB) | ~$8–12 at low traffic |
+| Each additional replica (scale-out) | ~$8–12 per replica |
+| Zone-redundant HA (Dedicated plan) | Significantly higher — evaluate when P99 latency or uptime SLAs require it |
+
+Costs are approximate and vary by region and usage. See [Azure Container Apps pricing](https://azure.microsoft.com/pricing/details/container-apps/) for current rates.
+
+### KEDA scalers (advanced)
+
+For queue-driven workloads (e.g. Azure Service Bus, Storage Queue), KEDA scalers let you scale on message backlog rather than HTTP traffic. See the [KEDA scalers documentation](https://keda.sh/docs/scalers/) for available trigger types.
+
+---
+
 ## Deploying
 
 ```bash
