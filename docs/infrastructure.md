@@ -99,5 +99,5 @@ az deployment sub create \
 ## Validating the template
 
 ```bash
-az bicep build infra/main.bicep
+az bicep build --file infra/main.bicep
 ```
