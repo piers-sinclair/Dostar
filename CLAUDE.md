@@ -201,6 +201,7 @@ Every issue must be implemented on a dedicated feature branch and merged via a p
    ```bash
    dotnet build   # backend
    cd frontend && pnpm build   # frontend (if changed)
+   az deployment sub what-if --location australiaeast --template-file infra/main.bicep --parameters infra/main.parameters.dev.bicepparam   # infra (if changed)
    ```
 4. **Commit** with a message that references the issue (`Closes #N`).
 5. **Push** and open a PR targeting `main`:
