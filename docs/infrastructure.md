@@ -98,6 +98,20 @@ az deployment sub create \
 
 ## Validating the template
 
+Use `what-if` to confirm what a deployment would create or change, without actually deploying anything. This is the recommended way to validate Bicep changes before merging a PR.
+
 ```bash
-az bicep build --file infra/main.bicep
+# Validate against dev
+az deployment sub what-if \
+  --location australiaeast \
+  --template-file infra/main.bicep \
+  --parameters infra/main.parameters.dev.bicepparam
+
+# Validate against prod
+az deployment sub what-if \
+  --location australiaeast \
+  --template-file infra/main.bicep \
+  --parameters infra/main.parameters.prod.bicepparam
 ```
+
+`az bicep build --file infra/main.bicep` is a local syntax check only — it does not prove the template is deployable against Azure.
