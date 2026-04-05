@@ -80,6 +80,50 @@ Add entries here as new regions are used.
 
 ---
 
+## Key Vault
+
+Key Vault is provisioned via `infra/modules/keyvault.bicep`. It uses RBAC authorization (not access policies) and is integrated with managed identity.
+
+**Example name:** `kv-dostar-prod-aue-001`
+
+### Secret naming convention
+
+Secrets stored in Key Vault follow this naming pattern:
+
+```
+{env}--{component}--{key}
+```
+
+**Full example:** `prod--postgres--admin-password`
+
+### Referencing secrets in Container App settings
+
+Use the Key Vault reference syntax in application settings:
+
+```
+@Microsoft.KeyVault(SecretUri=https://kv-dostar-prod-aue-001.vault.azure.net/secrets/prod--postgres--admin-password/)
+```
+
+The Container App must have a system-assigned managed identity with the **Key Vault Secrets User** role on the vault.
+
+### RBAC roles
+
+| Role | Who gets it | Purpose |
+|------|-------------|---------|
+| Key Vault Secrets User (`4633458b-17de-408a-b874-0445c86b69e0`) | Container App managed identity | Read secrets at runtime |
+
+No identity is granted **Key Vault Administrator** or **Key Vault Secrets Officer** by default.
+
+### Environment differences
+
+| Setting | dev | prod |
+|---------|-----|------|
+| `enablePurgeProtection` | `false` | `true` |
+| `softDeleteRetentionInDays` | 90 | 90 |
+| `publicNetworkAccess` | Enabled | Enabled (private endpoint deferred to VNet module — #32) |
+
+---
+
 ## Deploying
 
 ```bash

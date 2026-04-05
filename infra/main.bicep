@@ -20,6 +20,9 @@ param instance string = '001'
 @description('Azure region used for all resources.')
 param location string
 
+@description('Principal ID of the Container App managed identity. Leave empty until the Container App module is added (#27).')
+param appServicePrincipalId string = ''
+
 // ---------------------------------------------------------------------------
 // Abbreviations (following Azure CAF conventions — see modules/abbreviations.bicep)
 // ---------------------------------------------------------------------------
@@ -56,3 +59,28 @@ resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: resourceName(abbrev.resourceGroup, workload, env, region, instance)
   location: location
 }
+
+// ---------------------------------------------------------------------------
+// Key Vault — RBAC mode, soft-delete 90 days, purge protection in prod
+// appServicePrincipalId is wired once the Container App module (#27) is added
+// ---------------------------------------------------------------------------
+
+module keyvault 'modules/keyvault.bicep' = {
+  name: 'keyvault'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+    appServicePrincipalId: appServicePrincipalId
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Outputs
+// ---------------------------------------------------------------------------
+
+@description('The URI of the Key Vault.')
+output keyVaultUri string = keyvault.outputs.keyVaultUri
