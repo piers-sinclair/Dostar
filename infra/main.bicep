@@ -20,9 +20,6 @@ param instance string = '001'
 @description('Azure region used for all resources.')
 param location string
 
-@description('Application Insights connection string secret URI from Key Vault (optional - leave empty to skip wiring).')
-param appInsightsConnectionStringSecretUri string = ''
-
 @description('GitHub repository URL for automatic Static Web App deployments.')
 param repositoryUrl string
 
@@ -129,6 +126,25 @@ module acr 'modules/acr.bicep' = {
 }
 
 // ---------------------------------------------------------------------------
+// Application Insights + Log Analytics Workspace
+// Workspace-based (not classic). 30-day retention in dev, 90 days in prod.
+// Connection string is passed directly to the Container App as an env var —
+// App Insights connection strings are not credentials and do not need Key Vault.
+// ---------------------------------------------------------------------------
+
+module appinsights 'modules/appinsights.bicep' = {
+  name: 'appinsights'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Container Apps Environment + Container App (.NET backend)
 // AcrPull role assignment is handled inside containerapp.bicep to avoid a
 // circular dependency (acr -> containerapp.principalId -> acr).
@@ -145,7 +161,7 @@ module containerapp 'modules/containerapp.bicep' = {
     instance: instance
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
     acrId: acr.outputs.acrId
-    appInsightsConnectionStringSecretUri: appInsightsConnectionStringSecretUri
+    appInsightsConnectionString: appinsights.outputs.connectionString
   }
 }
 
@@ -219,3 +235,9 @@ output postgresServerFqdn string = postgres.outputs.serverFqdn
 
 @description('Name of the initial PostgreSQL database.')
 output postgresDatabaseName string = postgres.outputs.databaseName
+
+@description('Application Insights connection string. Set as APPLICATIONINSIGHTS_CONNECTION_STRING in the app runtime environment.')
+output appInsightsConnectionString string = appinsights.outputs.connectionString
+
+@description('Application Insights instrumentation key (legacy — prefer connectionString for new workloads).')
+output appInsightsInstrumentationKey string = appinsights.outputs.instrumentationKey
