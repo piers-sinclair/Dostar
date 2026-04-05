@@ -79,8 +79,33 @@ module keyvault 'modules/keyvault.bicep' = {
 }
 
 // ---------------------------------------------------------------------------
+// VNet — always provisioned in both dev and prod for security consistency
+// Subnet IDs are consumed by:
+//   - Container Apps Environment module (#27): containerAppSubnetId
+//   - PostgreSQL Flexible Server module (#29): postgresSubnetId
+// ---------------------------------------------------------------------------
+
+module vnet 'modules/vnet.bicep' = {
+  name: 'vnet'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Outputs
 // ---------------------------------------------------------------------------
 
 @description('The URI of the Key Vault.')
 output keyVaultUri string = keyvault.outputs.keyVaultUri
+
+@description('Resource ID of the Container Apps subnet.')
+output containerAppSubnetId string = vnet.outputs.containerAppSubnetId
+
+@description('Resource ID of the PostgreSQL subnet.')
+output postgresSubnetId string = vnet.outputs.postgresSubnetId
