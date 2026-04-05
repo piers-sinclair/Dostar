@@ -26,8 +26,8 @@ param containerAppSubnetId string
 @description('Resource ID of the ACR. Used to scope the AcrPull role assignment.')
 param acrId string
 
-@description('Application Insights connection string secret URI from Key Vault (optional — leave empty to skip wiring).')
-param appInsightsConnectionStringSecretUri string = ''
+@description('Application Insights connection string (optional — leave empty to skip wiring).')
+param appInsightsConnectionString string = ''
 
 // ---------------------------------------------------------------------------
 // Variables
@@ -94,15 +94,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           identity: 'system'
         }
       ]
-      secrets: !empty(appInsightsConnectionStringSecretUri)
-        ? [
-            {
-              name: 'appinsights-connection-string'
-              keyVaultUrl: appInsightsConnectionStringSecretUri
-              identity: 'system'
-            }
-          ]
-        : []
     }
     template: {
       containers: [
@@ -120,11 +111,11 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 value: 'http://+:8080'
               }
             ],
-            !empty(appInsightsConnectionStringSecretUri)
+            !empty(appInsightsConnectionString)
               ? [
                   {
                     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-                    secretRef: 'appinsights-connection-string'
+                    value: appInsightsConnectionString
                   }
                 ]
               : []

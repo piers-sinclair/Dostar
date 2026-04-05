@@ -19,6 +19,8 @@ const string RateLimitRejectionMessage = "Too many requests. Please try again la
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 builder.Services.AddOpenApi(V1DocumentName);
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
@@ -63,6 +65,14 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields = HttpLoggingFields.RequestMethod
+        | HttpLoggingFields.RequestPath
+        | HttpLoggingFields.ResponseStatusCode
+        | HttpLoggingFields.Duration;
+});
+
 var allowedOrigins = builder.Configuration.GetSection(CorsPolicy.ConfigSection).Get<string[]>() ?? [];
 builder.Services.AddCors(options =>
 {
@@ -75,13 +85,6 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod());
-});
-builder.Services.AddHttpLogging(options =>
-{
-    options.LoggingFields = HttpLoggingFields.RequestMethod
-        | HttpLoggingFields.RequestPath
-        | HttpLoggingFields.ResponseStatusCode
-        | HttpLoggingFields.Duration;
 });
 
 IModule[] modules =
