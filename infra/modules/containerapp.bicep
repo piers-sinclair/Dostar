@@ -23,11 +23,14 @@ param instance string
 @description('Resource ID of the subnet delegated to Container Apps.')
 param containerAppSubnetId string
 
-@description('ACR login server (e.g. crdostardevaue001.azurecr.io). Used to build the initial image reference.')
+@description('ACR login server (e.g. crdostardevaue001.azurecr.io). Used to configure the registry credential.')
 param acrLoginServer string
 
 @description('Resource ID of the ACR. Used to scope the AcrPull role assignment.')
 param acrId string
+
+@description('Container image to deploy. Defaults to a public hello-world placeholder; CI/CD overrides this on first real deployment.')
+param image string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
 @description('Application Insights connection string secret URI from Key Vault (optional — leave empty to skip wiring).')
 param appInsightsConnectionStringSecretUri string = ''
@@ -42,9 +45,6 @@ var caName = 'ca-${workload}-${env}-${region}-${instance}'
 // Scale-to-zero in dev saves cost; keep warm in prod to avoid cold starts
 var minReplicas = env == 'prod' ? 1 : 0
 var maxReplicas = env == 'prod' ? 10 : 3
-
-// Placeholder image — replaced by CI/CD on first real deployment
-var initialImage = '${acrLoginServer}/${workload}-api:latest'
 
 // Built-in role: AcrPull
 // https://learn.microsoft.com/azure/container-registry/container-registry-roles
@@ -107,7 +107,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: workload
-          image: initialImage
+          image: image
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
