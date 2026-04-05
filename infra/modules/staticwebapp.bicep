@@ -1,0 +1,71 @@
+targetScope = 'resourceGroup'
+
+// ---------------------------------------------------------------------------
+// Parameters
+// ---------------------------------------------------------------------------
+
+@description('Azure region used for this resource.')
+param location string
+
+@description('Short workload identifier (e.g. dostar).')
+param workload string
+
+@description('Deployment environment.')
+@allowed(['dev', 'prod'])
+param env string
+
+@description('Short region code (e.g. aue for australiaeast).')
+param region string
+
+@description('Three-digit instance number.')
+param instance string
+
+@description('GitHub repository URL to connect for automatic deployments.')
+param repositoryUrl string
+
+@description('Branch to auto-deploy from.')
+param branch string
+
+@description('Optional custom domain to associate with the Static Web App.')
+param customDomain string = ''
+
+// ---------------------------------------------------------------------------
+// Naming convention: {abbrev}-{workload}-{env}-{region}-{instance}
+// ---------------------------------------------------------------------------
+
+var resourceNameValue = '${abbrev}-${workload}-${env}-${region}-${instance}'
+var abbrev = 'stapp'
+
+// ---------------------------------------------------------------------------
+// Static Web App
+// ---------------------------------------------------------------------------
+
+resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
+  name: resourceNameValue
+  location: location
+  sku: {
+    name: env == 'prod' ? 'Standard' : 'Free'
+    tier: env == 'prod' ? 'Standard' : 'Free'
+  }
+  properties: {
+    repositoryUrl: repositoryUrl
+    branch: branch
+    buildProperties: {
+      appLocation: 'frontend'
+      outputLocation: 'dist'
+      apiLocation: ''
+    }
+    customDomains: empty(customDomain) ? [] : [customDomain]
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Outputs
+// ---------------------------------------------------------------------------
+
+@description('Default hostname of the Static Web App.')
+output hostname string = staticWebApp.properties.defaultHostname
+
+@description('Deployment token used by CI/CD to publish the frontend.')
+@secure()
+output deploymentToken string = staticWebApp.listSecrets().properties.apiKey
