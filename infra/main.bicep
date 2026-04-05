@@ -20,8 +20,8 @@ param instance string = '001'
 @description('Azure region used for all resources.')
 param location string
 
-@description('Principal ID of the Container App managed identity. Leave empty until the Container App module is added (#27).')
-param appServicePrincipalId string = ''
+@description('Application Insights connection string secret URI from Key Vault (optional — leave empty to skip wiring).')
+param appInsightsConnectionStringSecretUri string = ''
 
 @description('GitHub repository URL for automatic Static Web App deployments.')
 param repositoryUrl string
@@ -68,7 +68,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
 
 // ---------------------------------------------------------------------------
 // Key Vault — RBAC mode, soft-delete 90 days, purge protection in prod
-// appServicePrincipalId is wired once the Container App module (#27) is added
+// Container App principal is granted Key Vault Secrets User after it is created.
 // ---------------------------------------------------------------------------
 
 module keyvault 'modules/keyvault.bicep' = {
@@ -80,14 +80,14 @@ module keyvault 'modules/keyvault.bicep' = {
     env: env
     region: region
     instance: instance
-    appServicePrincipalId: appServicePrincipalId
+    appServicePrincipalId: containerapp.outputs.principalId
   }
 }
 
 // ---------------------------------------------------------------------------
 // VNet — always provisioned in both dev and prod for security consistency
 // Subnet IDs are consumed by:
-//   - Container Apps Environment module (#27): containerAppSubnetId
+//   - Container Apps Environment (containerapp module): containerAppSubnetId
 //   - PostgreSQL Flexible Server module (#29): postgresSubnetId
 // ---------------------------------------------------------------------------
 
@@ -100,6 +100,43 @@ module vnet 'modules/vnet.bicep' = {
     env: env
     region: region
     instance: instance
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Azure Container Registry
+// ---------------------------------------------------------------------------
+
+module acr 'modules/acr.bicep' = {
+  name: 'acr'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Container Apps Environment + Container App (.NET backend)
+// AcrPull role assignment is handled inside containerapp.bicep to avoid a
+// circular dependency (acr → containerapp.principalId → acr).
+// ---------------------------------------------------------------------------
+
+module containerapp 'modules/containerapp.bicep' = {
+  name: 'containerapp'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+    containerAppSubnetId: vnet.outputs.containerAppSubnetId
+    acrId: acr.outputs.acrId
+    appInsightsConnectionStringSecretUri: appInsightsConnectionStringSecretUri
   }
 }
 
@@ -136,3 +173,12 @@ output postgresSubnetId string = vnet.outputs.postgresSubnetId
 
 @description('Default hostname of the Static Web App hosting the React frontend.')
 output staticWebAppHostname string = staticWebApp.outputs.hostname
+
+@description('ACR login server hostname.')
+output acrLoginServer string = acr.outputs.loginServer
+
+@description('FQDN of the Container App (backend API ingress).')
+output containerAppFqdn string = containerapp.outputs.fqdn
+
+@description('Principal ID of the Container App system-assigned managed identity.')
+output containerAppPrincipalId string = containerapp.outputs.principalId
