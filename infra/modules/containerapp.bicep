@@ -23,14 +23,8 @@ param instance string
 @description('Resource ID of the subnet delegated to Container Apps.')
 param containerAppSubnetId string
 
-@description('ACR login server (e.g. crdostardevaue001.azurecr.io). Used to configure the registry credential.')
-param acrLoginServer string
-
 @description('Resource ID of the ACR. Used to scope the AcrPull role assignment.')
 param acrId string
-
-@description('Container image to deploy. Defaults to a public hello-world placeholder; CI/CD overrides this on first real deployment.')
-param image string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
 @description('Application Insights connection string secret URI from Key Vault (optional — leave empty to skip wiring).')
 param appInsightsConnectionStringSecretUri string = ''
@@ -41,6 +35,13 @@ param appInsightsConnectionStringSecretUri string = ''
 
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
+
+// ACR name uses the same deterministic formula as acr.bicep — no cross-resource
+// reference needed, so the image string resolves at compile time.
+var acrNameRaw = 'cr${workload}${env}${region}${instance}'
+var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
+var acrLoginServer = '${acrName}.azurecr.io'
+var image = '${acrLoginServer}/${workload}-api:latest'
 
 // Scale-to-zero in dev saves cost; keep warm in prod to avoid cold starts
 var minReplicas = env == 'prod' ? 1 : 0

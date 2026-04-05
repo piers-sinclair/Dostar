@@ -135,7 +135,6 @@ module containerapp 'modules/containerapp.bicep' = {
     region: region
     instance: instance
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
-    acrLoginServer: acr.outputs.loginServer
     acrId: acr.outputs.acrId
     appInsightsConnectionStringSecretUri: appInsightsConnectionStringSecretUri
   }
