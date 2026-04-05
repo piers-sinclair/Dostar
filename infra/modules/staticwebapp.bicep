@@ -26,9 +26,6 @@ param repositoryUrl string
 @description('Branch to auto-deploy from.')
 param branch string
 
-@description('Optional custom domain to associate with the Static Web App.')
-param customDomain string = ''
-
 // ---------------------------------------------------------------------------
 // Naming convention: {abbrev}-{workload}-{env}-{region}-{instance}
 // ---------------------------------------------------------------------------
@@ -55,7 +52,6 @@ resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
       outputLocation: 'dist'
       apiLocation: ''
     }
-    customDomains: empty(customDomain) ? [] : [customDomain]
   }
 }
 
