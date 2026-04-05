@@ -23,6 +23,10 @@ param instance string
 @description('Principal ID of the managed identity that needs Key Vault Secrets User access.')
 param appServicePrincipalId string
 
+@description('Auto-generated admin password for the PostgreSQL Flexible Server. Stored as a secret so operators can retrieve it.')
+@secure()
+param postgresAdminPassword string
+
 // ---------------------------------------------------------------------------
 // Variables
 // ---------------------------------------------------------------------------
@@ -64,6 +68,14 @@ resource secretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
     roleDefinitionId: keyVaultSecretsUserRoleId
     principalId: appServicePrincipalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+resource postgresPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'postgres-admin-password'
+  parent: keyVault
+  properties: {
+    value: postgresAdminPassword
   }
 }
 

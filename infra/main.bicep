@@ -20,7 +20,7 @@ param instance string = '001'
 @description('Azure region used for all resources.')
 param location string
 
-@description('Application Insights connection string secret URI from Key Vault (optional — leave empty to skip wiring).')
+@description('Application Insights connection string secret URI from Key Vault (optional - leave empty to skip wiring).')
 param appInsightsConnectionStringSecretUri string = ''
 
 @description('GitHub repository URL for automatic Static Web App deployments.')
@@ -28,6 +28,13 @@ param repositoryUrl string
 
 @description('Branch to auto-deploy from.')
 param branch string = 'main'
+
+@description('Administrator username for the PostgreSQL Flexible Server.')
+param postgresAdminUsername string
+
+@description('Admin password for the PostgreSQL Flexible Server. Defaults to a new random value each deployment — pin this in your param file after the first deploy to prevent rotation.')
+@secure()
+param postgresAdminPassword string = newGuid()
 
 // ---------------------------------------------------------------------------
 // Abbreviations (following Azure CAF conventions — see modules/abbreviations.bicep)
@@ -68,6 +75,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
 
 // ---------------------------------------------------------------------------
 // Key Vault — RBAC mode, soft-delete 90 days, purge protection in prod
+// Stores the auto-generated postgres admin password as a secret.
 // Container App principal is granted Key Vault Secrets User after it is created.
 // ---------------------------------------------------------------------------
 
@@ -81,6 +89,7 @@ module keyvault 'modules/keyvault.bicep' = {
     region: region
     instance: instance
     appServicePrincipalId: containerapp.outputs.principalId
+    postgresAdminPassword: postgresAdminPassword
   }
 }
 
@@ -122,7 +131,7 @@ module acr 'modules/acr.bicep' = {
 // ---------------------------------------------------------------------------
 // Container Apps Environment + Container App (.NET backend)
 // AcrPull role assignment is handled inside containerapp.bicep to avoid a
-// circular dependency (acr → containerapp.principalId → acr).
+// circular dependency (acr -> containerapp.principalId -> acr).
 // ---------------------------------------------------------------------------
 
 module containerapp 'modules/containerapp.bicep' = {
@@ -138,6 +147,28 @@ module containerapp 'modules/containerapp.bicep' = {
     acrId: acr.outputs.acrId
     appInsightsConnectionStringSecretUri: appInsightsConnectionStringSecretUri
   }
+}
+
+// ---------------------------------------------------------------------------
+// PostgreSQL Flexible Server — private, VNet-integrated, password auto-generated
+// and stored in Key Vault by the keyvault module above.
+// ---------------------------------------------------------------------------
+
+module postgres 'modules/postgres.bicep' = {
+  name: 'postgres'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+    adminUsername: postgresAdminUsername
+    adminPassword: postgresAdminPassword
+    postgresSubnetId: vnet.outputs.postgresSubnetId
+    vnetId: vnet.outputs.vnetId
+  }
+  dependsOn: [keyvault]
 }
 
 // ---------------------------------------------------------------------------
@@ -182,3 +213,9 @@ output containerAppFqdn string = containerapp.outputs.fqdn
 
 @description('Principal ID of the Container App system-assigned managed identity.')
 output containerAppPrincipalId string = containerapp.outputs.principalId
+
+@description('Fully qualified domain name of the PostgreSQL Flexible Server.')
+output postgresServerFqdn string = postgres.outputs.serverFqdn
+
+@description('Name of the initial PostgreSQL database.')
+output postgresDatabaseName string = postgres.outputs.databaseName
