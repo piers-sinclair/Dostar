@@ -118,10 +118,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 name: 'ASPNETCORE_URLS'
                 value: 'http://+:8080'
               }
-              {
-                name: 'AZURE_CLIENT_ID'
-                value: ''
-              }
             ],
             !empty(appInsightsConnectionStringSecretUri)
               ? [
