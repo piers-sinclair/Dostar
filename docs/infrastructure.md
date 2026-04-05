@@ -172,7 +172,7 @@ az containerapp update \
 
 ### HTTP scaling rule (default, built-in)
 
-ACA automatically scales on concurrent HTTP requests. The default threshold is **10 requests per replica**. To tune this, update the `scale` block in `infra/modules/containerapp.bicep`:
+ACA's built-in HTTP scaler triggers scale-out at **10 concurrent requests per replica** by default — no explicit rule is needed in the Bicep. To override this threshold, add a `rules` block to the `scale` section in `infra/modules/containerapp.bicep`:
 
 ```bicep
 scale: {
