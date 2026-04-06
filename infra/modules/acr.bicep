@@ -1,9 +1,5 @@
 targetScope = 'resourceGroup'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Azure region used for this resource.')
 param location string
 
@@ -20,20 +16,11 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-// ---------------------------------------------------------------------------
-// Variables
-// ---------------------------------------------------------------------------
-
 // ACR names must be alphanumeric only, 5–50 chars — strip hyphens and truncate
 var acrNameRaw = 'cr${workload}${env}${region}${instance}'
 var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
 
-// Basic for dev (cheaper), Standard for prod (geo-replication, larger storage)
 var acrSku = env == 'prod' ? 'Standard' : 'Basic'
-
-// ---------------------------------------------------------------------------
-// Resources
-// ---------------------------------------------------------------------------
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: acrName
@@ -46,10 +33,6 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
     publicNetworkAccess: 'Enabled'
   }
 }
-
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
 
 @description('The name of the Azure Container Registry.')
 output acrName string = acr.name

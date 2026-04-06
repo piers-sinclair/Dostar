@@ -1,9 +1,5 @@
 targetScope = 'resourceGroup'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Azure region used for all resources.')
 param location string
 
@@ -20,14 +16,8 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-// ---------------------------------------------------------------------------
-// Naming convention: {abbrev}-{workload}-{env}-{region}-{instance}
-// Subnet names are purpose-scoped (not per-environment) as they live inside the VNet.
-// ---------------------------------------------------------------------------
-
 var vnetName = 'vnet-${workload}-${env}-${region}-${instance}'
 
-// NSG: Container Apps subnet — deny all inbound by default, allow VNet-internal traffic
 resource nsgContainerApp 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
   name: 'nsg-${workload}-${env}-${region}-${instance}-containerapp'
   location: location
@@ -65,7 +55,6 @@ resource nsgContainerApp 'Microsoft.Network/networkSecurityGroups@2024-01-01' = 
   }
 }
 
-// NSG: PostgreSQL subnet — deny all inbound by default, allow VNet-internal traffic
 resource nsgPostgres 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
   name: 'nsg-${workload}-${env}-${region}-${instance}-postgres'
   location: location
@@ -102,10 +91,6 @@ resource nsgPostgres 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
     ]
   }
 }
-
-// ---------------------------------------------------------------------------
-// Virtual Network
-// ---------------------------------------------------------------------------
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
   name: vnetName
@@ -156,15 +141,11 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
-
 @description('Resource ID of the virtual network.')
 output vnetId string = vnet.id
 
-@description('Resource ID of the Container Apps subnet (consumed by the Container Apps Environment — see issue #27).')
+@description('Resource ID of the Container Apps subnet.')
 output containerAppSubnetId string = vnet.properties.subnets[0].id
 
-@description('Resource ID of the PostgreSQL subnet (consumed by the PostgreSQL Flexible Server module — see issue #29).')
+@description('Resource ID of the PostgreSQL subnet.')
 output postgresSubnetId string = vnet.properties.subnets[1].id
