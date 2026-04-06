@@ -29,9 +29,9 @@ param staticWebAppLocation string = 'eastus2'
 @description('Administrator username for the PostgreSQL Flexible Server.')
 param postgresAdminUsername string
 
-@description('Admin password for the PostgreSQL Flexible Server. Defaults to a new random value each deployment — pin this in your param file after the first deploy to prevent rotation.')
+@description('Admin password for the PostgreSQL Flexible Server. Must be supplied by the CI workflow (read from Key Vault, or generated on first deploy). Never hardcode this value.')
 @secure()
-param postgresAdminPassword string = newGuid()
+param postgresAdminPassword string
 
 var abbrev = {
   resourceGroup: 'rg'
