@@ -1,0 +1,73 @@
+name: Infra — what-if
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'infra/**'
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  whatif:
+    name: Bicep what-if (dev)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run what-if and post PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OUTPUT=$(az deployment sub what-if \
+            --location australiaeast \
+            --template-file infra/main.bicep \
+            --parameters infra/main.parameters.dev.bicepparam \
+            --no-pretty-print \
+            2>&1) || true
+
+          # Truncate to stay within GitHub comment size limits (65 536 chars)
+          MAX=64000
+          if [ ${#OUTPUT} -gt $MAX ]; then
+            OUTPUT="${OUTPUT:0:$MAX}
+          ... (output truncated — see workflow logs for full output)"
+          fi
+
+          BODY="## Bicep what-if — dev environment
+
+          <details>
+          <summary>Click to expand</summary>
+
+          \`\`\`
+          ${OUTPUT}
+          \`\`\`
+
+          </details>
+
+          > Generated from \`infra/main.parameters.dev.bicepparam\` against the \`australiaeast\` subscription scope."
+
+          PR=${{ github.event.pull_request.number }}
+          REPO=${{ github.repository }}
+          MARKER="Bicep what-if — dev environment"
+
+          # Update existing bot comment if present, otherwise create a new one
+          COMMENT_ID=$(gh api "repos/$REPO/issues/$PR/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | contains(\"$MARKER\"))) | .id" \
+            | head -1)
+
+          if [ -n "$COMMENT_ID" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$COMMENT_ID" -f body="$BODY"
+          else
+            gh api --method POST "repos/$REPO/issues/$PR/comments" -f body="$BODY"
+          fi
