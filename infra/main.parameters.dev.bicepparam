@@ -7,6 +7,7 @@ param instance = '001'
 param location = 'australiaeast'
 param repositoryUrl = 'https://github.com/piers-sinclair/Dostar'
 param postgresAdminUsername = 'dostaradmin'
-// postgresAdminPassword: set to a placeholder for local what-if validation only.
-// CI overrides this with the real secret from Key Vault. Never use this value in production.
-param postgresAdminPassword = 'Placeholder123!'
+// postgresAdminPassword: reads from the POSTGRES_ADMIN_PASSWORD env var at compile time.
+// CI sets this to the real secret fetched from Key Vault before running az deployment.
+// Locally (what-if validation only) it falls back to the placeholder — never deploy with the placeholder.
+param postgresAdminPassword = readEnvironmentVariable('POSTGRES_ADMIN_PASSWORD', 'Placeholder123!')
