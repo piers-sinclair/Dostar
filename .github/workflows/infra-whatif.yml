@@ -26,8 +26,9 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Run what-if
-        id: whatif
+      - name: Run what-if and post PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           OUTPUT=$(az deployment sub what-if \
             --location australiaeast \
@@ -43,26 +44,30 @@ jobs:
           ... (output truncated — see workflow logs for full output)"
           fi
 
-          # Store as multiline env var
-          EOF_MARKER=$(openssl rand -hex 8)
-          echo "WHATIF_OUTPUT<<$EOF_MARKER" >> "$GITHUB_ENV"
-          echo "$OUTPUT" >> "$GITHUB_ENV"
-          echo "$EOF_MARKER" >> "$GITHUB_ENV"
+          BODY="## Bicep what-if — dev environment
 
-      - name: Post what-if as PR comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ## Bicep what-if — dev environment
+          <details>
+          <summary>Click to expand</summary>
 
-            <details>
-            <summary>Click to expand</summary>
+          \`\`\`
+          ${OUTPUT}
+          \`\`\`
 
-            ```
-            ${{ env.WHATIF_OUTPUT }}
-            ```
+          </details>
 
-            </details>
+          > Generated from \`infra/main.parameters.dev.bicepparam\` against the \`australiaeast\` subscription scope."
 
-            > Generated from `infra/main.parameters.dev.bicepparam` against the `australiaeast` subscription scope.
+          PR=${{ github.event.pull_request.number }}
+          REPO=${{ github.repository }}
+          MARKER="Bicep what-if — dev environment"
+
+          # Update existing bot comment if present, otherwise create a new one
+          COMMENT_ID=$(gh api "repos/$REPO/issues/$PR/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | contains(\"$MARKER\"))) | .id" \
+            | head -1)
+
+          if [ -n "$COMMENT_ID" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$COMMENT_ID" -f body="$BODY"
+          else
+            gh api --method POST "repos/$REPO/issues/$PR/comments" -f body="$BODY"
+          fi
