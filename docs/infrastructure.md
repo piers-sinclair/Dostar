@@ -218,7 +218,42 @@ az deployment sub create \
   --location australiaeast \
   --template-file infra/main.bicep \
   --parameters infra/main.parameters.prod.bicepparam
+
+# Tear down (dev)
+az group delete --name rg-dostar-dev-aue-001 --yes
 ```
+
+---
+
+## PostgreSQL high availability
+
+### Default configuration
+
+| Environment | HA mode | Protection |
+|-------------|---------|------------|
+| dev | Disabled | No HA — lowest cost |
+| prod | SameZone | Standby replica in the same availability zone; automatic failover on node failure |
+
+**Same-zone HA** (prod default) protects against individual node failure within a zone. The standby replica is kept in sync and promoted automatically if the primary fails — no data loss, short failover window (~30–120 seconds).
+
+### Zone-redundant HA upgrade path
+
+**Zone-redundant HA** spreads the primary and standby across separate availability zones, protecting against a full zone outage. It is available on the same Burstable and General Purpose SKUs and is enabled by setting `highAvailability.mode = 'ZoneRedundant'` in `infra/modules/postgres.bicep`.
+
+Roughly doubles the database cost (two servers billed instead of one). Evaluate when:
+
+- Your uptime SLA requires surviving an availability zone failure (e.g. 99.99% SLO)
+- RPO/RTO requirements cannot tolerate the risk of same-zone failure
+
+To enable, change the `highAvailability` block in `infra/modules/postgres.bicep`:
+
+```bicep
+highAvailability: {
+  mode: 'ZoneRedundant'
+}
+```
+
+---
 
 ## Validating the template
 
