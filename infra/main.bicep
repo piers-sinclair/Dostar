@@ -1,3 +1,4 @@
+// Test comment to trigger infra-whatif workflow (delete before merging)
 targetScope = 'subscription'
 
 @description('Short workload identifier (e.g. dostar).')
