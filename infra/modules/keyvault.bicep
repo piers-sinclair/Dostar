@@ -35,9 +35,9 @@ var keyVaultName = 'kv-${workload}-${env}-${region}-${instance}'
 
 // Built-in role: Key Vault Secrets User
 // https://learn.microsoft.com/azure/key-vault/general/rbac-guide#azure-built-in-roles-for-key-vault-data-plane-operations
-var keyVaultSecretsUserRoleId = subscriptionResourceId(
+var keyVaultSecretsUserRoleId = tenantResourceId(
   'Microsoft.Authorization/roleDefinitions',
-  '4633458b-17de-408a-b874-0445c86b69e0'
+  '4633458b-17de-408a-b874-0445c86b69e6'
 )
 
 // ---------------------------------------------------------------------------
@@ -56,13 +56,18 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: 90
-    enablePurgeProtection: env == 'prod' ? true : false
+    // Purge protection can never be disabled once enabled, so we omit the
+    // property in dev (leaving whatever state already exists) and only
+    // explicitly enable it in prod.
+    enablePurgeProtection: env == 'prod' ? true : null
     publicNetworkAccess: 'Enabled'
   }
 }
 
 resource secretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(appServicePrincipalId)) {
-  name: guid(keyVault.id, appServicePrincipalId, keyVaultSecretsUserRoleId)
+  // Use principalId + raw role GUID so the name is stable regardless of how the
+  // role definition resource ID is formatted (subscription- vs tenant-scoped).
+  name: guid(keyVault.id, appServicePrincipalId, '4633458b-17de-408a-b874-0445c86b69e6')
   scope: keyVault
   properties: {
     roleDefinitionId: keyVaultSecretsUserRoleId

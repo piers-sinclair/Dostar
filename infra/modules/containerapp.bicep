@@ -29,6 +29,9 @@ param acrId string
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
 param appInsightsConnectionString string = ''
 
+@description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
+param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+
 // ---------------------------------------------------------------------------
 // Variables
 // ---------------------------------------------------------------------------
@@ -41,7 +44,6 @@ var caName = 'ca-${workload}-${env}-${region}-${instance}'
 var acrNameRaw = 'cr${workload}${env}${region}${instance}'
 var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
 var acrLoginServer = '${acrName}.azurecr.io'
-var image = '${acrLoginServer}/${workload}-api:latest'
 
 // Scale-to-zero in dev saves cost; keep warm in prod to avoid cold starts
 var minReplicas = env == 'prod' ? 1 : 0
@@ -49,7 +51,7 @@ var maxReplicas = env == 'prod' ? 10 : 3
 
 // Built-in role: AcrPull
 // https://learn.microsoft.com/azure/container-registry/container-registry-roles
-var acrPullRoleId = subscriptionResourceId(
+var acrPullRoleId = tenantResourceId(
   'Microsoft.Authorization/roleDefinitions',
   '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 )
@@ -88,18 +90,25 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         transport: 'auto'
       }
-      registries: [
-        {
-          server: acrLoginServer
-          identity: 'system'
-        }
-      ]
+      // Only configure ACR registry when the image is actually from ACR.
+      // On first deploy the placeholder image (mcr.microsoft.com) is used and the
+      // AcrPull role hasn't been assigned yet (it depends on the Container App's
+      // principalId). Configuring the registry before the role exists causes Azure
+      // to fail with "Operation expired" while trying to validate ACR access.
+      registries: startsWith(containerImage, acrLoginServer)
+        ? [
+            {
+              server: acrLoginServer
+              identity: 'system'
+            }
+          ]
+        : []
     }
     template: {
       containers: [
         {
           name: workload
-          image: image
+          image: containerImage
           resources: {
             cpu: json('0.5')
             memory: '1Gi'
@@ -137,7 +146,9 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
 
 // AcrPull role — lets the Container App pull images via its system-assigned identity
 resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acrId, containerApp.id, acrPullRoleId)
+  // Use the Container App resource ID + raw role GUID so the name is stable
+  // regardless of how the role definition resource ID is formatted.
+  name: guid(acr.id, containerApp.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
   scope: acr
   properties: {
     roleDefinitionId: acrPullRoleId

@@ -4,7 +4,8 @@ targetScope = 'resourceGroup'
 // Parameters
 // ---------------------------------------------------------------------------
 
-@description('Azure region used for this resource.')
+@description('Azure region used for this resource. Must be one of the regions that support Static Web Apps: eastus2, westus2, centralus, westeurope, eastasia.')
+@allowed(['eastus2', 'westus2', 'centralus', 'westeurope', 'eastasia'])
 param location string
 
 @description('Short workload identifier (e.g. dostar).')

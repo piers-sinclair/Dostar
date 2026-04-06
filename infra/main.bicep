@@ -26,6 +26,10 @@ param repositoryUrl string
 @description('Branch to auto-deploy from.')
 param branch string = 'main'
 
+@description('Azure region for the Static Web App. Must be one of the regions that support Static Web Apps: eastus2, westus2, centralus, westeurope, eastasia.')
+@allowed(['eastus2', 'westus2', 'centralus', 'westeurope', 'eastasia'])
+param staticWebAppLocation string = 'eastus2'
+
 @description('Administrator username for the PostgreSQL Flexible Server.')
 param postgresAdminUsername string
 
@@ -195,7 +199,7 @@ module staticWebApp 'modules/staticwebapp.bicep' = {
   name: 'staticwebapp'
   scope: rg
   params: {
-    location: location
+    location: staticWebAppLocation
     workload: workload
     env: env
     region: region
