@@ -1,9 +1,5 @@
 targetScope = 'subscription'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Short workload identifier (e.g. dostar).')
 param workload string
 
@@ -37,10 +33,6 @@ param postgresAdminUsername string
 @secure()
 param postgresAdminPassword string = newGuid()
 
-// ---------------------------------------------------------------------------
-// Abbreviations (following Azure CAF conventions — see modules/abbreviations.bicep)
-// ---------------------------------------------------------------------------
-
 var abbrev = {
   resourceGroup: 'rg'
   appServicePlan: 'asp'
@@ -57,28 +49,13 @@ var abbrev = {
   subnet: 'snet'
 }
 
-// ---------------------------------------------------------------------------
-// Naming convention: {abbrev}-{workload}-{env}-{region}-{instance}
-// Example: app-dostar-prod-aue-001
-// ---------------------------------------------------------------------------
-
 func resourceName(abbr string, workloadName string, environment string, regionCode string, instanceNumber string) string =>
   '${abbr}-${workloadName}-${environment}-${regionCode}-${instanceNumber}'
-
-// ---------------------------------------------------------------------------
-// Resource group
-// ---------------------------------------------------------------------------
 
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: resourceName(abbrev.resourceGroup, workload, env, region, instance)
   location: location
 }
-
-// ---------------------------------------------------------------------------
-// Key Vault — RBAC mode, soft-delete 90 days, purge protection in prod
-// Stores the auto-generated postgres admin password as a secret.
-// Container App principal is granted Key Vault Secrets User after it is created.
-// ---------------------------------------------------------------------------
 
 module keyvault 'modules/keyvault.bicep' = {
   name: 'keyvault'
@@ -94,13 +71,6 @@ module keyvault 'modules/keyvault.bicep' = {
   }
 }
 
-// ---------------------------------------------------------------------------
-// VNet — always provisioned in both dev and prod for security consistency
-// Subnet IDs are consumed by:
-//   - Container Apps Environment (containerapp module): containerAppSubnetId
-//   - PostgreSQL Flexible Server module (#29): postgresSubnetId
-// ---------------------------------------------------------------------------
-
 module vnet 'modules/vnet.bicep' = {
   name: 'vnet'
   scope: rg
@@ -112,10 +82,6 @@ module vnet 'modules/vnet.bicep' = {
     instance: instance
   }
 }
-
-// ---------------------------------------------------------------------------
-// Azure Container Registry
-// ---------------------------------------------------------------------------
 
 module acr 'modules/acr.bicep' = {
   name: 'acr'
@@ -129,13 +95,6 @@ module acr 'modules/acr.bicep' = {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Application Insights + Log Analytics Workspace
-// Workspace-based (not classic). 30-day retention in dev, 90 days in prod.
-// Connection string is passed directly to the Container App as an env var —
-// App Insights connection strings are not credentials and do not need Key Vault.
-// ---------------------------------------------------------------------------
-
 module appinsights 'modules/appinsights.bicep' = {
   name: 'appinsights'
   scope: rg
@@ -148,12 +107,8 @@ module appinsights 'modules/appinsights.bicep' = {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Container Apps Environment + Container App (.NET backend)
-// AcrPull role assignment is handled inside containerapp.bicep to avoid a
-// circular dependency (acr -> containerapp.principalId -> acr).
-// ---------------------------------------------------------------------------
-
+// AcrPull role assignment is inside containerapp.bicep to avoid a circular dependency
+// (acr.id → containerapp.principalId → acr)
 module containerapp 'modules/containerapp.bicep' = {
   name: 'containerapp'
   scope: rg
@@ -168,11 +123,6 @@ module containerapp 'modules/containerapp.bicep' = {
     appInsightsConnectionString: appinsights.outputs.connectionString
   }
 }
-
-// ---------------------------------------------------------------------------
-// PostgreSQL Flexible Server — private, VNet-integrated, password auto-generated
-// and stored in Key Vault by the keyvault module above.
-// ---------------------------------------------------------------------------
 
 module postgres 'modules/postgres.bicep' = {
   name: 'postgres'
@@ -191,10 +141,6 @@ module postgres 'modules/postgres.bicep' = {
   dependsOn: [keyvault]
 }
 
-// ---------------------------------------------------------------------------
-// Static Web App (React frontend)
-// ---------------------------------------------------------------------------
-
 module staticWebApp 'modules/staticwebapp.bicep' = {
   name: 'staticwebapp'
   scope: rg
@@ -208,10 +154,6 @@ module staticWebApp 'modules/staticwebapp.bicep' = {
     branch: branch
   }
 }
-
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
 
 @description('The URI of the Key Vault.')
 output keyVaultUri string = keyvault.outputs.keyVaultUri

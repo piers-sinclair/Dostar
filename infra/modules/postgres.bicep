@@ -1,9 +1,5 @@
 targetScope = 'resourceGroup'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Azure region used for all resources.')
 param location string
 
@@ -33,22 +29,14 @@ param postgresSubnetId string
 @description('Resource ID of the VNet (used for private DNS zone VNet link).')
 param vnetId string
 
-// ---------------------------------------------------------------------------
-// Variables
-// ---------------------------------------------------------------------------
-
 var serverName = 'psql-${workload}-${env}-${region}-${instance}'
 var databaseName = workload
 
-// Burstable B1ms (~$12/month) for dev; Burstable B2ms for prod
+// Burstable B2ms for prod; B1ms (~$12/month) for dev
 var skuName = env == 'prod' ? 'Standard_B2ms' : 'Standard_B1ms'
 
-// ---------------------------------------------------------------------------
-// Private DNS Zone
 // Required by PostgreSQL Flexible Server VNet integration.
 // Name must follow the pattern: <serverName>.private.postgres.database.azure.com
-// ---------------------------------------------------------------------------
-
 resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
   name: '${serverName}.private.postgres.database.azure.com'
   location: 'global'
@@ -65,10 +53,6 @@ resource privateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetwor
     registrationEnabled: false
   }
 }
-
-// ---------------------------------------------------------------------------
-// PostgreSQL Flexible Server
-// ---------------------------------------------------------------------------
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
   name: serverName
@@ -99,10 +83,6 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' =
   dependsOn: [privateDnsZoneVnetLink]
 }
 
-// ---------------------------------------------------------------------------
-// Initial database
-// ---------------------------------------------------------------------------
-
 resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-01' = {
   name: databaseName
   parent: postgresServer
@@ -111,10 +91,6 @@ resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2024-08-0
     collation: 'en_US.utf8'
   }
 }
-
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
 
 @description('Fully qualified domain name of the PostgreSQL Flexible Server.')
 output serverFqdn string = postgresServer.properties.fullyQualifiedDomainName

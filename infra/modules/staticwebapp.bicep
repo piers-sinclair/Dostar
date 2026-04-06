@@ -1,9 +1,5 @@
 targetScope = 'resourceGroup'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Azure region used for this resource. Must be one of the regions that support Static Web Apps: eastus2, westus2, centralus, westeurope, eastasia.')
 @allowed(['eastus2', 'westus2', 'centralus', 'westeurope', 'eastasia'])
 param location string
@@ -27,16 +23,8 @@ param repositoryUrl string
 @description('Branch to auto-deploy from.')
 param branch string
 
-// ---------------------------------------------------------------------------
-// Naming convention: {abbrev}-{workload}-{env}-{region}-{instance}
-// ---------------------------------------------------------------------------
-
-var resourceNameValue = '${abbrev}-${workload}-${env}-${region}-${instance}'
 var abbrev = 'stapp'
-
-// ---------------------------------------------------------------------------
-// Static Web App
-// ---------------------------------------------------------------------------
+var resourceNameValue = '${abbrev}-${workload}-${env}-${region}-${instance}'
 
 resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
   name: resourceNameValue
@@ -55,10 +43,6 @@ resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
     }
   }
 }
-
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
 
 @description('Default hostname of the Static Web App.')
 output hostname string = staticWebApp.properties.defaultHostname

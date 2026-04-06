@@ -1,9 +1,5 @@
 targetScope = 'resourceGroup'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Azure region used for this resource.')
 param location string
 
@@ -20,19 +16,11 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-// ---------------------------------------------------------------------------
-// Variables
-// ---------------------------------------------------------------------------
-
 var lawName = 'log-${workload}-${env}-${region}-${instance}'
 var appiName = 'appi-${workload}-${env}-${region}-${instance}'
 
-// 30-day retention for dev to keep costs low; 90 days for prod for audit/debugging
+// 30-day retention in dev to keep costs low; 90 days in prod for audit/debugging
 var retentionDays = env == 'prod' ? 90 : 30
-
-// ---------------------------------------------------------------------------
-// Log Analytics Workspace (backing store for workspace-based App Insights)
-// ---------------------------------------------------------------------------
 
 resource law 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: lawName
@@ -47,10 +35,6 @@ resource law 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Application Insights (workspace-based — not classic)
-// ---------------------------------------------------------------------------
-
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: appiName
   location: location
@@ -63,20 +47,6 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
     publicNetworkAccessForQuery: 'Enabled'
   }
 }
-
-// ---------------------------------------------------------------------------
-// Alert rules
-// ---------------------------------------------------------------------------
-
-// TODO: Enable this alert rule once teams are ready to act on 5xx alerts.
-// Example: create a Microsoft.Insights/metricAlerts resource targeting
-// appInsights.id with metric 'requests/failed' filtered to resultCode >= 500.
-// Set threshold, evaluation frequency, and action group (email/PagerDuty/etc.)
-// to match your on-call runbook.
-
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
 
 @description('Application Insights connection string. Pass to APPLICATIONINSIGHTS_CONNECTION_STRING in the app runtime environment.')
 output connectionString string = appInsights.properties.ConnectionString

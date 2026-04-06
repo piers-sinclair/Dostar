@@ -1,9 +1,5 @@
 targetScope = 'resourceGroup'
 
-// ---------------------------------------------------------------------------
-// Parameters
-// ---------------------------------------------------------------------------
-
 @description('Azure region used for all resources.')
 param location string
 
@@ -32,15 +28,10 @@ param appInsightsConnectionString string = ''
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
-// ---------------------------------------------------------------------------
-// Variables
-// ---------------------------------------------------------------------------
-
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
 
-// ACR name uses the same deterministic formula as acr.bicep — no cross-resource
-// reference needed, so the image string resolves at compile time.
+// ACR name uses the same deterministic formula as acr.bicep — no cross-module reference needed
 var acrNameRaw = 'cr${workload}${env}${region}${instance}'
 var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
 var acrLoginServer = '${acrName}.azurecr.io'
@@ -49,16 +40,11 @@ var acrLoginServer = '${acrName}.azurecr.io'
 var minReplicas = env == 'prod' ? 1 : 0
 var maxReplicas = env == 'prod' ? 10 : 3
 
-// Built-in role: AcrPull
 // https://learn.microsoft.com/azure/container-registry/container-registry-roles
 var acrPullRoleId = tenantResourceId(
   'Microsoft.Authorization/roleDefinitions',
   '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 )
-
-// ---------------------------------------------------------------------------
-// Container Apps Environment (Consumption plan + VNet integration)
-// ---------------------------------------------------------------------------
 
 resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
@@ -71,10 +57,6 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
     zoneRedundant: false
   }
 }
-
-// ---------------------------------------------------------------------------
-// Container App
-// ---------------------------------------------------------------------------
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: caName
@@ -90,11 +72,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         transport: 'auto'
       }
-      // Only configure ACR registry when the image is actually from ACR.
-      // On first deploy the placeholder image (mcr.microsoft.com) is used and the
-      // AcrPull role hasn't been assigned yet (it depends on the Container App's
-      // principalId). Configuring the registry before the role exists causes Azure
-      // to fail with "Operation expired" while trying to validate ACR access.
+      // ACR registry config is conditional: on first deploy the placeholder MCR image is used
+      // before the AcrPull role exists (it depends on this app's principalId). Configuring the
+      // registry without the role causes Azure to fail with "Operation expired".
       registries: startsWith(containerImage, acrLoginServer)
         ? [
             {
@@ -139,15 +119,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-// Reference the ACR by its resource ID so we can scope the role assignment to it
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: last(split(acrId, '/'))!
 }
 
-// AcrPull role — lets the Container App pull images via its system-assigned identity
 resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  // Use the Container App resource ID + raw role GUID so the name is stable
-  // regardless of how the role definition resource ID is formatted.
+  // Raw role GUID keeps the assignment name stable regardless of role definition ID format
   name: guid(acr.id, containerApp.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
   scope: acr
   properties: {
@@ -156,10 +133,6 @@ resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     principalType: 'ServicePrincipal'
   }
 }
-
-// ---------------------------------------------------------------------------
-// Outputs
-// ---------------------------------------------------------------------------
 
 @description('The system-assigned managed identity principal ID of the Container App.')
 output principalId string = containerApp.identity.principalId
