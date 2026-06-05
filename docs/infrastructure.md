@@ -204,20 +204,61 @@ For queue-driven workloads (e.g. Azure Service Bus, Storage Queue), KEDA scalers
 
 ---
 
-## Deploying
+## Deploying with azd (recommended)
+
+[Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/) provisions infrastructure and deploys both services in one command.
+
+### First-time setup
 
 ```bash
+azd auth login
+
+# Create a named environment (use 'dev' or 'prod' — must match the @allowed values in main.bicep)
+azd env new dev
+
+# Set environment-specific parameters (adjust values for your project)
+azd env set AZURE_LOCATION australiaeast
+azd env set WORKLOAD dostar       # your project name
+azd env set REGION aue            # short Azure region code
+azd env set INSTANCE 001
+azd env set repositoryUrl https://github.com/your-org/your-repo
+azd env set postgresAdminUsername dostaradmin
+
+# Provision infrastructure + deploy both services
+azd up
+```
+
+The `predeploy` hook in `infra/scripts/predeploy.sh` automatically reads the postgres password from Key Vault on subsequent deploys, or generates a new one on first deploy — no manual secret management required.
+
+### Day-to-day commands
+
+```bash
+azd provision   # re-apply infrastructure changes only
+azd deploy      # rebuild and redeploy services only (faster than azd up)
+azd down        # tear down the environment (prompts for confirmation)
+```
+
+### Deploying without azd
+
+If azd is not available, you can deploy manually:
+
+```bash
+# Generate a postgres password (first deploy only — store it securely afterwards)
+PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
+
 # Deploy to dev
 az deployment sub create \
   --location australiaeast \
   --template-file infra/main.bicep \
-  --parameters infra/main.parameters.dev.bicepparam
+  --parameters infra/main.parameters.dev.bicepparam \
+  --parameters postgresAdminPassword="$PASSWORD"
 
 # Deploy to prod
 az deployment sub create \
   --location australiaeast \
   --template-file infra/main.bicep \
-  --parameters infra/main.parameters.prod.bicepparam
+  --parameters infra/main.parameters.prod.bicepparam \
+  --parameters postgresAdminPassword="$PASSWORD"
 
 # Tear down (dev)
 az group delete --name rg-dostar-dev-aue-001 --yes
