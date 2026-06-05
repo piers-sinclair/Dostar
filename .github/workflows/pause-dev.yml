@@ -1,0 +1,62 @@
+name: Dev — pause
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "pause" to confirm'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  pause:
+    name: Pause dev environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Confirm
+        run: |
+          if [ "${{ inputs.confirm }}" != "pause" ]; then
+            echo "::error::Confirmation input must be exactly 'pause'"
+            exit 1
+          fi
+
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          POSTGRES_SERVER_NAME: ${{ secrets.POSTGRES_SERVER_NAME }}
+          RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$POSTGRES_SERVER_NAME" ]  && MISSING+=("POSTGRES_SERVER_NAME")
+          [ -z "$RESOURCE_GROUP" ]        && MISSING+=("RESOURCE_GROUP")
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            echo "Follow docs/ci-setup.md to configure OIDC credentials and deployment secrets."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Stop PostgreSQL
+        run: |
+          az postgres flexible-server stop \
+            --name "${{ secrets.POSTGRES_SERVER_NAME }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP }}"
+          echo "PostgreSQL stopped."
+          echo "The Container App scales to zero on idle — no further action needed."
+          echo "Estimated cost while paused: ~\$8/month (storage only)."
