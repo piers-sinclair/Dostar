@@ -1,0 +1,96 @@
+name: Deploy — production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Image tag to deploy (e.g. sha-abc1234)'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (optional)'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          CONTAINER_APP_NAME_PROD: ${{ secrets.CONTAINER_APP_NAME_PROD }}
+          RESOURCE_GROUP_PROD: ${{ secrets.RESOURCE_GROUP_PROD }}
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]          && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]          && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ]    && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$CONTAINER_APP_NAME_PROD" ]  && MISSING+=("CONTAINER_APP_NAME_PROD")
+          [ -z "$RESOURCE_GROUP_PROD" ]      && MISSING+=("RESOURCE_GROUP_PROD")
+          [ -z "$ACR_LOGIN_SERVER" ]         && MISSING+=("ACR_LOGIN_SERVER")
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            echo "Follow docs/ci-setup.md to configure OIDC credentials and deployment secrets."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Record current image for rollback
+        id: current
+        run: |
+          CURRENT=$(az containerapp show \
+            --name "${{ secrets.CONTAINER_APP_NAME_PROD }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP_PROD }}" \
+            --query "properties.template.containers[0].image" -o tsv)
+          echo "image=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "Current image: $CURRENT"
+
+      - name: Deploy image
+        run: |
+          az containerapp update \
+            --name "${{ secrets.CONTAINER_APP_NAME_PROD }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP_PROD }}" \
+            --image "${{ secrets.ACR_LOGIN_SERVER }}/api:${{ inputs.image_tag }}"
+
+      - name: Smoke test
+        id: smoke
+        run: |
+          FQDN=$(az containerapp show \
+            --name "${{ secrets.CONTAINER_APP_NAME_PROD }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP_PROD }}" \
+            --query "properties.configuration.ingress.fqdn" -o tsv)
+          for i in $(seq 1 10); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
+            [ "$STATUS" = "200" ] && echo "Smoke test passed." && exit 0
+            echo "Attempt $i/10 — status $STATUS — retrying in 10s"
+            sleep 10
+          done
+          echo "::error::Smoke test failed after 10 attempts — triggering rollback"
+          exit 1
+
+      - name: Rollback on smoke test failure
+        if: failure() && steps.smoke.conclusion == 'failure'
+        run: |
+          echo "::warning::Rolling back to ${{ steps.current.outputs.image }}"
+          az containerapp update \
+            --name "${{ secrets.CONTAINER_APP_NAME_PROD }}" \
+            --resource-group "${{ secrets.RESOURCE_GROUP_PROD }}" \
+            --image "${{ steps.current.outputs.image }}"
+          echo "Rollback complete."
