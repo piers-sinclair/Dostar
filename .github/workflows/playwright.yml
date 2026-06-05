@@ -1,0 +1,151 @@
+name: E2E — Playwright (full-stack)
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
+
+      - name: Build frontend
+        run: pnpm build
+        working-directory: frontend
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build Docker image
+        run: docker build -t dostar-api:e2e .
+
+      - name: Save Docker image
+        run: docker save dostar-api:e2e | gzip > /tmp/dostar-api.tar.gz
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp/dostar-api.tar.gz
+
+  e2e:
+    name: Playwright
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download frontend dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Download Docker image
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load < /tmp/dostar-api.tar.gz
+
+      - name: Start database
+        run: docker compose up -d db
+
+      - name: Wait for database
+        run: |
+          for i in $(seq 1 15); do
+            docker compose exec -T db pg_isready -U dostar && break
+            echo "Waiting for postgres... ($i/15)"
+            sleep 2
+          done
+
+      - name: Start API
+        run: |
+          docker run -d \
+            --name dostar-api \
+            --network host \
+            -e ASPNETCORE_URLS=http://+:8080 \
+            -e "ConnectionStrings__Default=Host=localhost;Port=5432;Database=dostar;Username=dostar;Password=dostar" \
+            dostar-api:e2e
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080/healthz/live && break
+            echo "Waiting for API... ($i/20)"
+            sleep 3
+          done
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install E2E deps
+        run: pnpm install --frozen-lockfile
+        working-directory: tests/Dostar.E2ETests
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: tests/Dostar.E2ETests
+
+      - name: Serve frontend
+        run: pnpm exec serve dist -p 5173 &
+        working-directory: frontend
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:5173 && break
+            echo "Waiting for frontend... ($i/10)"
+            sleep 2
+          done
+
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
+        working-directory: tests/Dostar.E2ETests
+        env:
+          E2E_BASE_URL: http://localhost:5173
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/Dostar.E2ETests/playwright-report/
+          retention-days: 7
