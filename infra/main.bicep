@@ -187,3 +187,12 @@ output appInsightsConnectionString string = appinsights.outputs.connectionString
 
 @description('Application Insights instrumentation key (legacy — prefer connectionString for new workloads).')
 output appInsightsInstrumentationKey string = appinsights.outputs.instrumentationKey
+
+@description('Resource group name. Used by azd to scope subsequent operations.')
+output AZURE_RESOURCE_GROUP string = rg.name
+
+@description('ACR login server endpoint. Used by azd to push and pull container images.')
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = acr.outputs.loginServer
+
+@description('Container image name for the API service. Used by azd to tag and deploy the built image.')
+output SERVICE_API_IMAGE_NAME string = 'api'
