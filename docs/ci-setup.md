@@ -41,12 +41,18 @@ azd pipeline config --provider github
 
 The command prompts for several values — use the following:
 
-| Prompt | Value |
-|--------|-------|
-| Azure Subscription | Select your subscription |
-| `env` | `dev` |
-| `location` | `australiaeast` (no hyphen — this is the Azure region identifier) |
-| `postgresAdminPassword` | A strong password of your choice — azd stores it as a GitHub secret |
+| Prompt | Value | Notes |
+|--------|-------|-------|
+| Azure Subscription | Select your subscription | |
+| `env` | `dev` | |
+| `location` | `australiaeast` | No hyphen — this is the Azure region identifier |
+| `postgresAdminPassword` | A strong password of your choice | Stored as a GitHub secret; used to create the PostgreSQL server |
+| `workload` | `dostar` | Short identifier embedded in all resource names |
+| `region` | `aue` | Short region code embedded in resource names |
+| `repositoryUrl` | Your GitHub repo URL (e.g. `https://github.com/your-org/your-repo`) | Used to wire up Static Web App auto-deploy |
+| `postgresAdminUsername` | `dostaradmin` | PostgreSQL admin username |
+
+Parameters with defaults (`instance`, `branch`, `staticWebAppLocation`) are not prompted.
 
 This command:
 
