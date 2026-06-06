@@ -17,6 +17,7 @@ infra:
 services:
   api:
     project: ./backend/Dostar.Api
+    language: dotnet
     host: containerapp
     docker:
       path: ./Dockerfile
