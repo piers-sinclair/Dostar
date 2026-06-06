@@ -44,7 +44,7 @@ The command prompts for the following values — all other infrastructure parame
 | Prompt | Value | Notes |
 |--------|-------|-------|
 | Azure Subscription | Select your subscription | |
-| `env` | `dev` | |
+| `env` | `dev` or `prod` | Must be explicit — controls which environment tier is provisioned |
 | `postgresAdminPassword` | A strong password of your choice | Stored as a GitHub secret; used to create the PostgreSQL server |
 
 > **Deploying outside Australia?** The defaults use `location = australiaeast` and `region = aue`. Update both values in `infra/main.parameters.dev.bicepparam` before running this command — for example `location = eastus` and `region = eus`. The `region` code is just a short label embedded in resource names; `location` must be a valid Azure region identifier (no spaces or hyphens, e.g. `westeurope`, `southeastasia`).
