@@ -39,6 +39,15 @@ Use `dev` for a development environment. azd stores this environment's config lo
 azd pipeline config --provider github
 ```
 
+The command prompts for several values — use the following:
+
+| Prompt | Value |
+|--------|-------|
+| Azure Subscription | Select your subscription |
+| `env` | `dev` |
+| `location` | `australiaeast` (no hyphen — this is the Azure region identifier) |
+| `postgresAdminPassword` | A strong password of your choice — azd stores it as a GitHub secret |
+
 This command:
 
 1. Creates an Azure AD app registration and service principal
@@ -49,6 +58,7 @@ This command:
    - `AZURE_SUBSCRIPTION_ID`
    - `AZURE_ENV_NAME`
    - `AZURE_LOCATION`
+   - `AZURE_POSTGRESADMINPASSWORD` (the password you entered above)
 
 After this step the `infra-whatif.yml` workflow will authenticate successfully and `deploy-dev.yml` will be able to provision and deploy.
 
