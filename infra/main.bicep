@@ -14,7 +14,7 @@ param region string = 'aue'
 param instance string = '001'
 
 @description('Azure region used for all resources.')
-param location string = 'australiaeast'
+param location string
 
 @description('GitHub repository URL for automatic Static Web App deployments.')
 param repositoryUrl string = 'https://github.com/piers-sinclair/Dostar'

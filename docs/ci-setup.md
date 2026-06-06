@@ -33,21 +33,32 @@ Use `dev` for a development environment. azd stores this environment's config lo
 
 ---
 
-## Step 3 — Configure the pipeline (OIDC + GitHub secrets)
+## Step 3 — Pre-set your Azure location
+
+Set the location before running the pipeline config so azd stores the value and can pass it to GitHub without prompting:
+
+```bash
+azd env set AZURE_LOCATION australiaeast
+```
+
+> **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (no spaces or hyphens, e.g. `eastus`, `westeurope`, `southeastasia`). Also update `location` and `region` in `infra/main.parameters.dev.bicepparam` to match.
+
+---
+
+## Step 4 — Configure the pipeline (OIDC + GitHub secrets)
 
 ```bash
 azd pipeline config --provider github
 ```
 
-The command prompts for the following values — all other infrastructure parameters have defaults:
+The command prompts for only two values:
 
 | Prompt | Value | Notes |
 |--------|-------|-------|
-| Azure Subscription | Select your subscription | |
 | `env` | `dev` or `prod` | Must be explicit — controls which environment tier is provisioned |
 | `postgresAdminPassword` | A strong password of your choice | Stored as a GitHub secret; used to create the PostgreSQL server |
 
-> **Deploying outside Australia?** The defaults use `location = australiaeast` and `region = aue`. Update both values in `infra/main.parameters.dev.bicepparam` before running this command — for example `location = eastus` and `region = eus`. The `region` code is just a short label embedded in resource names; `location` must be a valid Azure region identifier (no spaces or hyphens, e.g. `westeurope`, `southeastasia`).
+When prompted for auth type, select **Federated service principal** (OIDC — no long-lived secrets).
 
 This command:
 
@@ -65,7 +76,7 @@ After this step the `infra-whatif.yml` workflow will authenticate successfully a
 
 ---
 
-## Step 4 — Add deployment secrets (manual)
+## Step 5 — Add deployment secrets (manual)
 
 `azd pipeline config` does not set the following secrets — add them manually under **Settings → Secrets and variables → Actions** in your GitHub repository.
 
@@ -86,7 +97,7 @@ After this step the `infra-whatif.yml` workflow will authenticate successfully a
 
 ---
 
-## Step 5 — Configure the production GitHub Environment
+## Step 6 — Configure the production GitHub Environment
 
 The `deploy-production.yml` workflow uses a GitHub Environment called `production` to enforce a manual approval gate before deploying.
 
@@ -116,7 +127,7 @@ OIDC federated credentials do not expire. If you need to rotate for any reason:
 
 ### "Missing required secrets: AZURE_CLIENT_ID ..."
 
-One or more OIDC secrets are not configured. Return to Step 3 and run `azd pipeline config`.
+One or more OIDC secrets are not configured. Return to Step 4 and run `azd pipeline config`.
 
 ### "azure/login failed"
 
