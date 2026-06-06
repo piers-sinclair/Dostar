@@ -39,7 +39,7 @@ Use `dev` for a development environment. azd stores this environment's config lo
 azd pipeline config --provider github
 ```
 
-The command prompts for several values — use the following:
+The command prompts for the following values — most infrastructure parameters have defaults so only these three are required:
 
 | Prompt | Value | Notes |
 |--------|-------|-------|
@@ -47,12 +47,10 @@ The command prompts for several values — use the following:
 | `env` | `dev` | |
 | `location` | `australiaeast` | No hyphen — this is the Azure region identifier |
 | `postgresAdminPassword` | A strong password of your choice | Stored as a GitHub secret; used to create the PostgreSQL server |
-| `workload` | `dostar` | Short identifier embedded in all resource names |
-| `region` | `aue` | Short region code embedded in resource names |
-| `repositoryUrl` | Your GitHub repo URL (e.g. `https://github.com/your-org/your-repo`) | Used to wire up Static Web App auto-deploy |
-| `postgresAdminUsername` | `dostaradmin` | PostgreSQL admin username |
 
-Parameters with defaults (`instance`, `branch`, `staticWebAppLocation`) are not prompted.
+All other infrastructure parameters have defaults and are not prompted. If you need different values, override them in `infra/main.parameters.dev.bicepparam` before running this command.
+
+> **Deploying outside Australia?** The defaults use `location = australiaeast` and `region = aue`. Update both values in `infra/main.parameters.dev.bicepparam` to match your region — for example `location = eastus` and `region = eus`. The `region` code is just a short label embedded in resource names; `location` must be a valid Azure region identifier (no spaces or hyphens, e.g. `westeurope`, `southeastasia`).
 
 This command:
 

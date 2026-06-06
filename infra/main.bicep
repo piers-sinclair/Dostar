@@ -1,14 +1,14 @@
 targetScope = 'subscription'
 
 @description('Short workload identifier (e.g. dostar).')
-param workload string
+param workload string = 'dostar'
 
 @description('Deployment environment.')
 @allowed(['dev', 'prod'])
 param env string
 
 @description('Short region code (e.g. aue for australiaeast).')
-param region string
+param region string = 'aue'
 
 @description('Three-digit instance number.')
 param instance string = '001'
@@ -17,7 +17,7 @@ param instance string = '001'
 param location string
 
 @description('GitHub repository URL for automatic Static Web App deployments.')
-param repositoryUrl string
+param repositoryUrl string = 'https://github.com/piers-sinclair/Dostar'
 
 @description('Branch to auto-deploy from.')
 param branch string = 'main'
@@ -27,7 +27,7 @@ param branch string = 'main'
 param staticWebAppLocation string = 'eastus2'
 
 @description('Administrator username for the PostgreSQL Flexible Server.')
-param postgresAdminUsername string
+param postgresAdminUsername string = 'dostaradmin'
 
 @description('Admin password for the PostgreSQL Flexible Server. Must be supplied by the CI workflow (read from Key Vault, or generated on first deploy). Never hardcode this value.')
 @secure()
