@@ -42,20 +42,13 @@ azd env select dev
 Pre-populate the values that the Bicep parameters read from environment variables. This lets `azd pipeline config` map them to CI variables without prompting.
 
 ```bash
-azd env set AZURE_APP_ENV dev
 azd env set AZURE_LOCATION australiaeast
 azd env set AZURE_POSTGRES_ADMIN_PASSWORD "$(openssl rand -base64 24)"
 ```
 
-`AZURE_APP_ENV` maps to the Bicep `env` parameter. `AZURE_ENV_NAME` is reserved by azd for its own environment tracking and cannot be used here.
-
 `AZURE_POSTGRES_ADMIN_PASSWORD` needs a seed value so azd can store it as a GitHub secret. The actual password used in Azure is always set by the `infra/scripts/predeploy.sh` hook at deploy time (reads from Key Vault, or generates on first deploy) — the seed value is overwritten on every run and never used directly.
 
-> **If you have run `azd pipeline config` before** and were previously prompted for the `env` parameter interactively, azd may have cached that value in `.azure/dev/config.json`. Remove it before continuing:
-> ```bash
-> # Remove the cached prompt value for 'env' so azd re-evaluates the bicepparam mapping
-> jq 'del(.infra.parameters.env)' .azure/dev/config.json > /tmp/azd-config.json && mv /tmp/azd-config.json .azure/dev/config.json
-> ```
+The `env` Bicep parameter no longer needs to be set here — `main.bicep` defaults it to `readEnvironmentVariable('AZURE_ENV_NAME', 'dev')`, which azd provides automatically.
 
 > **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (e.g. `eastus`, `westeurope`, `southeastasia`). Also update `region` in `infra/main.parameters.dev.bicepparam` to the matching short code (e.g. `eus`, `weu`, `sea`).
 

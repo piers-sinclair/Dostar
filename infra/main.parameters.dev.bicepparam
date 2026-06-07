@@ -1,9 +1,8 @@
 using './main.bicep'
 
 param workload = 'dostar'
-// env and location use readEnvironmentVariable so azd pipeline config can map them to CI variables without prompting.
-// AZURE_APP_ENV avoids the AZURE_ENV_NAME reserved name; AZURE_LOCATION is set via azd env set.
-param env = readEnvironmentVariable('AZURE_APP_ENV', 'dev')
+// env is omitted — main.bicep defaults it to readEnvironmentVariable('AZURE_ENV_NAME', 'dev'),
+// which azd always provides. Explicit value is only needed to override (e.g. testing prod locally).
 param region = 'aue'
 param instance = '001'
 param location = readEnvironmentVariable('AZURE_LOCATION', 'australiaeast')

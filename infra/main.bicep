@@ -5,7 +5,7 @@ param workload string = 'dostar'
 
 @description('Deployment environment.')
 @allowed(['dev', 'prod'])
-param env string
+param env string = readEnvironmentVariable('AZURE_ENV_NAME', 'dev')
 
 @description('Short region code (e.g. aue for australiaeast).')
 param region string = 'aue'

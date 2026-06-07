@@ -1,7 +1,8 @@
 using './main.bicep'
 
 param workload = 'dostar'
-param env = 'prod'
+// env is omitted — main.bicep defaults to readEnvironmentVariable('AZURE_ENV_NAME', 'dev');
+// for prod, set AZURE_ENV_NAME=prod in the azd environment before deploying.
 param region = 'aue'
 param instance = '001'
 param location = 'australiaeast'
