@@ -44,9 +44,12 @@ Pre-populate the values that the Bicep parameters read from environment variable
 ```bash
 azd env set AZURE_ENV_NAME dev
 azd env set AZURE_LOCATION australiaeast
+azd env set AZURE_POSTGRES_ADMIN_PASSWORD "$(openssl rand -base64 24)"
 ```
 
 `AZURE_ENV_NAME` is the azd environment name. azd stores it as metadata rather than a variable, so setting it explicitly ensures the Bicep parameter `env` picks it up correctly.
+
+`AZURE_POSTGRES_ADMIN_PASSWORD` needs a seed value so azd can store it as a GitHub secret. The actual password used in Azure is always set by the `infra/scripts/predeploy.sh` hook at deploy time (reads from Key Vault, or generates on first deploy) — the seed value is overwritten on every run and never used directly.
 
 > **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (e.g. `eastus`, `westeurope`, `southeastasia`). Also update `region` in `infra/main.parameters.dev.bicepparam` to the matching short code (e.g. `eus`, `weu`, `sea`).
 
