@@ -37,13 +37,18 @@ azd env select dev
 
 ---
 
-## Step 3 — Pre-set your Azure location
+## Step 3 — Pre-set environment variables
+
+Pre-populate the values that the Bicep parameters read from environment variables. This lets `azd pipeline config` map them to CI variables without prompting.
 
 ```bash
+azd env set AZURE_ENV_NAME dev
 azd env set AZURE_LOCATION australiaeast
 ```
 
-> **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (e.g. `eastus`, `westeurope`, `southeastasia`). Also update `region` in `infra/main.parameters.dev.bicepparam` to the matching short code.
+`AZURE_ENV_NAME` is the azd environment name. azd stores it as metadata rather than a variable, so setting it explicitly ensures the Bicep parameter `env` picks it up correctly.
+
+> **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (e.g. `eastus`, `westeurope`, `southeastasia`). Also update `region` in `infra/main.parameters.dev.bicepparam` to the matching short code (e.g. `eus`, `weu`, `sea`).
 
 ---
 
@@ -120,6 +125,10 @@ OIDC federated credentials do not expire. If you need to rotate for any reason:
 ---
 
 ## Troubleshooting
+
+### `azd pipeline config` prompts for `location` twice
+
+This is expected azd behaviour — one prompt is for the Bicep `location` parameter, the other is for the azd subscription-level deployment location. Both are pre-filled with `australiaeast` (from Step 3). Press Enter for each.
 
 ### "Missing required secrets: AZURE_CLIENT_ID ..."
 
