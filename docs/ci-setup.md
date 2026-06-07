@@ -51,26 +51,26 @@ azd env set AZURE_LOCATION australiaeast
 azd pipeline config --provider github
 ```
 
-The command prompts for only two values:
+The command prompts for only one value:
 
 | Prompt | Value | Notes |
 |--------|-------|-------|
 | `env` | `dev` or `prod` | Must be explicit — controls which environment tier is provisioned |
-| `postgresAdminPassword` | A strong password of your choice | Stored as a GitHub secret; used to create the PostgreSQL server |
 
 When prompted for auth type, select **Federated service principal** (OIDC — no long-lived secrets).
+
+> **`postgresAdminPassword` is not prompted.** It is managed by the `infra/scripts/predeploy.sh` hook at deploy time — the hook reads the password from Key Vault, or generates a new one on first deploy. It is never stored as a GitHub secret.
 
 This command:
 
 1. Creates an Azure AD app registration and service principal
 2. Configures OIDC federated credentials for the `main` branch and pull requests
-3. Adds the following secrets to your GitHub repository automatically:
+3. Adds the following variables to your GitHub repository automatically:
    - `AZURE_CLIENT_ID`
    - `AZURE_TENANT_ID`
    - `AZURE_SUBSCRIPTION_ID`
    - `AZURE_ENV_NAME`
    - `AZURE_LOCATION`
-   - `AZURE_POSTGRESADMINPASSWORD` (the password you entered above)
 
 After this step the `infra-whatif.yml` workflow will authenticate successfully and `deploy-dev.yml` will be able to provision and deploy.
 

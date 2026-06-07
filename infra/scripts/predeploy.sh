@@ -23,4 +23,4 @@ if [ -z "$PASSWORD" ]; then
   PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
 fi
 
-azd env set postgresAdminPassword "$PASSWORD"
+azd env set AZURE_POSTGRES_ADMIN_PASSWORD "$PASSWORD"
