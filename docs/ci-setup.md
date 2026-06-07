@@ -42,12 +42,12 @@ azd env select dev
 Pre-populate the values that the Bicep parameters read from environment variables. This lets `azd pipeline config` map them to CI variables without prompting.
 
 ```bash
-azd env set AZURE_ENV_NAME dev
+azd env set AZURE_APP_ENV dev
 azd env set AZURE_LOCATION australiaeast
 azd env set AZURE_POSTGRES_ADMIN_PASSWORD "$(openssl rand -base64 24)"
 ```
 
-`AZURE_ENV_NAME` is the azd environment name. azd stores it as metadata rather than a variable, so setting it explicitly ensures the Bicep parameter `env` picks it up correctly.
+`AZURE_APP_ENV` maps to the Bicep `env` parameter. `AZURE_ENV_NAME` is reserved by azd for its own environment tracking and cannot be used here.
 
 `AZURE_POSTGRES_ADMIN_PASSWORD` needs a seed value so azd can store it as a GitHub secret. The actual password used in Azure is always set by the `infra/scripts/predeploy.sh` hook at deploy time (reads from Key Vault, or generates on first deploy) — the seed value is overwritten on every run and never used directly.
 
