@@ -26,22 +26,24 @@ This opens a browser for interactive login. If running in a headless environment
 ## Step 2 — Create an azd environment
 
 ```bash
-azd env new <env-name>
+azd env new dev
 ```
 
-Use `dev` for a development environment. azd stores this environment's config locally in `.azure/<env-name>/`.
+azd stores this environment's config locally in `.azure/dev/`. If you have already created the environment (e.g. from a previous run), select it instead:
+
+```bash
+azd env select dev
+```
 
 ---
 
 ## Step 3 — Pre-set your Azure location
 
-Set the location before running the pipeline config so azd stores the value and can pass it to GitHub without prompting:
-
 ```bash
 azd env set AZURE_LOCATION australiaeast
 ```
 
-> **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (no spaces or hyphens, e.g. `eastus`, `westeurope`, `southeastasia`). Also update `location` and `region` in `infra/main.parameters.dev.bicepparam` to match.
+> **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (e.g. `eastus`, `westeurope`, `southeastasia`). Also update `region` in `infra/main.parameters.dev.bicepparam` to the matching short code.
 
 ---
 
@@ -51,15 +53,9 @@ azd env set AZURE_LOCATION australiaeast
 azd pipeline config --provider github
 ```
 
-The command prompts for only one value:
-
-| Prompt | Value | Notes |
-|--------|-------|-------|
-| `env` | `dev` or `prod` | Must be explicit — controls which environment tier is provisioned |
-
 When prompted for auth type, select **Federated service principal** (OIDC — no long-lived secrets).
 
-> **`postgresAdminPassword` is not prompted.** It is managed by the `infra/scripts/predeploy.sh` hook at deploy time — the hook reads the password from Key Vault, or generates a new one on first deploy. It is never stored as a GitHub secret.
+All Bicep parameters (`env`, `location`, `postgresAdminPassword`) are mapped to environment variables in `infra/main.parameters.dev.bicepparam`, so azd does not prompt for them. If you are prompted, run `azd env set AZURE_LOCATION australiaeast` and retry.
 
 This command:
 
