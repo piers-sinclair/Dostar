@@ -3,6 +3,9 @@ name: CD — deploy (dev)
 on:
   push:
     branches: ["main"]
+    paths:
+      - "backend/**"
+      - "Dockerfile"
   workflow_dispatch:
 
 permissions:
