@@ -198,13 +198,29 @@ M1 (Foundation) → M2 (Modular Architecture) ─┬→ M3 (CLI)
 
 Every issue must be implemented on a dedicated feature branch and merged via a pull request. Never commit directly to `main`.
 
+### Agentic AI workflow (Claude Code)
+
+**All agentic work must use a git worktree.** Never check out a branch directly — this pollutes the main working tree and risks overwriting uncommitted user changes.
+
+```bash
+# 1. Create the branch and worktree together
+git fetch origin
+git worktree add .claude/worktrees/issue-<N> -b feat/issue-<N>-<short-description> origin/main
+
+# 2. Work inside the worktree
+cd .claude/worktrees/issue-<N>
+
+# 3. Build, commit, push, open PR (same steps as below)
+
+# 4. Clean up after the PR merges
+git worktree remove .claude/worktrees/issue-<N>
+```
+
+`.claude/worktrees/` is gitignored — worktrees never appear as untracked files in the main repo.
+
 ### Branch & PR workflow
 
-1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>`
-   ```bash
-   git checkout main && git pull
-   git checkout -b feat/issue-9-global-api-plumbing
-   ```
+1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>` (inside a worktree for agentic work — see above).
 2. **Implement** the changes.
 3. **Build** — must pass with 0 warnings before committing:
    ```bash
