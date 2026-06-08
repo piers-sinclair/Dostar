@@ -194,3 +194,55 @@ Require elevated permissions that should NOT be in Bicep or CI/CD core pipelines
 GitHub Actions can now authenticate to Azure using OIDC.
 
 No passwords required.
+
+---
+
+## 4. Verifying the deployment
+
+After a successful CD run, confirm the app is up before calling it done.
+
+### 4.1 Backend (Container App)
+
+Get the FQDN:
+
+```bash
+az containerapp show \
+  --name ca-dostar-dev-aue-001 \
+  --resource-group rg-dostar-dev-aue-001 \
+  --query properties.configuration.ingress.fqdn -o tsv
+```
+
+Check the health endpoint (HTTP 200 = app is up):
+
+```bash
+curl https://<FQDN>/healthz/live
+```
+
+Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connection problem):
+
+```bash
+curl https://<FQDN>/api/v1/todos
+```
+
+> Note: Scalar (`/scalar/v1`) is dev-only and returns 404 in deployed environments. Use the endpoints above instead.
+
+Tail logs if something is wrong:
+
+```bash
+az containerapp logs show \
+  --name ca-dostar-dev-aue-001 \
+  --resource-group rg-dostar-dev-aue-001 \
+  --follow
+```
+
+---
+
+### 4.2 Frontend (Static Web App)
+
+Get the hostname:
+
+```bash
+az staticwebapp list \
+  --resource-group rg-dostar-dev-aue-001 \
+  --query "[0].defaultHostname" -o tsv
+```
