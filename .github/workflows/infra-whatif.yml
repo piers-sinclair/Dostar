@@ -32,7 +32,7 @@ jobs:
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
-            echo "Follow docs/ci-setup.md to configure OIDC credentials and add these secrets to the repository."
+            echo "Follow docs/deploy-setup.md to configure OIDC credentials and add these secrets to the repository."
             exit 1
           fi
 
