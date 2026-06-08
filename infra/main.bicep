@@ -1,14 +1,14 @@
 targetScope = 'subscription'
 
 @description('Short workload identifier (e.g. dostar).')
-param workload string
+param workload string = 'dostar'
 
 @description('Deployment environment.')
 @allowed(['dev', 'prod'])
-param env string
+param env string = 'dev'
 
 @description('Short region code (e.g. aue for australiaeast).')
-param region string
+param region string = 'aue'
 
 @description('Three-digit instance number.')
 param instance string = '001'
@@ -17,7 +17,7 @@ param instance string = '001'
 param location string
 
 @description('GitHub repository URL for automatic Static Web App deployments.')
-param repositoryUrl string
+param repositoryUrl string = 'https://github.com/piers-sinclair/Dostar'
 
 @description('Branch to auto-deploy from.')
 param branch string = 'main'
@@ -27,7 +27,7 @@ param branch string = 'main'
 param staticWebAppLocation string = 'eastus2'
 
 @description('Administrator username for the PostgreSQL Flexible Server.')
-param postgresAdminUsername string
+param postgresAdminUsername string = 'dostaradmin'
 
 @description('Admin password for the PostgreSQL Flexible Server. Must be supplied by the CI workflow (read from Key Vault, or generated on first deploy). Never hardcode this value.')
 @secure()
@@ -188,11 +188,11 @@ output appInsightsConnectionString string = appinsights.outputs.connectionString
 @description('Application Insights instrumentation key (legacy — prefer connectionString for new workloads).')
 output appInsightsInstrumentationKey string = appinsights.outputs.instrumentationKey
 
-@description('Resource group name. Used by azd to scope subsequent operations.')
+@description('Resource group name. Used to scope subsequent operations.')
 output AZURE_RESOURCE_GROUP string = rg.name
 
-@description('ACR login server endpoint. Used by azd to push and pull container images.')
+@description('ACR login server endpoint. Used to push and pull container images.')
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = acr.outputs.loginServer
 
-@description('Container image name for the API service. Used by azd to tag and deploy the built image.')
+@description('Container image name for the API service. Used to tag and deploy the built image.')
 output SERVICE_API_IMAGE_NAME string = 'api'
