@@ -136,7 +136,7 @@ No additional package references are needed — `FluentValidation` flows through
 
 ## Unit tests
 
-Unit tests for a module live under `tests/Dostar.<Name>.Tests/` — not alongside the module in `backend/`. All test types (unit, integration, E2E) are co-located in the root `tests/` folder so that `backend/` remains pure production code and CI can run the full suite with a single `dotnet test tests/` invocation.
+Unit tests for a module live under `tests/Dostar.<Name>.Tests/` — not alongside the module in `backend/`. All test types (unit, integration, UI tests) are co-located in the root `tests/` folder so that `backend/` remains pure production code and CI can run the full suite with a single `dotnet test tests/` invocation.
 
 ```
 tests/

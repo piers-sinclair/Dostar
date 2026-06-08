@@ -36,7 +36,7 @@ backend/                ← all .NET projects (not src/ — decoupling is explic
       Dostar.Todos.UnitTests/           ← unit tests (in-memory EF Core, NSubstitute)
       Dostar.Todos.IntegrationTests/    ← integration tests (WebApplicationFactory + Testcontainers)
 frontend/               ← React + Vite; standalone, separate toolchain
-tests/                  ← cross-cutting tests only (E2E, multi-module); currently empty
+tests/                  ← cross-cutting tests only (UI tests, multi-module); currently empty
 infra/                  ← Bicep templates
 .claude/
   commands/             ← Claude Code skills (scaffold-module, playwright, etc.)
@@ -136,12 +136,12 @@ dotnet test backend/Modules/<Module>/Dostar.<Module>.UnitTests
 # Integration tests (per module — real PostgreSQL via Testcontainers)
 dotnet test backend/Modules/<Module>/Dostar.<Module>.IntegrationTests
 
-# E2E (Playwright)
+# UI tests (Playwright)
 cd tests && pnpm exec playwright test
 ```
 
 Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
-**Playwright TypeScript** (E2E).
+**Playwright TypeScript** (UI tests).
 
 ### Unit test conventions
 
