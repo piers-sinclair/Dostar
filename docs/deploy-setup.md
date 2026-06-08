@@ -164,11 +164,9 @@ Add:
 
 | Secret                              | Value                       | Required by                        |
 | ----------------------------------- | --------------------------- | ---------------------------------- |
-| `AZURE_CLIENT_ID`       | App ID                    | All workflows                             |
-| `AZURE_TENANT_ID`       | Tenant ID                 | All workflows                             |
-| `AZURE_SUBSCRIPTION_ID` | Subscription ID           | All workflows                             |
-| `POSTGRES_SERVER_NAME`  | `psql-dostar-dev-aue-001` | `pause-dev`, `resume-dev`                 |
-| `RESOURCE_GROUP`        | `rg-dostar-dev-aue-001`   | `pause-dev`, `resume-dev`, `teardown-dev` |
+| `AZURE_CLIENT_ID`       | App ID          | All workflows |
+| `AZURE_TENANT_ID`       | Tenant ID       | All workflows |
+| `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 
 ---
 

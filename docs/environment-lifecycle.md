@@ -1,6 +1,6 @@
 # Dev Environment Lifecycle
 
-The dev environment has three states. Pick the right one based on how long you'll be away.
+The dev environment has two states. Tear it down when you won't need it for a while.
 
 ---
 
@@ -8,19 +8,10 @@ The dev environment has three states. Pick the right one based on how long you'l
 
 | State | What's running | Approx. monthly cost | Resume time |
 |-------|---------------|---------------------|-------------|
-| **Running** | Container App (active) + PostgreSQL + Static Web App | ~$25–35 | — |
-| **Paused** | PostgreSQL stopped; Container App idles to zero on inactivity | ~$8 (storage only) | ~3 min |
+| **Running** | Container App (scales to zero on idle) + PostgreSQL + Static Web App | ~$15–25 | — |
 | **Torn down** | All resources deleted | $0 | ~15 min |
 
----
-
-## Decision guide
-
-| Scenario | Action |
-|----------|--------|
-| End of work day / overnight | Nothing needed — Container App already scales to zero |
-| Weekend / short break | **Pause** — stops PostgreSQL billing, data preserved |
-| Holiday / extended break (1+ weeks) | **Tear down** — zero cost, full reprovision on return |
+> The Container App automatically scales to zero replicas when there is no traffic — no action needed for day-to-day idle time. PostgreSQL continues to run when the environment is up.
 
 ---
 
@@ -28,7 +19,7 @@ The dev environment has three states. Pick the right one based on how long you'l
 
 ### Spin up (provision from scratch)
 
-Use after a full teardown, or for first-time setup as an alternative to running `infra-deploy-dev` + `bootstrap-rbac` manually.
+Use after a full teardown, or for first-time setup as an alternative to running `infra-deploy-dev`, `bootstrap-rbac`, and the CD workflows manually.
 
 **Prerequisites** — the following GitHub secrets must be set (see [deploy-setup.md](deploy-setup.md)):
 
@@ -59,47 +50,9 @@ The spinup workflow:
 
 ---
 
-### Pause
-
-Stops the PostgreSQL server to eliminate compute billing. The Container App already scales to zero when idle; no action is needed for it.
-
-**Prerequisites** — in addition to the three OIDC secrets:
-
-| Secret | Value |
-|--------|-------|
-| `POSTGRES_SERVER_NAME` | `psql-dostar-dev-aue-001` |
-| `RESOURCE_GROUP` | `rg-dostar-dev-aue-001` |
-
-**Steps:**
-
-1. Go to **GitHub Actions** → **Dev — pause** → **Run workflow**
-2. Enter `pause` in the confirmation field
-3. PostgreSQL will stop within ~1 minute
-
----
-
-### Resume
-
-Starts PostgreSQL and redeploys the application.
-
-**Prerequisites** — same as Pause (`POSTGRES_SERVER_NAME` + `RESOURCE_GROUP`).
-
-**Steps:**
-
-1. Go to **GitHub Actions** → **Dev — resume** → **Run workflow**
-2. The workflow polls until PostgreSQL is `Ready` (~3 minutes), then triggers backend and frontend deploys automatically
-
----
-
 ### Tear down
 
 Deletes the entire resource group and all resources inside it. Cost drops to $0 immediately.
-
-**Prerequisites** — in addition to the three OIDC secrets:
-
-| Secret | Value |
-|--------|-------|
-| `RESOURCE_GROUP` | `rg-dostar-dev-aue-001` |
 
 **Steps:**
 
@@ -118,8 +71,6 @@ To bring the environment back, run **Dev — spin up** (see above).
 | `AZURE_CLIENT_ID` | All lifecycle workflows | Service principal app ID |
 | `AZURE_TENANT_ID` | All lifecycle workflows | Azure AD tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | All lifecycle workflows | Subscription ID |
-| `POSTGRES_SERVER_NAME` | Pause, Resume | `psql-dostar-dev-aue-001` |
-| `RESOURCE_GROUP` | Pause, Resume, Tear down | `rg-dostar-dev-aue-001` |
 | `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` | Frontend CD | Auto-refreshed by spin up; set manually after first deploy (see [deploy-setup.md](deploy-setup.md)) |
 
 See [deploy-setup.md](deploy-setup.md) for instructions on creating the service principal and adding these secrets.
