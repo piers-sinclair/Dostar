@@ -162,11 +162,11 @@ In GitHub:
 
 Add:
 
-| Secret                | Value           |
-| --------------------- | --------------- |
-| AZURE_CLIENT_ID       | App ID          |
-| AZURE_TENANT_ID       | Tenant ID       |
-| AZURE_SUBSCRIPTION_ID | Subscription ID |
+| Secret                              | Value                       | Required by                        |
+| ----------------------------------- | --------------------------- | ---------------------------------- |
+| `AZURE_CLIENT_ID`       | App ID          | All workflows |
+| `AZURE_TENANT_ID`       | Tenant ID       | All workflows |
+| `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 
 ---
 
@@ -258,3 +258,9 @@ az staticwebapp list \
 ```
 
 Open the URL in a browser — it should show the React app. If it shows the Azure placeholder page, the frontend workflow has not run yet.
+
+---
+
+## 5. Managing the dev environment lifecycle
+
+Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.

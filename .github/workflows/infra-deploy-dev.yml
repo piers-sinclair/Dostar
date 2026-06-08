@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "infra/**"
+  workflow_call:
 
 permissions:
   id-token: write
