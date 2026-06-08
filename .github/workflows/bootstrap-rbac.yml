@@ -2,6 +2,7 @@ name: Bootstrap RBAC (dev)
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   id-token: write
