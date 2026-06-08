@@ -1,4 +1,4 @@
-name: Testing — E2E
+name: Testing — UI
 
 on:
   pull_request:
