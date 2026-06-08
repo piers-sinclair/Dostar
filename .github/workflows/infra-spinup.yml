@@ -1,16 +1,16 @@
-name: Dev — spin up
+name: Infra — spin up
 
 on:
   workflow_dispatch:
 
 jobs:
   deploy-infra:
-    uses: ./.github/workflows/infra-deploy-dev.yml
+    uses: ./.github/workflows/infra-deploy.yml
     secrets: inherit
 
   bootstrap-rbac:
     needs: deploy-infra
-    uses: ./.github/workflows/bootstrap-rbac.yml
+    uses: ./.github/workflows/infra-bootstrap-rbac.yml
     secrets: inherit
 
   refresh-swa-token:
@@ -42,10 +42,10 @@ jobs:
 
   deploy-backend:
     needs: refresh-swa-token
-    uses: ./.github/workflows/cd-dev.yml
+    uses: ./.github/workflows/cd-backend.yml
     secrets: inherit
 
   deploy-frontend:
     needs: deploy-backend
-    uses: ./.github/workflows/cd-frontend-dev.yml
+    uses: ./.github/workflows/cd-frontend.yml
     secrets: inherit

@@ -172,7 +172,7 @@ Add:
 
 ## 3. Post-infra setup (REQUIRED after first deploy)
 
-Run the infra deploy workflow first (`infra-deploy-dev`), then complete these steps.
+Run the infra deploy workflow first (`infra-deploy`), then complete these steps.
 
 ### 3.1 Run Bootstrap RBAC
 
@@ -247,7 +247,7 @@ az containerapp logs show \
 
 ### 4.2 Frontend (Static Web App)
 
-The `cd-frontend-dev` workflow deploys automatically on pushes to `main` that touch `frontend/**`. To trigger an initial deploy manually, go to GitHub Actions → **CD — deploy frontend (dev)** → Run workflow.
+The `cd-frontend` workflow deploys automatically on pushes to `main` that touch `frontend/**`. To trigger an initial deploy manually, go to GitHub Actions → **CD — deploy frontend** → Run workflow.
 
 Get the hostname:
 
