@@ -11,3 +11,4 @@ param postgresAdminUsername = 'dostaradmin'
 // postgresAdminPassword: set by infra/scripts/predeploy.sh (reads Key Vault, generates on first deploy).
 // Placeholder fallback is used for local `az deployment sub what-if` validation only.
 param postgresAdminPassword = readEnvironmentVariable('AZURE_POSTGRES_ADMIN_PASSWORD', 'Placeholder123!')
+param env = readEnvironmentVariable('AZURE_ENV_NAME', 'dev')
