@@ -1,153 +1,258 @@
-# CI/CD Setup
+# CI/CD Setup (GitHub Actions + Bicep + OIDC)
 
-This guide walks through setting up Azure credentials and GitHub secrets so the CI/CD workflows in `.github/workflows/` can authenticate with Azure using OIDC (no long-lived secrets).
+This repository uses **GitHub Actions + Azure OIDC (no secrets passwords)** to automatically:
 
----
-
-## Prerequisites
-
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) installed and signed in (`az login`)
-- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) installed
-- Owner or Contributor + User Access Administrator role on the target Azure subscription
-- Admin access to the GitHub repository
+- Deploy infrastructure (Bicep)
+- Deploy applications (API + Web)
+- Run Bicep what-if on pull requests
+- Automatically deploy changes when infra or app code changes
 
 ---
 
-## Step 1 — Authenticate with Azure
+# 1. Prerequisites
 
-```bash
-azd auth login
-```
+You must have:
 
-This opens a browser for interactive login. If running in a headless environment, use `azd auth login --use-device-code`.
+## Azure
+- Azure Subscription
+- Owner or User Access Administrator (first-time setup only)
+- Ability to create App Registrations + RBAC roles
 
----
+## GitHub
+- Admin access to repository
+- Ability to create:
+  - Repository Secrets
+  - Repository Variables (optional)
+  - Environments (recommended)
 
-## Step 2 — Create an azd environment
+## Local tools (for initial setup only)
+- Azure CLI
+- GitHub CLI (`gh`)
+- Logged in:
+  ```bash
+  az login
+  gh auth login
 
-```bash
-azd env new dev
-```
+2. One-time Azure OIDC Setup (IMPORTANT)
 
-azd stores this environment's config locally in `.azure/dev/`. If you have already created the environment (e.g. from a previous run), select it instead:
+Run this once to create the GitHub → Azure trust relationship:
 
-```bash
-azd env select dev
-```
+az ad sp create-for-rbac \
+  --name "dostar-github-actions" \
+  --role Contributor \
+  --scopes /subscriptions/<SUBSCRIPTION_ID>
 
----
+Then configure federated credentials (recommended approach is via Azure Portal OR az cli + manifest).
 
-## Step 3 — Pre-set environment variables
+You need:
 
-Pre-populate the values that the Bicep parameters read from environment variables. This lets `azd pipeline config` map them to CI variables without prompting.
+AZURE_CLIENT_ID
+AZURE_TENANT_ID
+AZURE_SUBSCRIPTION_ID
 
-```bash
-azd env set AZURE_LOCATION australiaeast
-azd env set AZURE_POSTGRES_ADMIN_PASSWORD "$(openssl rand -base64 24)"
-```
+3. Add GitHub Secrets
 
-`AZURE_POSTGRES_ADMIN_PASSWORD` needs a seed value so azd can store it as a GitHub secret. The actual password used in Azure is always set by the `infra/scripts/predeploy.sh` hook at deploy time (reads from Key Vault, or generates on first deploy) — the seed value is overwritten on every run and never used directly.
+Go to:
 
-The `env` Bicep parameter no longer needs to be set here — `main.bicep` defaults it to `readEnvironmentVariable('AZURE_ENV_NAME', 'dev')`, which azd provides automatically.
+GitHub Repo → Settings → Secrets and variables → Actions
 
-> **Deploying outside Australia?** Replace `australiaeast` with your Azure region identifier (e.g. `eastus`, `westeurope`, `southeastasia`). Also update `region` in `infra/main.parameters.dev.bicepparam` to the matching short code (e.g. `eus`, `weu`, `sea`).
+Add:
 
----
+Required Secrets
+Name	Value
+AZURE_CLIENT_ID	from service principal
+AZURE_TENANT_ID	from Azure tenant
+AZURE_SUBSCRIPTION_ID	from Azure subscription
 
-## Step 4 — Configure the pipeline (OIDC + GitHub secrets)
+4. Add GitHub Variables (optional but recommended)
 
-```bash
-azd pipeline config --provider github
-```
+Go to:
 
-When prompted for auth type, select **Federated service principal** (OIDC — no long-lived secrets).
+Settings → Secrets and variables → Actions → Variables
 
-All Bicep parameters (`env`, `location`, `postgresAdminPassword`) are mapped to environment variables in `infra/main.parameters.dev.bicepparam`, so azd does not prompt for them. If you are prompted, run `azd env set AZURE_LOCATION australiaeast` and retry.
+Name	Value
+AZURE_ENV_NAME	dev
+AZURE_LOCATION	australiaeast
 
-This command:
+5. Repository Structure (Required)
+/infra
+  main.bicep
+  main.parameters.dev.bicepparam
 
-1. Creates an Azure AD app registration and service principal
-2. Configures OIDC federated credentials for the `main` branch and pull requests
-3. Adds the following variables to your GitHub repository automatically:
-   - `AZURE_CLIENT_ID`
-   - `AZURE_TENANT_ID`
-   - `AZURE_SUBSCRIPTION_ID`
-   - `AZURE_ENV_NAME`
-   - `AZURE_LOCATION`
+/backend
+/frontend
 
-After this step the `infra-whatif.yml` workflow will authenticate successfully and `deploy-dev.yml` will be able to provision and deploy.
+.github/workflows
+  infra-whatif.yml
+  infra-deploy.yml
+  deploy-dev.yml
+6. Infrastructure Pipeline (WHAT-IF)
 
----
+Runs on every PR affecting infra:
 
-## Step 5 — Add deployment secrets (manual)
+on:
+  pull_request:
+    paths:
+      - infra/**
+Behaviour
+Runs az deployment sub what-if
+Posts results to PR
+No changes applied
 
-`azd pipeline config` does not set the following secrets — add them manually under **Settings → Secrets and variables → Actions** in your GitHub repository.
+7. Infrastructure Deployment Pipeline (AUTO APPLY)
 
-### Dev environment
+This is the key automation piece.
 
-| Secret | Description | Where to find it |
-|--------|-------------|------------------|
-| `RESOURCE_GROUP` | Dev resource group name (e.g. `rg-dostar-dev-aue-001`) | `az group list` after first deploy |
-| `POSTGRES_SERVER_NAME` | PostgreSQL server name (e.g. `psql-dostar-dev-aue-001`) | `az postgres flexible-server list` after first deploy |
+Create: .github/workflows/infra-deploy.yml
 
-### Production environment
+name: Infra — deploy
 
-| Secret | Description | Where to find it |
-|--------|-------------|------------------|
-| `RESOURCE_GROUP_PROD` | Prod resource group name (e.g. `rg-dostar-prod-aue-001`) | `az group list` after first prod deploy |
-| `CONTAINER_APP_NAME_PROD` | Container App name (e.g. `ca-dostar-prod-aue-001`) | `az containerapp list` after first prod deploy |
-| `ACR_LOGIN_SERVER` | ACR login server (e.g. `crDostarProdAue001.azurecr.io`) | `az acr list --query "[].loginServer"` |
+on:
+  push:
+    branches: [main]
+    paths:
+      - infra/**
 
----
+permissions:
+  id-token: write
+  contents: read
 
-## Step 6 — Configure the production GitHub Environment
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-The `deploy-production.yml` workflow uses a GitHub Environment called `production` to enforce a manual approval gate before deploying.
+    steps:
+      - uses: actions/checkout@v4
 
-1. Go to **Settings → Environments** in your GitHub repository
-2. Click **New environment** and name it `production`
-3. Under **Deployment protection rules**, add required reviewers (at least one person who must approve production deploys)
-4. Under **Deployment branches and tags**, restrict to `main` only
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
----
+      - name: Deploy Bicep
+        run: |
+          az deployment sub create \
+            --location australiaeast \
+            --template-file infra/main.bicep \
+            --parameters infra/main.parameters.dev.bicepparam
 
-## Verifying the setup
+8. Application Deployment Pipeline
 
-Open a PR that touches a file under `infra/` — the `infra-whatif.yml` workflow should trigger and post a Bicep what-if summary as a PR comment.
+Create: .github/workflows/app-deploy.yml
 
----
+name: App — deploy
 
-## Rotating credentials
+on:
+  push:
+    branches: [main]
+    paths:
+      - backend/**
+      - frontend/**
 
-OIDC federated credentials do not expire. If you need to rotate for any reason:
+permissions:
+  id-token: write
+  contents: read
 
-1. Delete the existing app registration in Azure AD
-2. Re-run `azd pipeline config --provider github`
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
----
+    steps:
+      - uses: actions/checkout@v4
 
-## Troubleshooting
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-### `azd pipeline config` prompts for `location` twice
+      - name: Deploy API
+        run: |
+          az containerapp up ...
 
-This is expected azd behaviour — one prompt is for the Bicep `location` parameter, the other is for the azd subscription-level deployment location. Both are pre-filled with `australiaeast` (from Step 3). Press Enter for each.
+      - name: Deploy Web
+        run: |
+          az staticwebapp deploy ...
 
-### "Missing required secrets: AZURE_CLIENT_ID ..."
+(Replace with your actual deployment commands.)
 
-One or more OIDC secrets are not configured. Return to Step 4 and run `azd pipeline config`.
+9. Recommended Production Promotion Strategy
 
-### "azure/login failed"
+Use GitHub Environments:
 
-The OIDC federated credential may not trust the current branch or pull request context. Verify that `azd pipeline config` created federated credentials for both branch pushes and pull requests:
+Create environment
 
-```bash
-az ad app federated-credential list --id <app-id>
-```
+GitHub → Settings → Environments → production
 
-### Service principal lacks permissions
+Add:
 
-Check that the service principal has Contributor role at the subscription scope:
+Required reviewers
+Restrict to main
 
-```bash
-az role assignment list --assignee <client-id> --scope /subscriptions/<subscription-id>
-```
+Then modify infra/app workflows:
+
+environment: production
+
+This forces manual approval for production deploys.
+
+10. Infra + App Flow (FINAL BEHAVIOUR)
+Pull Request
+Runs:
+infra what-if
+optional build/test
+Merge to main
+
+Triggers:
+
+1. infra deploy
+applies Bicep changes
+2. app deploy
+deploys API + web
+
+Order is important:
+
+Infra first, then app
+
+11. Common Issues
+Missing secrets
+Missing required secrets: AZURE_CLIENT_ID
+
+→ Add GitHub secrets
+
+OIDC login fails
+Federated credential not created correctly
+Wrong repo or branch subject
+Deployment fails with missing parameters
+Ensure Bicep defaults exist OR parameters file is complete
+Permission denied on scripts
+/bin/sh: permission denied
+
+Fix:
+
+chmod +x infra/scripts/*.sh
+git update-index --chmod=+x infra/scripts/predeploy.sh
+12. Design Philosophy
+
+This template is intentionally:
+
+No Azure DevOps
+No azd pipeline dependency
+No long-lived secrets
+GitHub Actions only
+Fully declarative infra (Bicep)
+Event-driven deployments
+
+13. Summary
+
+To onboard a new team:
+
+Add Azure OIDC credentials
+Add GitHub secrets
+Push to main
+Infra + app deploy automatically
+PRs show infra diff (what-if)
+
+That’s it.
