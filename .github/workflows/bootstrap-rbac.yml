@@ -89,3 +89,29 @@ jobs:
               --role "AcrPull" \
               --scope "$ACR_ID"
           fi
+
+      - name: Assign Container App managed identity Key Vault Secrets User role
+        run: |
+          KV_NAME="kv-dostar-dev-aue-001"
+          KV_ID=$(az keyvault show --name "$KV_NAME" --query id -o tsv)
+
+          CA_PRINCIPAL_ID=$(az containerapp show \
+            --name "ca-dostar-dev-aue-001" \
+            --resource-group "rg-dostar-dev-aue-001" \
+            --query identity.principalId -o tsv)
+
+          EXISTING=$(az role assignment list \
+            --assignee "$CA_PRINCIPAL_ID" \
+            --role "Key Vault Secrets User" \
+            --scope "$KV_ID" \
+            --query "[0].id" -o tsv 2>/dev/null)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Key Vault Secrets User role assignment already exists — skipping"
+          else
+            az role assignment create \
+              --assignee-object-id "$CA_PRINCIPAL_ID" \
+              --assignee-principal-type ServicePrincipal \
+              --role "Key Vault Secrets User" \
+              --scope "$KV_ID"
+          fi
