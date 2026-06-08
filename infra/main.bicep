@@ -122,7 +122,7 @@ module containerapp 'modules/containerapp.bicep' = {
     instance: instance
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
     appInsightsConnectionString: appinsights.outputs.connectionString
-    keyVaultConnectionStringUri: keyvault.outputs.connectionStringSecretUri
+    postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
   }
 }
 
