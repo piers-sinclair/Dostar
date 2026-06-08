@@ -63,7 +63,9 @@ jobs:
           az containerapp update \
             --name $CONTAINER_APP_NAME \
             --resource-group $AZURE_RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
+            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} \
+            --registry-server $ACR_NAME.azurecr.io \
+            --registry-identity system
 
       - name: Smoke test
         run: |
