@@ -49,7 +49,7 @@ jobs:
 
       - name: Build API Docker image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} ./backend/Dostar.Api
+          docker build -f Dockerfile -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} .
 
       - name: Login to ACR
         run: az acr login --name $ACR_NAME
