@@ -20,7 +20,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-      secrets: write
     steps:
       - name: Azure login (OIDC)
         uses: azure/login@v3
