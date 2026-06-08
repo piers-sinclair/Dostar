@@ -66,11 +66,11 @@ To bring the environment back, run **Dev — spin up** (see above).
 
 ## Required GitHub secrets summary
 
-| Secret | Used by | Notes |
-|--------|---------|-------|
-| `AZURE_CLIENT_ID` | All lifecycle workflows | Service principal app ID |
-| `AZURE_TENANT_ID` | All lifecycle workflows | Azure AD tenant ID |
-| `AZURE_SUBSCRIPTION_ID` | All lifecycle workflows | Subscription ID |
-| `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` | Frontend CD | Auto-refreshed by spin up; set manually after first deploy (see [deploy-setup.md](deploy-setup.md)) |
+| Secret | Notes |
+|--------|-------|
+| `AZURE_CLIENT_ID` | Service principal app ID |
+| `AZURE_TENANT_ID` | Azure AD tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Subscription ID |
+| `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` | Auto-refreshed by spin up; set manually after first deploy (see [deploy-setup.md](deploy-setup.md)) |
 
 See [deploy-setup.md](deploy-setup.md) for instructions on creating the service principal and adding these secrets.

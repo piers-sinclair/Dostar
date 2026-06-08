@@ -164,9 +164,9 @@ Add:
 
 | Secret                              | Value                       | Required by                        |
 | ----------------------------------- | --------------------------- | ---------------------------------- |
-| `AZURE_CLIENT_ID`       | App ID          | All workflows |
-| `AZURE_TENANT_ID`       | Tenant ID       | All workflows |
-| `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
+| `AZURE_CLIENT_ID`       | App ID          |
+| `AZURE_TENANT_ID`       | Tenant ID       |
+| `AZURE_SUBSCRIPTION_ID` | Subscription ID |
 
 ---
 
