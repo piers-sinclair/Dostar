@@ -84,7 +84,7 @@ jobs:
         run: pnpm build
 
   e2e:
-    name: E2E — Playwright
+    name: UI — Playwright
     runs-on: ubuntu-latest
     needs: frontend-checks
 
@@ -109,7 +109,7 @@ jobs:
         working-directory: frontend
         run: pnpm build
 
-      - name: Install E2E dependencies
+      - name: Install UI test dependencies
         working-directory: tests/Dostar.E2ETests
         run: pnpm install --frozen-lockfile
 
@@ -128,7 +128,7 @@ jobs:
             sleep 1
           done
 
-      - name: Run E2E tests
+      - name: Run UI tests
         working-directory: tests/Dostar.E2ETests
         env:
           CI: true
