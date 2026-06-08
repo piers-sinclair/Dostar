@@ -33,13 +33,13 @@ After setup:
 
 Login:
 
-`````bash
+```bash
 az login
 gh auth login
+```
 
 ---
 
-````markdown
 ## 2. Create Azure Identity (ONE-TIME SETUP)
 
 This step creates the Azure identity that GitHub Actions will use via OIDC (no passwords).
@@ -48,15 +48,14 @@ This step creates the Azure identity that GitHub Actions will use via OIDC (no p
 
 ### 2.1 Set variables
 
-Replace these before running:
+export these before running:
 
 ```bash
-SUBSCRIPTION_ID="<your-subscription-id>"
-REPO="YOUR_GITHUB_ORG/YOUR_REPO"
-APP_NAME="dostar-github-actions"
-`````
+export SUBSCRIPTION_ID="<your-subscription-id>"
+export REPO="<YOUR_GITHUB_ORG/YOUR_REPO>"
+export APP_NAME="<YOUR_APP_NAME>"
 
-````
+```
 
 ---
 
@@ -163,4 +162,3 @@ Add:
 GitHub Actions can now authenticate to Azure using OIDC.
 
 No passwords required.
-````
