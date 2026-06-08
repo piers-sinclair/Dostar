@@ -109,7 +109,7 @@ az ad app federated-credential create \
 
 ---
 
-### 2.6 (Optional) Allow Pull Request deployments
+### 2.6 Allow Pull Request deployments
 
 ```bash
 az ad app federated-credential create \
