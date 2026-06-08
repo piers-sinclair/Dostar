@@ -52,7 +52,6 @@ jobs:
         run: |
           az group delete \
             --name rg-dostar-dev-aue-001 \
-            --yes \
-            --no-wait
-          echo "Resource group deletion initiated (running in background)."
+            --yes
+          echo "Resource group deleted."
           echo "Run the 'Dev — spin up' workflow to re-provision the dev environment."
