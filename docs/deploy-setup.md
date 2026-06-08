@@ -92,7 +92,20 @@ az role assignment create \
 
 ---
 
-### 2.5 Create GitHub OIDC trust (MAIN BRANCH)
+### 2.5 Grant role-assignment permissions
+
+This allows the GitHub Actions identity to create Azure RBAC role assignments (required by the Bootstrap RBAC workflow). Can be scoped to a resource group instead for least-privilege.
+
+```bash
+az role assignment create \
+  --assignee "$APP_ID" \
+  --role "User Access Administrator" \
+  --scope "/subscriptions/$SUBSCRIPTION_ID"
+```
+
+---
+
+### 2.6 Create GitHub OIDC trust (MAIN BRANCH)
 
 This allows GitHub Actions to authenticate securely.
 
@@ -109,7 +122,7 @@ az ad app federated-credential create \
 
 ---
 
-### 2.6 Allow Pull Request deployments
+### 2.7 Allow Pull Request deployments
 
 ```bash
 az ad app federated-credential create \
@@ -124,7 +137,7 @@ az ad app federated-credential create \
 
 ---
 
-### 2.7 Retrieve values for GitHub Secrets
+### 2.8 Retrieve values for GitHub Secrets
 
 Run:
 
@@ -141,7 +154,7 @@ And use:
 
 ---
 
-### 2.8 Add GitHub Secrets
+### 2.9 Add GitHub Secrets
 
 In GitHub:
 
