@@ -246,5 +246,3 @@ az staticwebapp list \
   --resource-group rg-dostar-dev-aue-001 \
   --query "[0].defaultHostname" -o tsv
 ```
-
-Current dev URL (for reference): `https://zealous-ground-0c1d90b0f.7.azurestaticapps.net`
