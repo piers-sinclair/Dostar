@@ -53,6 +53,7 @@ CLAUDE.md               ← this file
 | `/add-package` | `.claude/commands/add-package.md` | Add NuGet/npm package with licence check |
 | `/scaffold-module` | `.claude/commands/scaffold-module.md` | Scaffold a full feature module (Contracts + Implementation + unit tests) |
 | `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
+| `/code-quality` | `.claude/commands/code-quality.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
 
 > Future (build after M4): `/integration-tests`, `/playwright`, `/scaffold-page` (M9)
 
