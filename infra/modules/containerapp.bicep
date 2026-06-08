@@ -41,10 +41,7 @@ var minReplicas = env == 'prod' ? 1 : 0
 var maxReplicas = env == 'prod' ? 10 : 3
 
 // https://learn.microsoft.com/azure/container-registry/container-registry-roles
-var acrPullRoleId = tenantResourceId(
-  'Microsoft.Authorization/roleDefinitions',
-  '7f951dda-4ed3-4680-a7ca-43fe172d538d'
-)
+var acrPullRoleId = tenantResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d')
 
 resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
@@ -121,17 +118,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 
 resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
   name: last(split(acrId, '/'))!
-}
-
-resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  // Raw role GUID keeps the assignment name stable regardless of role definition ID format
-  name: guid(acr.id, containerApp.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
-  scope: acr
-  properties: {
-    roleDefinitionId: acrPullRoleId
-    principalId: containerApp.identity.principalId
-    principalType: 'ServicePrincipal'
-  }
 }
 
 @description('The system-assigned managed identity principal ID of the Container App.')
