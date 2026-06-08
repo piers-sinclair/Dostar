@@ -19,7 +19,7 @@ The dev environment has two states. Tear it down when you won't need it for a wh
 
 ### Spin up (provision from scratch)
 
-Use after a full teardown, or for first-time setup as an alternative to running `infra-deploy-dev`, `bootstrap-rbac`, and the CD workflows manually.
+Use after a full teardown, or for first-time setup as an alternative to running `infra-deploy`, `infra-bootstrap-rbac`, and the CD workflows manually.
 
 **Prerequisites** — the following GitHub secrets must be set (see [deploy-setup.md](deploy-setup.md)):
 

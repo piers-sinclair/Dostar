@@ -1,4 +1,4 @@
-name: Bootstrap RBAC (dev)
+name: Infra — bootstrap RBAC
 
 on:
   workflow_dispatch:

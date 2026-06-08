@@ -1,4 +1,4 @@
-name: Dev — tear down
+name: Infra — tear down
 
 on:
   workflow_dispatch:
