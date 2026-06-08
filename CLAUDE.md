@@ -220,7 +220,7 @@ git worktree remove .claude/worktrees/issue-<N>
 
 ### Branch & PR workflow
 
-1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>` (inside a worktree for agentic work — see above).
+1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>` (inside a worktree for agentic work — see above). Always run `git fetch origin` and base the branch on `origin/main` to avoid stale-base conflicts when opening the PR.
 2. **Implement** the changes.
 3. **Build** — must pass with 0 warnings before committing:
    ```bash
