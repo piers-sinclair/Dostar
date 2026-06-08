@@ -1,4 +1,4 @@
-name: E2E — Playwright (full-stack)
+name: Testing — E2E
 
 on:
   pull_request:
