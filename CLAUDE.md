@@ -54,6 +54,7 @@ CLAUDE.md               ← this file
 | `/scaffold-module` | `.claude/commands/scaffold-module.md` | Scaffold a full feature module (Contracts + Implementation + unit tests) |
 | `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
 | `/code-quality` | `.claude/commands/code-quality.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
+| `/audit-azure-costs` | `.claude/commands/audit-azure-costs.md` | Audit Azure infra + CI/CD for startup cost optimisation |
 
 > Future (build after M4): `/integration-tests`, `/playwright`, `/scaffold-page` (M9)
 
