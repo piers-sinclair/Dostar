@@ -38,7 +38,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Assign ACR pull role
+      - name: Assign CI service principal AcrPush role
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         run: |
@@ -50,15 +50,41 @@ jobs:
 
           EXISTING=$(az role assignment list \
             --assignee "$SP_OBJECT_ID" \
+            --role "AcrPush" \
+            --scope "$ACR_ID" \
+            --query "[0].id" -o tsv 2>/dev/null)
+
+          if [ -n "$EXISTING" ]; then
+            echo "AcrPush role assignment already exists — skipping"
+          else
+            az role assignment create \
+              --assignee-object-id "$SP_OBJECT_ID" \
+              --assignee-principal-type ServicePrincipal \
+              --role "AcrPush" \
+              --scope "$ACR_ID"
+          fi
+
+      - name: Assign Container App managed identity AcrPull role
+        run: |
+          ACR_NAME="crdostardevaue001"
+          ACR_ID=$(az acr show --name "$ACR_NAME" --query id -o tsv)
+
+          CA_PRINCIPAL_ID=$(az containerapp show \
+            --name "ca-dostar-dev-aue-001" \
+            --resource-group "rg-dostar-dev-aue-001" \
+            --query identity.principalId -o tsv)
+
+          EXISTING=$(az role assignment list \
+            --assignee "$CA_PRINCIPAL_ID" \
             --role "AcrPull" \
             --scope "$ACR_ID" \
             --query "[0].id" -o tsv 2>/dev/null)
 
           if [ -n "$EXISTING" ]; then
-            echo "AcrPull role assignment already exists — skipping"
+            echo "Container App AcrPull role assignment already exists — skipping"
           else
             az role assignment create \
-              --assignee-object-id "$SP_OBJECT_ID" \
+              --assignee-object-id "$CA_PRINCIPAL_ID" \
               --assignee-principal-type ServicePrincipal \
               --role "AcrPull" \
               --scope "$ACR_ID"
