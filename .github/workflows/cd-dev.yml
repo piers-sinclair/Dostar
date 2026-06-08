@@ -60,12 +60,15 @@ jobs:
 
       - name: Update Container App
         run: |
+          az containerapp registry set \
+            --name $CONTAINER_APP_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP \
+            --server $ACR_NAME.azurecr.io \
+            --identity system
           az containerapp update \
             --name $CONTAINER_APP_NAME \
             --resource-group $AZURE_RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} \
-            --registry-server $ACR_NAME.azurecr.io \
-            --registry-identity system
+            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
 
       - name: Smoke test
         run: |
