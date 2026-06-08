@@ -1,8 +1,6 @@
 using './main.bicep'
 
 param workload = 'dostar'
-// env is omitted — main.bicep defaults it to readEnvironmentVariable('AZURE_ENV_NAME', 'dev'),
-// which azd always provides. Explicit value is only needed to override (e.g. testing prod locally).
 param region = 'aue'
 param instance = '001'
 param location = readEnvironmentVariable('AZURE_LOCATION', 'australiaeast')
