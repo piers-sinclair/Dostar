@@ -170,24 +170,32 @@ Add:
 
 ---
 
-## 3. RBAC Bootstrap (REQUIRED after first deploy)
+## 3. Post-infra setup (REQUIRED after first deploy)
 
-After first infra deployment:
+Run the infra deploy workflow first (`infra-deploy-dev`), then complete these steps.
 
-1. Go to GitHub Actions
-2. Run: Bootstrap RBAC (dev)
+### 3.1 Run Bootstrap RBAC
 
-This assigns required runtime permissions
+Go to GitHub Actions → run **Bootstrap RBAC (dev)**.
+
+This grants the Container App managed identity `AcrPull` and `Key Vault Secrets User` so it can pull images and read the database connection string.
 
 #### Why this exists?
 
-Azure RBAC permissions like:
+Role assignments (ACR pull, Key Vault access) require elevated permissions that should not be embedded in Bicep or the core CI/CD pipelines.
 
-- ACR pull
-- Key Vault access
-- Storage access
+### 3.2 Add the Static Web App deploy token
 
-Require elevated permissions that should NOT be in Bicep or CI/CD core pipelines.
+The frontend deploy workflow needs a token scoped to the Static Web App. Run once after the first infra deploy:
+
+```bash
+TOKEN=$(az staticwebapp secrets list \
+  --name stapp-dostar-dev-aue-001 \
+  --resource-group rg-dostar-dev-aue-001 \
+  --query "properties.apiKey" -o tsv)
+
+gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN_DEV --body "$TOKEN"
+```
 
 ### Done
 
@@ -239,6 +247,8 @@ az containerapp logs show \
 
 ### 4.2 Frontend (Static Web App)
 
+The `cd-frontend-dev` workflow deploys automatically on pushes to `main` that touch `frontend/**`. To trigger an initial deploy manually, go to GitHub Actions → **CD — deploy frontend (dev)** → Run workflow.
+
 Get the hostname:
 
 ```bash
@@ -246,3 +256,5 @@ az staticwebapp list \
   --resource-group rg-dostar-dev-aue-001 \
   --query "[0].defaultHostname" -o tsv
 ```
+
+Open the URL in a browser — it should show the React app. If it shows the Azure placeholder page, the frontend workflow has not run yet.
