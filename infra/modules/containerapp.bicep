@@ -23,8 +23,9 @@ param containerAppSubnetId string
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
 param appInsightsConnectionString string = ''
 
-@description('Key Vault secret URI for the PostgreSQL connection string.')
-param keyVaultConnectionStringUri string
+@description('PostgreSQL connection string. Passed as a secure param so ARM encrypts it in transit and in deployment history.')
+@secure()
+param postgresConnectionString string
 
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
@@ -71,8 +72,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           name: 'connectionstrings--default'
-          keyVaultUrl: keyVaultConnectionStringUri
-          identity: 'system'
+          value: postgresConnectionString
         }
       ]
       // ACR registry config is conditional: on first deploy the placeholder MCR image is used
