@@ -66,8 +66,10 @@ module keyvault 'modules/keyvault.bicep' = {
     env: env
     region: region
     instance: instance
-    appServicePrincipalId: containerapp.outputs.principalId
     postgresAdminPassword: postgresAdminPassword
+    postgresServerFqdn: postgres.outputs.serverFqdn
+    postgresDatabaseName: postgres.outputs.databaseName
+    postgresAdminUsername: postgresAdminUsername
   }
 }
 
@@ -119,8 +121,8 @@ module containerapp 'modules/containerapp.bicep' = {
     region: region
     instance: instance
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
-    acrId: acr.outputs.acrId
     appInsightsConnectionString: appinsights.outputs.connectionString
+    keyVaultConnectionStringUri: keyvault.outputs.connectionStringSecretUri
   }
 }
 
@@ -138,7 +140,6 @@ module postgres 'modules/postgres.bicep' = {
     postgresSubnetId: vnet.outputs.postgresSubnetId
     vnetId: vnet.outputs.vnetId
   }
-  dependsOn: [keyvault]
 }
 
 module staticWebApp 'modules/staticwebapp.bicep' = {
