@@ -1,0 +1,60 @@
+name: Dev — tear down
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "teardown" to confirm'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  teardown:
+    name: Tear down dev environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Confirm
+        run: |
+          if [ "${{ inputs.confirm }}" != "teardown" ]; then
+            echo "::error::Confirmation input must be exactly 'teardown'"
+            exit 1
+          fi
+
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$RESOURCE_GROUP" ]        && MISSING+=("RESOURCE_GROUP")
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            echo "Follow docs/deploy-setup.md to configure OIDC credentials and deployment secrets."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Delete resource group
+        run: |
+          az group delete \
+            --name "${{ secrets.RESOURCE_GROUP }}" \
+            --yes \
+            --no-wait
+          echo "Resource group deletion initiated (running in background)."
+          echo "Run the 'Dev — spin up' workflow to re-provision the dev environment."

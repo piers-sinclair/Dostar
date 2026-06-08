@@ -162,11 +162,14 @@ In GitHub:
 
 Add:
 
-| Secret                | Value           |
-| --------------------- | --------------- |
-| AZURE_CLIENT_ID       | App ID          |
-| AZURE_TENANT_ID       | Tenant ID       |
-| AZURE_SUBSCRIPTION_ID | Subscription ID |
+| Secret                              | Value                       | Required by                        |
+| ----------------------------------- | --------------------------- | ---------------------------------- |
+| `AZURE_CLIENT_ID`                   | App ID                      | All workflows                      |
+| `AZURE_TENANT_ID`                   | Tenant ID                   | All workflows                      |
+| `AZURE_SUBSCRIPTION_ID`             | Subscription ID             | All workflows                      |
+| `AZURE_POSTGRES_ADMIN_PASSWORD`     | Password for PostgreSQL admin | `spinup-dev` (spin up workflow)  |
+| `POSTGRES_SERVER_NAME`              | `psql-dostar-dev-aue-001`   | `pause-dev`, `resume-dev`          |
+| `RESOURCE_GROUP`                    | `rg-dostar-dev-aue-001`     | `pause-dev`, `resume-dev`, `teardown-dev` |
 
 ---
 
@@ -258,3 +261,9 @@ az staticwebapp list \
 ```
 
 Open the URL in a browser — it should show the React app. If it shows the Azure placeholder page, the frontend workflow has not run yet.
+
+---
+
+## 5. Managing the dev environment lifecycle
+
+Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.
