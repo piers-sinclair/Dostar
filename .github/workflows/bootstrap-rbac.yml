@@ -1,0 +1,32 @@
+name: Bootstrap RBAC (dev)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  rbac:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Assign ACR pull role
+        run: |
+          ACR_NAME="crdostardevaue001"
+          ACR_ID=$(az acr show --name $ACR_NAME --query id -o tsv)
+
+          az role assignment create \
+            --assignee ${{ secrets.AZURE_CLIENT_ID }} \
+            --role "AcrPull" \
+            --scope $ACR_ID

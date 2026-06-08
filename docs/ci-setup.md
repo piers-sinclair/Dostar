@@ -157,6 +157,25 @@ Add:
 
 ---
 
+## 3. RBAC Bootstrap (REQUIRED after first deploy)
+
+After first infra deployment:
+
+1. Go to GitHub Actions
+2. Run: Bootstrap RBAC (dev)
+
+This assigns required runtime permissions
+
+#### Why this exists?
+
+Azure RBAC permissions like:
+
+- ACR pull
+- Key Vault access
+- Storage access
+
+Require elevated permissions that should NOT be in Bicep or CI/CD core pipelines.
+
 ### Done
 
 GitHub Actions can now authenticate to Azure using OIDC.
