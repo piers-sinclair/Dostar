@@ -109,7 +109,7 @@ app.UseStatusCodePages();
 app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseHttpLogging();
 
-app.UseCors(app.Environment.IsDevelopment() ? CorsPolicy.Development : CorsPolicy.Production);
+app.UseCors(app.Environment.IsDevelopment() && allowedOrigins.Length == 0 ? CorsPolicy.Development : CorsPolicy.Production);
 app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())

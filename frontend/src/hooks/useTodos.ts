@@ -40,11 +40,19 @@ export function useDeleteTodo() {
 export function useToggleTodo() {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, isCompleted }: { id: string; isCompleted: boolean }) =>
+        mutationFn: ({
+            id,
+            title,
+            isCompleted,
+        }: {
+            id: string;
+            title: string;
+            isCompleted: boolean;
+        }) =>
             fetchJson<Todo>(`${BASE}/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isCompleted }),
+                body: JSON.stringify({ title, isComplete: isCompleted }),
             }),
         onSuccess: () => client.invalidateQueries({ queryKey: ['todos'] }),
     });
