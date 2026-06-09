@@ -24,15 +24,11 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
-          AZURE_ENTRA_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
         run: |
           MISSING=()
-          [ -z "$AZURE_CLIENT_ID" ]               && MISSING+=("AZURE_CLIENT_ID")
-          [ -z "$AZURE_TENANT_ID" ]               && MISSING+=("AZURE_TENANT_ID")
-          [ -z "$AZURE_SUBSCRIPTION_ID" ]         && MISSING+=("AZURE_SUBSCRIPTION_ID")
-          [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ] && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
-          [ -z "$AZURE_ENTRA_CLIENT_ID" ]         && MISSING+=("AZURE_ENTRA_CLIENT_ID")
+          [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
@@ -50,8 +46,8 @@ jobs:
       - name: Run what-if and post PR comment
         env:
           GH_TOKEN: ${{ github.token }}
-          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
-          AZURE_ENTRA_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
+          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD || 'WhatIfPlaceholder' }}
+          AZURE_ENTRA_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID || '00000000-0000-0000-0000-000000000000' }}
         run: |
           OUTPUT=$(az deployment sub what-if \
             --location australiaeast \
