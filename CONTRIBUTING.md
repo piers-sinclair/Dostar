@@ -10,7 +10,6 @@ See [CLAUDE.md](CLAUDE.md) for the full stack, repo structure, and key conventio
 - Work on a feature branch named `feat/issue-N-short-description`
 - Never commit directly to `main`
 - Open a PR for every change, referencing the issue: `Closes #N`
-- All agentic work (Claude Code) must use a git worktree — see [CLAUDE.md § Agentic AI workflow](CLAUDE.md)
 
 ## Commit messages
 
@@ -36,9 +35,9 @@ docs: update README with architecture diagram
 ci: add release-please workflow
 ```
 
-## Build gates
+## Running checks locally
 
-Before opening a PR, all applicable checks must pass:
+CI enforces these on every PR, but running them locally before pushing saves a round-trip:
 
 ```bash
 # Backend (if changed)
@@ -90,7 +89,6 @@ Skills in `.claude/commands/` are slash commands for common scaffolding tasks:
 | `/integration-tests` | Add integration tests for a module endpoint |
 | `/playwright` | Write a Playwright UI test |
 
-See [docs/agents.md](docs/agents.md) for full documentation.
 
 ## Dependabot
 
