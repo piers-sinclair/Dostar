@@ -1,0 +1,67 @@
+name: Dev — pause
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm pause'
+        required: true
+        type: choice
+        options: ['', 'yes']
+  workflow_call:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  pause:
+    name: Pause dev environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate confirmation
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ inputs.confirm }}" != "yes" ]; then
+            echo "::error::Confirmation required. Set confirm to 'yes' to proceed."
+            exit 1
+          fi
+
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          POSTGRES_SERVER_NAME: ${{ secrets.POSTGRES_SERVER_NAME }}
+          RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$POSTGRES_SERVER_NAME" ]  && MISSING+=("POSTGRES_SERVER_NAME")
+          [ -z "$RESOURCE_GROUP" ]        && MISSING+=("RESOURCE_GROUP")
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            echo "Add these secrets in repo Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Stop PostgreSQL Flexible Server
+        env:
+          POSTGRES_SERVER_NAME: ${{ secrets.POSTGRES_SERVER_NAME }}
+          RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+        run: |
+          az postgres flexible-server stop \
+            --name "$POSTGRES_SERVER_NAME" \
+            --resource-group "$RESOURCE_GROUP"
+          echo "PostgreSQL stopped. The Container App scales to zero automatically on idle."
