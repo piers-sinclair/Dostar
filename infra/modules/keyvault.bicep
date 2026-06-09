@@ -29,6 +29,10 @@ param postgresDatabaseName string
 @description('Administrator username for the PostgreSQL Flexible Server.')
 param postgresAdminUsername string
 
+@description('SWA deployment token. Pass from staticWebApp.outputs.deploymentToken. Leave empty to skip.')
+@secure()
+param swaDeploymentToken string = ''
+
 var keyVaultName = 'kv-${workload}-${env}-${region}-${instance}'
 
 
@@ -66,6 +70,14 @@ resource postgresConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-
   }
 }
 
+
+resource swaDeploymentTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(swaDeploymentToken)) {
+  name: 'swa-deployment-token'
+  parent: keyVault
+  properties: {
+    value: swaDeploymentToken
+  }
+}
 
 @description('The URI of the Key Vault.')
 output keyVaultUri string = keyVault.properties.vaultUri

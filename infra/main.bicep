@@ -70,6 +70,7 @@ module keyvault 'modules/keyvault.bicep' = {
     postgresServerFqdn: postgres.outputs.serverFqdn
     postgresDatabaseName: postgres.outputs.databaseName
     postgresAdminUsername: postgresAdminUsername
+    swaDeploymentToken: staticWebApp.outputs.deploymentToken
   }
 }
 
