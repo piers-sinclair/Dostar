@@ -27,7 +27,7 @@ public class TodoServiceTests
         var result = await service.CreateAsync("Buy milk");
 
         result.Title.ShouldBe("Buy milk");
-        result.IsComplete.ShouldBeFalse();
+        result.IsCompleted.ShouldBeFalse();
         result.Id.ShouldNotBe(Guid.Empty);
         result.CreatedAt.ShouldBeInRange(DateTimeOffset.UtcNow.AddSeconds(-5), DateTimeOffset.UtcNow.AddSeconds(5));
     }
@@ -81,7 +81,7 @@ public class TodoServiceTests
 
         result.ShouldNotBeNull();
         result.Title.ShouldBe("Updated");
-        result.IsComplete.ShouldBeTrue();
+        result.IsCompleted.ShouldBeTrue();
     }
 
     [Fact]

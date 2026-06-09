@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { getApiError } from '@/hooks/getApiError';
 import { useCreateTodo, useDeleteTodo, useTodos, useToggleTodo } from '@/hooks/useTodos';
@@ -54,12 +56,11 @@ export function TodoList() {
 
                         return (
                             <li key={todo.id} className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
+                                <Checkbox
                                     aria-label={`Mark "${todo.title}" as ${todo.isCompleted ? 'incomplete' : 'complete'}`}
                                     checked={todo.isCompleted}
                                     disabled={isBusy}
-                                    onChange={() =>
+                                    onCheckedChange={() =>
                                         toggleTodo.mutate({
                                             id: todo.id,
                                             title: todo.title,
@@ -69,6 +70,7 @@ export function TodoList() {
                                 />
                                 <span
                                     className={cn(
+                                        'flex-1',
                                         todo.isCompleted && 'line-through text-muted-foreground'
                                     )}
                                 >
@@ -81,7 +83,7 @@ export function TodoList() {
                                     disabled={isBusy}
                                     onClick={() => deleteTodo.mutate(todo.id)}
                                 >
-                                    ×
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             </li>
                         );
