@@ -9,7 +9,13 @@
       "Bash(dotnet add *)",
       "Bash(dotnet remove *)",
       "Bash(pnpm *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git status)",
+      "Bash(gh pr view *)",
+      "Bash(gh issue view *)"
     ]
   }
 }
