@@ -46,7 +46,26 @@ jobs:
       - name: Deploy infrastructure
         run: |
           az deployment sub create \
+            --name dostar-dev \
             --location australiaeast \
             --template-file infra/main.bicep \
             --parameters infra/main.parameters.dev.bicepparam \
             --only-show-errors
+
+      - name: Print environment URLs
+        run: |
+          BACKEND_FQDN=$(az deployment sub show \
+            --name dostar-dev \
+            --query 'properties.outputs.containerAppFqdn.value' -o tsv)
+          FRONTEND_HOSTNAME=$(az deployment sub show \
+            --name dostar-dev \
+            --query 'properties.outputs.staticWebAppHostname.value' -o tsv)
+          {
+            echo "## Infrastructure deployed"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---------|-----|"
+            echo "| Frontend | https://$FRONTEND_HOSTNAME |"
+            echo "| Backend health | https://$BACKEND_FQDN/healthz/live |"
+            echo "| API docs | https://$BACKEND_FQDN/scalar/v1 |"
+          } >> "$GITHUB_STEP_SUMMARY"
