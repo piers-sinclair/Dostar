@@ -36,7 +36,7 @@ backend/                ← all .NET projects (not src/ — decoupling is explic
       Dostar.Todos.UnitTests/           ← unit tests (in-memory EF Core, NSubstitute)
       Dostar.Todos.IntegrationTests/    ← integration tests (WebApplicationFactory + Testcontainers)
 frontend/               ← React + Vite; standalone, separate toolchain
-tests/                  ← cross-cutting tests only (E2E, multi-module); currently empty
+tests/                  ← cross-cutting tests only (UI tests, multi-module); currently empty
 infra/                  ← Bicep templates
 .claude/
   commands/             ← Claude Code skills (scaffold-module, playwright, etc.)
@@ -53,6 +53,8 @@ CLAUDE.md               ← this file
 | `/add-package` | `.claude/commands/add-package.md` | Add NuGet/npm package with licence check |
 | `/scaffold-module` | `.claude/commands/scaffold-module.md` | Scaffold a full feature module (Contracts + Implementation + unit tests) |
 | `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
+| `/code-quality` | `.claude/commands/code-quality.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
+| `/audit-azure-costs` | `.claude/commands/audit-azure-costs.md` | Audit Azure infra + CI/CD for startup cost optimisation |
 
 > Future (build after M4): `/integration-tests`, `/playwright`, `/scaffold-page` (M9)
 
@@ -134,12 +136,12 @@ dotnet test backend/Modules/<Module>/Dostar.<Module>.UnitTests
 # Integration tests (per module — real PostgreSQL via Testcontainers)
 dotnet test backend/Modules/<Module>/Dostar.<Module>.IntegrationTests
 
-# E2E (Playwright)
+# UI tests (Playwright)
 cd tests && pnpm exec playwright test
 ```
 
 Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
-**Playwright TypeScript** (E2E).
+**Playwright TypeScript** (UI tests).
 
 ### Unit test conventions
 
@@ -196,13 +198,29 @@ M1 (Foundation) → M2 (Modular Architecture) ─┬→ M3 (CLI)
 
 Every issue must be implemented on a dedicated feature branch and merged via a pull request. Never commit directly to `main`.
 
+### Agentic AI workflow (Claude Code)
+
+**All agentic work must use a git worktree.** Never check out a branch directly — this pollutes the main working tree and risks overwriting uncommitted user changes.
+
+```bash
+# 1. Create the branch and worktree together
+git fetch origin
+git worktree add .claude/worktrees/issue-<N> -b feat/issue-<N>-<short-description> origin/main
+
+# 2. Work inside the worktree
+cd .claude/worktrees/issue-<N>
+
+# 3. Build, commit, push, open PR (same steps as below)
+
+# 4. Clean up after the PR merges
+git worktree remove .claude/worktrees/issue-<N>
+```
+
+`.claude/worktrees/` is gitignored — worktrees never appear as untracked files in the main repo.
+
 ### Branch & PR workflow
 
-1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>`
-   ```bash
-   git checkout main && git pull
-   git checkout -b feat/issue-9-global-api-plumbing
-   ```
+1. **Create a branch** from `main` named `feat/issue-<N>-<short-description>` (inside a worktree for agentic work — see above). Always run `git fetch origin` and base the branch on `origin/main` to avoid stale-base conflicts when opening the PR.
 2. **Implement** the changes.
 3. **Build** — must pass with 0 warnings before committing:
    ```bash

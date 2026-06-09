@@ -22,12 +22,12 @@ infra/
 
 ## Overview
 
-| Resource | Bicep module | Purpose |
-|----------|-------------|---------|
-| Resource Group | `main.bicep` | Container for all resources |
-| Key Vault | `modules/keyvault.bicep` | Secret management with RBAC |
-| Virtual Network | `modules/vnet.bicep` | Network isolation for backend services |
-| Static Web App | `modules/staticwebapp.bicep` | Hosts the Vite-built React frontend |
+| Resource        | Bicep module                 | Purpose                                |
+| --------------- | ---------------------------- | -------------------------------------- |
+| Resource Group  | `main.bicep`                 | Container for all resources            |
+| Key Vault       | `modules/keyvault.bicep`     | Secret management with RBAC            |
+| Virtual Network | `modules/vnet.bicep`         | Network isolation for backend services |
+| Static Web App  | `modules/staticwebapp.bicep` | Hosts the Vite-built React frontend    |
 
 ---
 
@@ -39,13 +39,13 @@ All resources follow the pattern:
 {abbrev}-{workload}-{env}-{region}-{instance}
 ```
 
-| Segment | Description | Example |
-|---------|-------------|---------|
-| `abbrev` | Resource type abbreviation (see below) | `app` |
+| Segment    | Description                              | Example  |
+| ---------- | ---------------------------------------- | -------- |
+| `abbrev`   | Resource type abbreviation (see below)   | `app`    |
 | `workload` | Short identifier for the product/project | `dostar` |
-| `env` | Deployment environment | `prod` |
-| `region` | Short Azure region code (see below) | `aue` |
-| `instance` | Three-digit instance number | `001` |
+| `env`      | Deployment environment                   | `prod`   |
+| `region`   | Short Azure region code (see below)      | `aue`    |
+| `instance` | Three-digit instance number              | `001`    |
 
 **Full example:** `app-dostar-prod-aue-001`
 
@@ -63,32 +63,32 @@ func resourceName(abbr string, workloadName string, environment string, regionCo
 Abbreviations are defined in `infra/modules/abbreviations.bicep` following the
 [Azure CAF naming conventions](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations).
 
-| Resource type | Abbreviation |
-|---------------|--------------|
-| Resource group | `rg` |
-| Static Web App | `stapp` |
-| PostgreSQL Flexible Server | `psql` |
-| Key Vault | `kv` |
-| Storage account | `st` |
-| Log Analytics workspace | `log` |
-| Application Insights | `appi` |
-| Container Apps Environment | `cae` |
-| Container App | `ca` |
-| Container registry | `cr` |
-| Managed identity | `id` |
-| Virtual network | `vnet` |
-| Subnet | `snet` |
+| Resource type              | Abbreviation |
+| -------------------------- | ------------ |
+| Resource group             | `rg`         |
+| Static Web App             | `stapp`      |
+| PostgreSQL Flexible Server | `psql`       |
+| Key Vault                  | `kv`         |
+| Storage account            | `st`         |
+| Log Analytics workspace    | `log`        |
+| Application Insights       | `appi`       |
+| Container Apps Environment | `cae`        |
+| Container App              | `ca`         |
+| Container registry         | `cr`         |
+| Managed identity           | `id`         |
+| Virtual network            | `vnet`       |
+| Subnet                     | `snet`       |
 
 ---
 
 ## Region codes
 
-| Azure region | Short code |
-|--------------|------------|
-| Australia East | `aue` |
-| East US | `eus` |
-| West Europe | `weu` |
-| Southeast Asia | `sea` |
+| Azure region   | Short code |
+| -------------- | ---------- |
+| Australia East | `aue`      |
+| East US        | `eus`      |
+| West Europe    | `weu`      |
+| Southeast Asia | `sea`      |
 
 Add entries here as new regions are used.
 
@@ -122,19 +122,19 @@ The Container App must have a system-assigned managed identity with the **Key Va
 
 ### RBAC roles
 
-| Role | Who gets it | Purpose |
-|------|-------------|---------|
+| Role                                                            | Who gets it                    | Purpose                 |
+| --------------------------------------------------------------- | ------------------------------ | ----------------------- |
 | Key Vault Secrets User (`4633458b-17de-408a-b874-0445c86b69e0`) | Container App managed identity | Read secrets at runtime |
 
 No identity is granted **Key Vault Administrator** or **Key Vault Secrets Officer** by default.
 
 ### Environment differences
 
-| Setting | dev | prod |
-|---------|-----|------|
-| `enablePurgeProtection` | `false` | `true` |
-| `softDeleteRetentionInDays` | 90 | 90 |
-| `publicNetworkAccess` | Enabled | Enabled (private endpoint deferred to VNet module — #32) |
+| Setting                     | dev     | prod                                                     |
+| --------------------------- | ------- | -------------------------------------------------------- |
+| `enablePurgeProtection`     | `false` | `true`                                                   |
+| `softDeleteRetentionInDays` | 90      | 90                                                       |
+| `publicNetworkAccess`       | Enabled | Enabled (private endpoint deferred to VNet module — #32) |
 
 ---
 
@@ -152,10 +152,10 @@ This means every pull request gets an ephemeral frontend environment at no addit
 
 The `containerapp.bicep` module sets replica limits based on environment:
 
-| Environment | `minReplicas` | `maxReplicas` | Effect |
-|-------------|---------------|---------------|--------|
-| dev | 0 | 3 | Scales to zero when idle — no charge |
-| prod | 1 | 10 | Always 1 warm replica; scales out on load |
+| Environment | `minReplicas` | `maxReplicas` | Effect                                    |
+| ----------- | ------------- | ------------- | ----------------------------------------- |
+| dev         | 0             | 3             | Scales to zero when idle — no charge      |
+| prod        | 1             | 10            | Always 1 warm replica; scales out on load |
 
 Each replica is allocated **0.5 vCPU / 1 GiB memory** (Consumption plan).
 
@@ -189,12 +189,12 @@ scale: {
 
 ### Cost reference
 
-| Scenario | Estimated monthly cost |
-|----------|------------------------|
-| Dev (scale-to-zero, Consumption plan) | $0 when idle; free monthly grants cover light usage |
-| Prod (min 1 replica, 0.5 vCPU / 1 GiB) | ~$8–12 at low traffic |
-| Each additional replica (scale-out) | ~$8–12 per replica |
-| Zone-redundant HA (Dedicated plan) | Significantly higher — evaluate when P99 latency or uptime SLAs require it |
+| Scenario                               | Estimated monthly cost                                                     |
+| -------------------------------------- | -------------------------------------------------------------------------- |
+| Dev (scale-to-zero, Consumption plan)  | $0 when idle; free monthly grants cover light usage                        |
+| Prod (min 1 replica, 0.5 vCPU / 1 GiB) | ~$8–12 at low traffic                                                      |
+| Each additional replica (scale-out)    | ~$8–12 per replica                                                         |
+| Zone-redundant HA (Dedicated plan)     | Significantly higher — evaluate when P99 latency or uptime SLAs require it |
 
 Costs are approximate and vary by region and usage. See [Azure Container Apps pricing](https://azure.microsoft.com/pricing/details/container-apps/) for current rates.
 
@@ -204,20 +204,25 @@ For queue-driven workloads (e.g. Azure Service Bus, Storage Queue), KEDA scalers
 
 ---
 
-## Deploying
+### Deploying
 
 ```bash
+# Generate a postgres password (first deploy only — store it securely afterwards)
+PASSWORD=$(openssl rand -base64 32 | tr -d '/+=' | head -c 32)
+
 # Deploy to dev
 az deployment sub create \
   --location australiaeast \
   --template-file infra/main.bicep \
-  --parameters infra/main.parameters.dev.bicepparam
+  --parameters infra/main.parameters.dev.bicepparam \
+  --parameters postgresAdminPassword="$PASSWORD"
 
 # Deploy to prod
 az deployment sub create \
   --location australiaeast \
   --template-file infra/main.bicep \
-  --parameters infra/main.parameters.prod.bicepparam
+  --parameters infra/main.parameters.prod.bicepparam \
+  --parameters postgresAdminPassword="$PASSWORD"
 
 # Tear down (dev)
 az group delete --name rg-dostar-dev-aue-001 --yes
@@ -229,10 +234,10 @@ az group delete --name rg-dostar-dev-aue-001 --yes
 
 ### Default configuration
 
-| Environment | HA mode | Protection |
-|-------------|---------|------------|
-| dev | Disabled | No HA — lowest cost |
-| prod | SameZone | Standby replica in the same availability zone; automatic failover on node failure |
+| Environment | HA mode  | Protection                                                                        |
+| ----------- | -------- | --------------------------------------------------------------------------------- |
+| dev         | Disabled | No HA — lowest cost                                                               |
+| prod        | SameZone | Standby replica in the same availability zone; automatic failover on node failure |
 
 **Same-zone HA** (prod default) protects against individual node failure within a zone. The standby replica is kept in sync and promoted automatically if the primary fails — no data loss, short failover window (~30–120 seconds).
 

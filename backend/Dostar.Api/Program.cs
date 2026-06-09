@@ -6,6 +6,8 @@ using Dostar.Api.HealthChecks;
 using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
 using Dostar.Todos.Implementation;
+using Dostar.Todos.Implementation.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
@@ -95,6 +97,11 @@ foreach (var module in modules)
     module.RegisterServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<TodosDbContext>().Database.Migrate();
+}
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseExceptionHandler();

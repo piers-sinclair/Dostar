@@ -1,0 +1,118 @@
+name: Infra — bootstrap RBAC
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  rbac:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            echo "Follow docs/deploy-setup.md to configure OIDC credentials and add these secrets."
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Assign CI service principal AcrPush role
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          ACR_NAME="crdostardevaue001"
+          ACR_ID=$(az acr show --name "$ACR_NAME" --query id -o tsv)
+
+          # Role assignments require the SP's object ID, not the app/client ID
+          SP_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
+
+          EXISTING=$(az role assignment list \
+            --assignee "$SP_OBJECT_ID" \
+            --role "AcrPush" \
+            --scope "$ACR_ID" \
+            --query "[0].id" -o tsv 2>/dev/null)
+
+          if [ -n "$EXISTING" ]; then
+            echo "AcrPush role assignment already exists — skipping"
+          else
+            az role assignment create \
+              --assignee-object-id "$SP_OBJECT_ID" \
+              --assignee-principal-type ServicePrincipal \
+              --role "AcrPush" \
+              --scope "$ACR_ID"
+          fi
+
+      - name: Assign Container App managed identity AcrPull role
+        run: |
+          ACR_NAME="crdostardevaue001"
+          ACR_ID=$(az acr show --name "$ACR_NAME" --query id -o tsv)
+
+          CA_PRINCIPAL_ID=$(az containerapp show \
+            --name "ca-dostar-dev-aue-001" \
+            --resource-group "rg-dostar-dev-aue-001" \
+            --query identity.principalId -o tsv)
+
+          EXISTING=$(az role assignment list \
+            --assignee "$CA_PRINCIPAL_ID" \
+            --role "AcrPull" \
+            --scope "$ACR_ID" \
+            --query "[0].id" -o tsv 2>/dev/null)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Container App AcrPull role assignment already exists — skipping"
+          else
+            az role assignment create \
+              --assignee-object-id "$CA_PRINCIPAL_ID" \
+              --assignee-principal-type ServicePrincipal \
+              --role "AcrPull" \
+              --scope "$ACR_ID"
+          fi
+
+      - name: Assign Container App managed identity Key Vault Secrets User role
+        run: |
+          KV_NAME="kv-dostar-dev-aue-001"
+          KV_ID=$(az keyvault show --name "$KV_NAME" --query id -o tsv)
+
+          CA_PRINCIPAL_ID=$(az containerapp show \
+            --name "ca-dostar-dev-aue-001" \
+            --resource-group "rg-dostar-dev-aue-001" \
+            --query identity.principalId -o tsv)
+
+          EXISTING=$(az role assignment list \
+            --assignee "$CA_PRINCIPAL_ID" \
+            --role "Key Vault Secrets User" \
+            --scope "$KV_ID" \
+            --query "[0].id" -o tsv 2>/dev/null)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Key Vault Secrets User role assignment already exists — skipping"
+          else
+            az role assignment create \
+              --assignee-object-id "$CA_PRINCIPAL_ID" \
+              --assignee-principal-type ServicePrincipal \
+              --role "Key Vault Secrets User" \
+              --scope "$KV_ID"
+          fi

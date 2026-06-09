@@ -19,11 +19,13 @@ param instance string
 @description('Resource ID of the subnet delegated to Container Apps.')
 param containerAppSubnetId string
 
-@description('Resource ID of the ACR. Used to scope the AcrPull role assignment.')
-param acrId string
 
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
 param appInsightsConnectionString string = ''
+
+@description('PostgreSQL connection string. Passed as a secure param so ARM encrypts it in transit and in deployment history.')
+@secure()
+param postgresConnectionString string
 
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
@@ -40,11 +42,6 @@ var acrLoginServer = '${acrName}.azurecr.io'
 var minReplicas = env == 'prod' ? 1 : 0
 var maxReplicas = env == 'prod' ? 10 : 3
 
-// https://learn.microsoft.com/azure/container-registry/container-registry-roles
-var acrPullRoleId = tenantResourceId(
-  'Microsoft.Authorization/roleDefinitions',
-  '7f951dda-4ed3-4680-a7ca-43fe172d538d'
-)
 
 resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
@@ -72,6 +69,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         targetPort: 8080
         transport: 'auto'
       }
+      secrets: [
+        {
+          name: 'connectionstrings--default'
+          value: postgresConnectionString
+        }
+      ]
       // ACR registry config is conditional: on first deploy the placeholder MCR image is used
       // before the AcrPull role exists (it depends on this app's principalId). Configuring the
       // registry without the role causes Azure to fail with "Operation expired".
@@ -99,6 +102,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 name: 'ASPNETCORE_URLS'
                 value: 'http://+:8080'
               }
+              {
+                name: 'ConnectionStrings__Default'
+                secretRef: 'connectionstrings--default'
+              }
             ],
             !empty(appInsightsConnectionString)
               ? [
@@ -116,21 +123,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         maxReplicas: maxReplicas
       }
     }
-  }
-}
-
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: last(split(acrId, '/'))!
-}
-
-resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  // Raw role GUID keeps the assignment name stable regardless of role definition ID format
-  name: guid(acr.id, containerApp.id, '7f951dda-4ed3-4680-a7ca-43fe172d538d')
-  scope: acr
-  properties: {
-    roleDefinitionId: acrPullRoleId
-    principalId: containerApp.identity.principalId
-    principalType: 'ServicePrincipal'
   }
 }
 

@@ -1,0 +1,61 @@
+name: CD — deploy frontend
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "frontend/**"
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy frontend (dev)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check required secrets
+        env:
+          SWA_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+        run: |
+          if [ -z "$SWA_TOKEN" ]; then
+            echo "::error::Missing required secret: AZURE_STATIC_WEB_APPS_API_TOKEN_DEV"
+            echo "Retrieve the token with: az staticwebapp secrets list --name stapp-dostar-dev-aue-001 --resource-group rg-dostar-dev-aue-001 --query 'properties.apiKey' -o tsv"
+            exit 1
+          fi
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: latest
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
+
+      - name: Build
+        run: pnpm build
+        working-directory: frontend
+
+      - name: Deploy to Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_DEV }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: frontend/dist
+          skip_app_build: true
+          skip_api_build: true

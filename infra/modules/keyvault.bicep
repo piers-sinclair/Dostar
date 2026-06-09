@@ -16,20 +16,21 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-@description('Principal ID of the managed identity that needs Key Vault Secrets User access.')
-param appServicePrincipalId string
-
 @description('Auto-generated admin password for the PostgreSQL Flexible Server. Stored as a secret so operators can retrieve it.')
 @secure()
 param postgresAdminPassword string
 
+@description('Fully qualified domain name of the PostgreSQL Flexible Server.')
+param postgresServerFqdn string
+
+@description('Name of the PostgreSQL database.')
+param postgresDatabaseName string
+
+@description('Administrator username for the PostgreSQL Flexible Server.')
+param postgresAdminUsername string
+
 var keyVaultName = 'kv-${workload}-${env}-${region}-${instance}'
 
-// https://learn.microsoft.com/azure/key-vault/general/rbac-guide#azure-built-in-roles-for-key-vault-data-plane-operations
-var keyVaultSecretsUserRoleId = tenantResourceId(
-  'Microsoft.Authorization/roleDefinitions',
-  '4633458b-17de-408a-b874-0445c86b69e6'
-)
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
@@ -49,17 +50,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-resource secretsUserRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(appServicePrincipalId)) {
-  // Raw role GUID keeps the assignment name stable regardless of role definition ID format
-  name: guid(keyVault.id, appServicePrincipalId, '4633458b-17de-408a-b874-0445c86b69e6')
-  scope: keyVault
-  properties: {
-    roleDefinitionId: keyVaultSecretsUserRoleId
-    principalId: appServicePrincipalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
 resource postgresPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'postgres-admin-password'
   parent: keyVault
@@ -68,8 +58,20 @@ resource postgresPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' =
   }
 }
 
+resource postgresConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  name: 'postgres-connection-string'
+  parent: keyVault
+  properties: {
+    value: 'Host=${postgresServerFqdn};Port=5432;Database=${postgresDatabaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
+  }
+}
+
+
 @description('The URI of the Key Vault.')
 output keyVaultUri string = keyVault.properties.vaultUri
 
 @description('The name of the Key Vault.')
 output keyVaultName string = keyVault.name
+
+@description('The versioned URI of the postgres-connection-string secret.')
+output connectionStringSecretUri string = postgresConnectionStringSecret.properties.secretUri
