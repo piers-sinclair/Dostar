@@ -23,6 +23,9 @@ param containerAppSubnetId string
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
 param appInsightsConnectionString string = ''
 
+@description('Frontend origin allowed by the production CORS policy (e.g. https://stapp-dostar-dev-aue-001.azurestaticapps.net). Leave empty to disable cross-origin access.')
+param frontendOrigin string = ''
+
 @description('PostgreSQL connection string. Passed as a secure param so ARM encrypts it in transit and in deployment history.')
 @secure()
 param postgresConnectionString string
@@ -116,6 +119,14 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                   {
                     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
                     value: appInsightsConnectionString
+                  }
+                ]
+              : [],
+            !empty(frontendOrigin)
+              ? [
+                  {
+                    name: 'Cors__AllowedOrigins__0'
+                    value: frontendOrigin
                   }
                 ]
               : []
