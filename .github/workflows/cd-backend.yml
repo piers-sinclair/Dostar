@@ -57,11 +57,7 @@ jobs:
       - name: Run EF Core migrations
         env:
           ConnectionStrings__Default: ${{ secrets.DB_CONNECTION_STRING }}
-        run: |
-          dotnet ef database update \
-            --project backend/Modules/Todos/Dostar.Todos.Implementation \
-            --startup-project backend/Dostar.Api \
-            --context TodosDbContext
+        run: bash tools/run-migrations.sh
 
   deploy:
     name: Deploy app (dev)

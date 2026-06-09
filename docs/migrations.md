@@ -65,10 +65,12 @@ In production this is set via Azure App Service environment variables (never com
 In production, migrations run as a dedicated step in `cd-backend.yml` **before** the app is deployed. The `migrate` job:
 
 1. Installs `dotnet-ef` globally
-2. Runs `dotnet ef database update` using the `DB_CONNECTION_STRING` secret (a GitHub secret containing the PostgreSQL connection string)
+2. Runs `bash tools/run-migrations.sh`, which discovers every `Dostar.<Name>.Implementation` project that has a `Migrations/` directory and calls `dotnet ef database update` for each one using the `DB_CONNECTION_STRING` secret
 3. Exits cleanly
 
 The `deploy` job has `needs: migrate` — the app only starts after migrations succeed. This prevents race conditions when multiple replicas start simultaneously and ensures a bad migration fails fast without taking down the app on boot.
+
+Adding a new module requires no changes to the workflow — the script picks it up automatically.
 
 To add the required secret:
 1. Go to repo Settings → Secrets and variables → Actions
