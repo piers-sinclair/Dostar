@@ -3,10 +3,120 @@ name: Testing — UI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-  ui:
-    name: Playwright
+  # On PRs: start the API with dotnet run — no Docker build overhead.
+  # Backend correctness is already validated by the backend-checks CI job.
+  ui-pr:
+    name: Playwright (PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: '**/pnpm-lock.yaml'
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
+
+      - name: Build frontend
+        run: pnpm build
+        working-directory: frontend
+
+      - name: Start database
+        run: docker compose up -d db
+
+      - name: Wait for database
+        run: |
+          for i in $(seq 1 15); do
+            docker compose exec -T db pg_isready -U dostar && break
+            echo "Waiting for postgres... ($i/15)"
+            sleep 2
+          done
+
+      - name: Start API
+        run: dotnet run --project backend/Dostar.Api/Dostar.Api.csproj &
+        env:
+          ASPNETCORE_URLS: http://+:8080
+          ConnectionStrings__Default: Host=localhost;Port=5432;Database=dostar;Username=dostar;Password=dostar
+
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 20); do
+            curl -sf http://localhost:8080/healthz/live && break
+            echo "Waiting for API... ($i/20)"
+            sleep 3
+          done
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('tests/Dostar.UITests/pnpm-lock.yaml') }}
+
+      - name: Install UI test deps
+        run: pnpm install --frozen-lockfile
+        working-directory: tests/Dostar.UITests
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: tests/Dostar.UITests
+
+      - name: Serve frontend
+        run: pnpm preview --port 5173 &
+        working-directory: frontend
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:5173 && exit 0
+            echo "Waiting for frontend... ($i/10)"
+            sleep 2
+          done
+          echo "::error::Frontend never started on port 5173"
+          exit 1
+
+      - name: Run Playwright tests
+        run: pnpm exec playwright test
+        working-directory: tests/Dostar.UITests
+        env:
+          UI_BASE_URL: http://localhost:5173
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/Dostar.UITests/playwright-report/
+          retention-days: 7
+
+  # On merge to main: run against the real Docker image for production fidelity.
+  ui-post-merge:
+    name: Playwright (post-merge — Docker)
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
