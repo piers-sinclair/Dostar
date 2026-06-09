@@ -74,8 +74,9 @@ lerna-debug.log*
 # Bicep compiled output (source of truth is the .bicep files)
 infra/**/*.json
 
-# Claude Code worktrees
+# Claude Code worktrees and local settings
 .claude/worktrees/
+.claude/settings.local.json
 
 # Editor / OS
 .idea/
