@@ -142,3 +142,30 @@ jobs:
               --role "Key Vault Secrets User" \
               --scope "$KV_ID"
           fi
+
+      - name: Ensure federated credential for environment:dev exists
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          SUBJECT="repo:${{ github.repository }}:environment:dev"
+
+          EXISTING=$(az ad app federated-credential list \
+            --id "$AZURE_CLIENT_ID" \
+            --query "[?subject=='$SUBJECT'].id" -o tsv 2>/dev/null || true)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Federated credential for environment:dev already exists — skipping"
+          elif az ad app federated-credential create \
+            --id "$AZURE_CLIENT_ID" \
+            --parameters "{
+              \"name\": \"github-environment-dev\",
+              \"issuer\": \"https://token.actions.githubusercontent.com\",
+              \"subject\": \"$SUBJECT\",
+              \"audiences\": [\"api://AzureADTokenExchange\"]
+            }" 2>/dev/null; then
+            echo "Created federated credential for environment:dev"
+          else
+            echo "::warning::Could not create federated credential for environment:dev."
+            echo "::warning::The SP must be an owner of its own app registration — see docs/deploy-setup.md section 2.3."
+            echo "::warning::Then run this manually: az ad app federated-credential create --id '$AZURE_CLIENT_ID' --parameters '{\"name\":\"github-environment-dev\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"$SUBJECT\",\"audiences\":[\"api://AzureADTokenExchange\"]}'"
+          fi

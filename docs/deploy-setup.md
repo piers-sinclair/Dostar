@@ -75,7 +75,11 @@ echo "APP_ID=$APP_ID"
 
 ```bash
 az ad sp create --id "$APP_ID"
+SP_OBJ_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
+az ad app owner add --id "$APP_ID" --owner-object-id "$SP_OBJ_ID"
 ```
+
+Making the SP an owner of its own app registration allows the Bootstrap RBAC workflow to automatically register new OIDC subjects (such as GitHub environment credentials) without manual intervention.
 
 ---
 
@@ -137,7 +141,26 @@ az ad app federated-credential create \
 
 ---
 
-### 2.8 Retrieve values for GitHub Secrets
+### 2.8 Allow environment deployments
+
+CD jobs use `environment: dev`, which changes the OIDC subject from `ref:refs/heads/main` to `environment:dev`. A separate federated credential is required.
+
+```bash
+az ad app federated-credential create \
+  --id "$APP_ID" \
+  --parameters "{
+    \"name\": \"github-environment-dev\",
+    \"issuer\": \"https://token.actions.githubusercontent.com\",
+    \"subject\": \"repo:$REPO:environment:dev\",
+    \"audiences\": [\"api://AzureADTokenExchange\"]
+  }"
+```
+
+The Bootstrap RBAC workflow also creates this credential automatically (requires the SP to be an app owner per section 2.3).
+
+---
+
+### 2.9 Retrieve values for GitHub Secrets
 
 Run:
 
@@ -154,7 +177,7 @@ And use:
 
 ---
 
-### 2.9 Add GitHub Secrets
+### 2.10 Add GitHub Secrets
 
 In GitHub:
 
