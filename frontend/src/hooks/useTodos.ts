@@ -6,6 +6,7 @@ const BASE = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/v1/todos`;
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     const res = await fetch(url, init);
     if (!res.ok) throw await res.json();
+    if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;
 }
 
@@ -33,7 +34,16 @@ export function useDeleteTodo() {
     const client = useQueryClient();
     return useMutation({
         mutationFn: (id: string) => fetchJson<void>(`${BASE}/${id}`, { method: 'DELETE' }),
-        onSuccess: () => client.invalidateQueries({ queryKey: ['todos'] }),
+        onMutate: async (id) => {
+            await client.cancelQueries({ queryKey: ['todos'] });
+            const previous = client.getQueryData<Todo[]>(['todos']);
+            client.setQueryData<Todo[]>(['todos'], (old) => old?.filter((t) => t.id !== id) ?? []);
+            return { previous };
+        },
+        onError: (_err, _id, ctx) => {
+            if (ctx?.previous) client.setQueryData(['todos'], ctx.previous);
+        },
+        onSettled: () => client.invalidateQueries({ queryKey: ['todos'] }),
     });
 }
 
@@ -54,6 +64,18 @@ export function useToggleTodo() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, isComplete: isCompleted }),
             }),
-        onSuccess: () => client.invalidateQueries({ queryKey: ['todos'] }),
+        onMutate: async ({ id, isCompleted }) => {
+            await client.cancelQueries({ queryKey: ['todos'] });
+            const previous = client.getQueryData<Todo[]>(['todos']);
+            client.setQueryData<Todo[]>(
+                ['todos'],
+                (old) => old?.map((t) => (t.id === id ? { ...t, isCompleted } : t)) ?? []
+            );
+            return { previous };
+        },
+        onError: (_err, _vars, ctx) => {
+            if (ctx?.previous) client.setQueryData(['todos'], ctx.previous);
+        },
+        onSettled: () => client.invalidateQueries({ queryKey: ['todos'] }),
     });
 }
