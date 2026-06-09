@@ -9,8 +9,7 @@
       "Bash(dotnet add *)",
       "Bash(dotnet remove *)",
       "Bash(pnpm *)",
-      "Bash(git pull *)",
-      "Bash(chmod +x *)"
+      "Bash(git pull *)"
     ]
   }
 }
