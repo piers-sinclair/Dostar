@@ -198,6 +198,39 @@ scale: {
 
 Costs are approximate and vary by region and usage. See [Azure Container Apps pricing](https://azure.microsoft.com/pricing/details/container-apps/) for current rates.
 
+### ASP.NET Core environment and Scalar
+
+`containerapp.bicep` sets `ASPNETCORE_ENVIRONMENT` based on the deployment environment:
+
+| `env` param | `ASPNETCORE_ENVIRONMENT` | Scalar at `/scalar/v1` | Error detail |
+|-------------|--------------------------|------------------------|--------------|
+| `dev`       | `Development`            | ✓ enabled              | Full stack traces |
+| `prod`      | `Production`             | ✗ disabled             | Generic messages |
+
+**Why `Development` in dev?** It enables Scalar at the deployed URL — useful for exploring the live API without running the app locally. It also surfaces full error detail in responses, which speeds up debugging.
+
+**To disable Scalar in the dev environment** (e.g. to test prod-like behaviour), change the value in `infra/modules/containerapp.bicep`:
+
+```bicep
+{
+  name: 'ASPNETCORE_ENVIRONMENT'
+  value: 'Production'   // was: env == 'prod' ? 'Production' : 'Development'
+}
+```
+
+Or override without redeploying infrastructure:
+
+```bash
+az containerapp update \
+  --name ca-dostar-dev-aue-001 \
+  --resource-group rg-dostar-dev-aue-001 \
+  --set-env-vars ASPNETCORE_ENVIRONMENT=Production
+```
+
+> Easy Auth still applies in both modes — Scalar requires a Bearer token in the deployed environment.
+
+---
+
 ### KEDA scalers (advanced)
 
 For queue-driven workloads (e.g. Azure Service Bus, Storage Queue), KEDA scalers let you scale on message backlog rather than HTTP traffic. See the [KEDA scalers documentation](https://keda.sh/docs/scalers/) for available trigger types.
