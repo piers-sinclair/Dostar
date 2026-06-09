@@ -103,6 +103,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 value: 'http://+:8080'
               }
               {
+                name: 'ASPNETCORE_ENVIRONMENT'
+                value: env == 'prod' ? 'Production' : 'Development'
+              }
+              {
                 name: 'ConnectionStrings__Default'
                 secretRef: 'connectionstrings--default'
               }
