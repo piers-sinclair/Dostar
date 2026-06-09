@@ -1,27 +1,55 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTodos, useDeleteTodo, useToggleTodo } from './hooks/useTodos';
+import { useApiError } from './hooks/useApiError';
 
 function App() {
+    const { data: todos, isLoading, error } = useTodos();
+    const deleteTodo = useDeleteTodo();
+    const toggleTodo = useToggleTodo();
+    const errorMessage = useApiError(error);
+
     return (
         <main className="min-h-screen bg-background p-8">
             <div className="mx-auto max-w-lg space-y-6">
                 <h1 className="text-3xl font-bold text-foreground">Dostar</h1>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Create Todo</CardTitle>
-                        <CardDescription>Add a new task to your list.</CardDescription>
+                        <CardTitle>Todos</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="title">Title</Label>
-                            <Input id="title" placeholder="What needs doing?" />
-                        </div>
-                        <Button>Add Todo</Button>
-                        <Button variant="outline" className="ml-2">
-                            Cancel
-                        </Button>
+                    <CardContent>
+                        {isLoading && <p className="text-muted-foreground">Loading…</p>}
+                        {errorMessage && <p className="text-destructive">{errorMessage}</p>}
+                        <ul className="space-y-2">
+                            {todos?.map((todo) => (
+                                <li key={todo.id} className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={todo.isCompleted}
+                                        onChange={() =>
+                                            toggleTodo.mutate({
+                                                id: todo.id,
+                                                isCompleted: !todo.isCompleted,
+                                            })
+                                        }
+                                    />
+                                    <span
+                                        className={
+                                            todo.isCompleted ? 'line-through text-muted-foreground' : ''
+                                        }
+                                    >
+                                        {todo.title}
+                                    </span>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteTodo.mutate(todo.id)}
+                                    >
+                                        ×
+                                    </Button>
+                                </li>
+                            ))}
+                        </ul>
                     </CardContent>
                 </Card>
             </div>
