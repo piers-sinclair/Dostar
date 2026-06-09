@@ -46,6 +46,7 @@ jobs:
       - name: Run what-if and post PR comment
         env:
           GH_TOKEN: ${{ github.token }}
+          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD || 'WhatIfPlaceholder' }}
         run: |
           OUTPUT=$(az deployment sub what-if \
             --location australiaeast \

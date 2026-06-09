@@ -173,19 +173,33 @@ And use:
 
 ---
 
-### 2.10 Add GitHub Secrets
+### 2.10 Generate a Postgres password
 
-In GitHub:
+Generate a strong random password and add it as a GitHub secret. You will never need to type it manually.
 
-**Settings → Secrets and variables → Actions**
+```bash
+POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')
+gh secret set AZURE_POSTGRES_ADMIN_PASSWORD --body "$POSTGRES_PASSWORD"
+```
 
-Add:
+---
 
-| Secret                              | Value                       | Required by                        |
-| ----------------------------------- | --------------------------- | ---------------------------------- |
-| `AZURE_CLIENT_ID`       | App ID          | All workflows |
-| `AZURE_TENANT_ID`       | Tenant ID       | All workflows |
+### 2.11 Add remaining GitHub secrets
+
+```bash
+gh secret set AZURE_CLIENT_ID       --body "$APP_ID"
+gh secret set AZURE_TENANT_ID       --body "$(az account show --query tenantId -o tsv)"
+gh secret set AZURE_SUBSCRIPTION_ID --body "$(az account show --query id -o tsv)"
+```
+
+Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
+
+| Secret | Value | Required by |
+| ------ | ----- | ----------- |
+| `AZURE_CLIENT_ID` | App ID from step 2.2 | All workflows |
+| `AZURE_TENANT_ID` | Tenant ID | All workflows |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
+| `AZURE_POSTGRES_ADMIN_PASSWORD` | Generated in step 2.10 | Infra workflows |
 
 ---
 
