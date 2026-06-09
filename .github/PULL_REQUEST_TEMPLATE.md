@@ -1,21 +1,20 @@
 ## Summary
 
-<!-- Describe what this PR does and why. Link to the relevant issue. -->
+<!-- What does this PR do? Bullet the key changes. -->
+
+## Related issue
 
 Closes #
 
-## Type of change
+## Test plan
 
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Refactor / code cleanup
-- [ ] Documentation update
-- [ ] CI / infrastructure change
-- [ ] Breaking change
+<!-- What did you do to verify this works? -->
 
-## Checklist
+- [ ] `dotnet build` passes (0 warnings) — if backend changed
+- [ ] `pnpm build` passes (0 TypeScript errors) — if frontend changed
+- [ ] Relevant unit tests pass
+- [ ] Relevant integration tests pass
 
-- [ ] Tests added or updated to cover the change
-- [ ] Documentation updated (if applicable)
-- [ ] No new compiler warnings or lint errors introduced
-- [ ] Breaking changes documented and communicated
+## Notes
+
+<!-- Anything reviewers should know: migration steps, secrets required, breaking changes, etc. -->
