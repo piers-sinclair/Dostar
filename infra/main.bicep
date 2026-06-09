@@ -33,8 +33,8 @@ param postgresAdminUsername string = 'dostaradmin'
 @secure()
 param postgresAdminPassword string
 
-@description('Client ID of the Entra app registration used for Easy Auth on the Container App. Leave empty (or omit the secret) to deploy without authentication.')
-param entraClientId string = ''
+@description('Client ID of the Entra app registration used for Easy Auth on the Container App.')
+param entraClientId string
 
 var abbrev = {
   resourceGroup: 'rg'

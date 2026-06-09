@@ -25,16 +25,18 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          AZURE_ENTRA_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
         run: |
           MISSING=()
           [ -z "$AZURE_CLIENT_ID" ]               && MISSING+=("AZURE_CLIENT_ID")
           [ -z "$AZURE_TENANT_ID" ]               && MISSING+=("AZURE_TENANT_ID")
           [ -z "$AZURE_SUBSCRIPTION_ID" ]         && MISSING+=("AZURE_SUBSCRIPTION_ID")
           [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ] && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+          [ -z "$AZURE_ENTRA_CLIENT_ID" ]         && MISSING+=("AZURE_ENTRA_CLIENT_ID")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
-            echo "Follow docs/deploy-setup.md to configure OIDC credentials and add these secrets to the repository."
+            echo "See docs/deploy-setup.md for setup instructions."
             exit 1
           fi
 

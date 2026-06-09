@@ -30,8 +30,8 @@ param postgresConnectionString string
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
-@description('Client ID of the Entra app registration used for Easy Auth. Leave empty to disable authentication.')
-param entraClientId string = ''
+@description('Client ID of the Entra app registration used for Easy Auth.')
+param entraClientId string
 
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
@@ -139,7 +139,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
 }
 
-resource authConfig 'Microsoft.App/containerApps/authConfigs@2024-03-01' = if (!empty(entraClientId)) {
+resource authConfig 'Microsoft.App/containerApps/authConfigs@2024-03-01' = {
   parent: containerApp
   name: 'current'
   properties: {

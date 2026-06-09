@@ -28,6 +28,8 @@ Use after a full teardown, or for first-time setup as an alternative to running 
 | `AZURE_CLIENT_ID` | Service principal app ID |
 | `AZURE_TENANT_ID` | Azure AD tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID |
+| `AZURE_POSTGRES_ADMIN_PASSWORD` | Strong random password for PostgreSQL |
+| `AZURE_ENTRA_CLIENT_ID` | API app registration client ID (Easy Auth) |
 
 **Steps:**
 
@@ -71,5 +73,7 @@ To bring the environment back, run **Dev — spin up** (see above).
 | `AZURE_CLIENT_ID` | All lifecycle workflows | Service principal app ID |
 | `AZURE_TENANT_ID` | All lifecycle workflows | Azure AD tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | All lifecycle workflows | Subscription ID |
+| `AZURE_POSTGRES_ADMIN_PASSWORD` | Infra workflows | Strong random password — see deploy-setup.md §2.9 |
+| `AZURE_ENTRA_CLIENT_ID` | Infra workflows | API app registration client ID — see deploy-setup.md §3 |
 
-See [deploy-setup.md](deploy-setup.md) for instructions on creating the service principal and adding these secrets.
+See [deploy-setup.md](deploy-setup.md) for step-by-step instructions.
