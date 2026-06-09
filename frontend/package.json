@@ -15,11 +15,18 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@radix-ui/react-label": "^2.1.9",
+    "@radix-ui/react-slot": "^1.2.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.17.0",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.0",
     "@types/node": "^25.9.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -33,6 +40,7 @@
     "eslint-plugin-react-x": "^5.8.16",
     "globals": "^17.6.0",
     "prettier": "^3.8.3",
+    "tailwindcss": "^4.3.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.60.1",
     "vite": "^8.0.16",
