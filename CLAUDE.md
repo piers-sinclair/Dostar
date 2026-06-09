@@ -1,5 +1,8 @@
 # Dostar — Claude Code Context
 
+> This file is loaded by Claude Code as AI context and instructions.
+> For human setup and reference, see [docs/developer-guide.md](docs/developer-guide.md).
+
 Dostar is a startup template for fullstack .NET modular monolith + React/Vite.
 Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerplate.
 
@@ -92,53 +95,9 @@ See `docs/module-pattern.md` for the full guide.
 
 ---
 
-## Running locally
-
-```bash
-# Backend — from repo root
-dotnet run --project backend/Dostar.Api --launch-profile http
-# → http://localhost:5000/healthz/live   (health check)
-# → http://localhost:5000/scalar/v1      (API docs)
-
-# Frontend — from repo root
-cd frontend && pnpm dev
-# → http://localhost:5173
-
-# Frontend build / lint / format
-cd frontend && pnpm build
-cd frontend && pnpm lint
-cd frontend && pnpm format
-```
-
-**VS Code**: press `F5` — builds and starts `Dostar.Api`, auto-opens Scalar.
-A compound launch config (backend + frontend together) is tracked separately.
-
-### CORS
-
-Two named policies are registered in `Program.cs`:
-
-| Policy | Used when | Allowed origins |
-|--------|-----------|-----------------|
-| `DevelopmentCors` | `IsDevelopment()` is true | `http://localhost:5173` (hardcoded) |
-| `ProductionCors` | all other environments | `Cors:AllowedOrigins` array from `appsettings.json` |
-
-`appsettings.Development.json` pre-populates `Cors:AllowedOrigins` with `http://localhost:5173` so `pnpm dev` works out of the box.
-In production, set `Cors:AllowedOrigins` to your Azure Static Web App hostname (or via env var `Cors__AllowedOrigins__0`).
-
----
-
 ## Testing
 
-```bash
-# Unit tests (per module — colocated with module code)
-dotnet test backend/Modules/<Module>/Dostar.<Module>.UnitTests
-
-# Integration tests (per module — real PostgreSQL via Testcontainers)
-dotnet test backend/Modules/<Module>/Dostar.<Module>.IntegrationTests
-
-# UI tests (Playwright)
-cd tests && pnpm exec playwright test
-```
+See [docs/developer-guide.md](docs/developer-guide.md) for how to run tests.
 
 Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
 **Playwright TypeScript** (UI tests).
@@ -171,26 +130,6 @@ The `dostar` CLI lives in [piers-sinclair/Dostar.Cli](https://github.com/piers-s
 > - New module structure conventions → `add-module` scaffolding templates may need updating
 >
 > When making such changes, open an issue on [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) if a CLI update is needed.
-
-```bash
-dostar add-module <Name>     # scaffold a new module
-dostar remove-module <Name>  # remove a module (with dry-run flag)
-dostar new-project <name>    # clone + rename template
-```
-
----
-
-## GitHub issues & milestones
-
-55 issues across 9 milestones. Sequencing:
-
-```
-M1 (Foundation) → M2 (Modular Architecture) ─┬→ M3 (CLI)
-                                               ├→ M4 (Testing)
-                                               ├→ M5 (CI/CD) → M6 (Infra)
-                                               └→ M9 (Frontend Patterns)
-                                    M7 (AI Agents) and M8 (Docs) — any time after M2
-```
 
 ---
 
@@ -256,5 +195,10 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 - Change a port, URL, or default environment setting
 - Introduce a new library or swap an existing one
 - Add a new Claude Code skill in `.claude/commands/`
+
+**Update `docs/developer-guide.md` whenever you:**
+- Change how to run the app or tests locally
+- Add or remove CLI commands
+- Update the stack or repo structure
 
 A reminder to do this is also in `CONTRIBUTING.md`.

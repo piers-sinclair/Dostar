@@ -3,7 +3,8 @@
 ## Getting started
 
 See [README.md](README.md) for prerequisites and local setup.
-See [CLAUDE.md](CLAUDE.md) for the full stack, repo structure, and key conventions.
+See [docs/developer-guide.md](docs/developer-guide.md) for stack, repo structure, and running locally.
+See [CLAUDE.md](CLAUDE.md) for coding conventions (this file is also loaded as Claude Code AI context).
 
 ## Development workflow
 
@@ -110,13 +111,18 @@ Releases are automated via release-please:
 2. release-please opens a versioned release PR with an updated `CHANGELOG.md`
 3. Merging the release PR creates a GitHub Release with a version tag
 
-## Keeping CLAUDE.md up to date
+## Keeping docs up to date
 
 Update `CLAUDE.md` whenever you:
 - Add a new module or change the module pattern
 - Change a port, URL, or default environment setting
 - Introduce a new library or swap an existing one
 - Add a new Claude Code skill
+
+Update `docs/developer-guide.md` whenever you:
+- Change how to run the app or tests locally
+- Add or remove CLI commands
+- Update the stack or repo structure
 
 ## Questions?
 
