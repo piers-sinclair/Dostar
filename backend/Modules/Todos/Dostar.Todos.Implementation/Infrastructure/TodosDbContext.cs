@@ -4,4 +4,10 @@ namespace Dostar.Todos.Implementation.Infrastructure;
 public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContext(options)
 {
     public DbSet<Todo> Todos => Set<Todo>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Todo>()
+            .ToTable(t => t.HasCheckConstraint("CK_Todos_Title_NotEmpty", "\"Title\" <> ''"));
+    }
 }
