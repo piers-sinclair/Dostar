@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "generate:api": "orval --config orval.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.9",
@@ -41,6 +42,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "eslint-plugin-react-x": "^5.8.16",
     "globals": "^17.6.0",
+    "orval": "^8.15.0",
     "prettier": "^3.8.3",
     "tailwindcss": "^4.3.0",
     "typescript": "~6.0.3",
