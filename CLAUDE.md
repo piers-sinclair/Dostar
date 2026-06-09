@@ -55,8 +55,10 @@ CLAUDE.md               ← this file
 | `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
 | `/code-quality` | `.claude/commands/code-quality.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
 | `/audit-azure-costs` | `.claude/commands/audit-azure-costs.md` | Audit Azure infra + CI/CD for startup cost optimisation |
+| `/integration-tests` | `.claude/commands/integration-tests.md` | Add integration tests for a module endpoint |
+| `/playwright` | `.claude/commands/playwright.md` | Write a Playwright UI test for a user journey |
 
-> Future (build after M4): `/integration-tests`, `/playwright`, `/scaffold-page` (M9)
+> Future (build after M9): `/scaffold-page`
 
 ---
 
