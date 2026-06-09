@@ -124,6 +124,7 @@ module containerapp 'modules/containerapp.bicep' = {
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
     appInsightsConnectionString: appinsights.outputs.connectionString
     postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
+    frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
   }
 }
 
