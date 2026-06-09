@@ -16,6 +16,7 @@ public class TodoService(TodosDbContext db) : ITodoService
 
     public async Task<TodoDto> CreateAsync(string title)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
         var todo = new Todo
         {
             Id = Guid.NewGuid(),
