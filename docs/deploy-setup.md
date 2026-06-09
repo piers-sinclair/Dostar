@@ -200,14 +200,47 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 | `AZURE_TENANT_ID` | Tenant ID | All workflows |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Generated in step 2.10 | Infra workflows |
+| `AZURE_ENTRA_CLIENT_ID` | API app client ID (step 3 below) | Infra workflows |
+
+`AZURE_ENTRA_CLIENT_ID` is set in step 3 — complete that section first.
 
 ---
 
-## 3. Post-infra setup (REQUIRED after first deploy)
+## 3. Create API app registration (ONE-TIME SETUP)
+
+Easy Auth is always enabled on the Container App — every API request must carry a valid Entra Bearer token. This step creates a separate app registration that represents your API (distinct from the CI service principal in section 2).
+
+### 3.1 Create the app registration
+
+```bash
+API_APP_ID=$(az ad app create \
+  --display-name "$APP_NAME-api" \
+  --query appId -o tsv)
+```
+
+### 3.2 Set the Application ID URI
+
+```bash
+az ad app update \
+  --id "$API_APP_ID" \
+  --identifier-uris "api://$API_APP_ID"
+```
+
+This is the audience that Easy Auth validates Bearer tokens against.
+
+### 3.3 Add GitHub secret
+
+```bash
+gh secret set AZURE_ENTRA_CLIENT_ID --body "$API_APP_ID"
+```
+
+---
+
+## 4. Post-infra setup (REQUIRED after first deploy)
 
 Run the infra deploy workflow first (`infra-deploy`), then complete these steps.
 
-### 3.1 Run Bootstrap RBAC
+### 4.1 Run Bootstrap RBAC
 
 Go to GitHub Actions → run **Bootstrap RBAC (dev)**.
 
@@ -225,34 +258,40 @@ No passwords or manually-managed tokens required.
 
 ---
 
-## 4. Verifying the deployment
+## 5. Verifying the deployment
 
 After a successful CD run, confirm the app is up before calling it done.
 
-### 4.1 Backend (Container App)
+### 5.1 Backend (Container App)
 
 Get the FQDN:
 
 ```bash
-az containerapp show \
+FQDN=$(az containerapp show \
   --name ca-dostar-dev-aue-001 \
   --resource-group rg-dostar-dev-aue-001 \
-  --query properties.configuration.ingress.fqdn -o tsv
+  --query properties.configuration.ingress.fqdn -o tsv)
 ```
 
-Check the health endpoint (HTTP 200 = app is up):
+Check the health endpoint — no token needed (excluded from Easy Auth):
 
 ```bash
-curl https://<FQDN>/healthz/live
+curl https://$FQDN/healthz/live
 ```
 
-Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connection problem):
+Call the API — requires a Bearer token:
 
 ```bash
-curl https://<FQDN>/api/v1/todos
+TOKEN=$(az account get-access-token \
+  --resource "api://$API_APP_ID" \
+  --query accessToken -o tsv)
+
+curl -H "Authorization: Bearer $TOKEN" https://$FQDN/api/v1/todos
 ```
 
-> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser after acquiring a Bearer token (Easy Auth applies; see above). It is not available in prod.
+> `[]` = app and DB are healthy. `401` = token missing or invalid. `500` = DB connection problem.
+>
+> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://$FQDN/scalar/v1`. Browse it in a browser after acquiring a Bearer token (Easy Auth applies; see above). It is not available in prod.
 
 Tail logs if something is wrong:
 
@@ -281,6 +320,6 @@ Open the URL in a browser — it should show the React app. If it shows the Azur
 
 ---
 
-## 5. Managing the dev environment lifecycle
+## 6. Managing the dev environment lifecycle
 
 Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.

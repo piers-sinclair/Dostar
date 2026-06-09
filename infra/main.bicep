@@ -33,6 +33,9 @@ param postgresAdminUsername string = 'dostaradmin'
 @secure()
 param postgresAdminPassword string
 
+@description('Client ID of the Entra app registration used for Easy Auth on the Container App.')
+param entraClientId string
+
 var abbrev = {
   resourceGroup: 'rg'
   appServicePlan: 'asp'
@@ -125,6 +128,7 @@ module containerapp 'modules/containerapp.bicep' = {
     appInsightsConnectionString: appinsights.outputs.connectionString
     postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
     frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
+    entraClientId: entraClientId
   }
 }
 
