@@ -116,3 +116,29 @@ jobs:
               --role "Key Vault Secrets User" \
               --scope "$KV_ID"
           fi
+
+      - name: Assign CI service principal Key Vault Secrets User role
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          KV_NAME="kv-dostar-dev-aue-001"
+          KV_ID=$(az keyvault show --name "$KV_NAME" --query id -o tsv)
+
+          # Role assignments require the SP's object ID, not the app/client ID
+          SP_OBJECT_ID=$(az ad sp show --id "$AZURE_CLIENT_ID" --query id -o tsv)
+
+          EXISTING=$(az role assignment list \
+            --assignee "$SP_OBJECT_ID" \
+            --role "Key Vault Secrets User" \
+            --scope "$KV_ID" \
+            --query "[0].id" -o tsv 2>/dev/null)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Key Vault Secrets User role for CI SP already exists — skipping"
+          else
+            az role assignment create \
+              --assignee-object-id "$SP_OBJECT_ID" \
+              --assignee-principal-type ServicePrincipal \
+              --role "Key Vault Secrets User" \
+              --scope "$KV_ID"
+          fi

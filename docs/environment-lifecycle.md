@@ -45,7 +45,7 @@ Use after a full teardown, or for first-time setup as an alternative to running 
 The spinup workflow:
 - Deploys Bicep (all Azure resources)
 - Bootstraps RBAC role assignments (AcrPush, AcrPull, Key Vault Secrets User)
-- Refreshes the `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` GitHub secret (it changes each reprovision)
+- Stores the SWA deployment token in Key Vault (automatically retrieved by the frontend CD workflow)
 - Triggers backend and frontend deploy workflows
 
 ---
@@ -71,6 +71,5 @@ To bring the environment back, run **Dev — spin up** (see above).
 | `AZURE_CLIENT_ID` | All lifecycle workflows | Service principal app ID |
 | `AZURE_TENANT_ID` | All lifecycle workflows | Azure AD tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | All lifecycle workflows | Subscription ID |
-| `AZURE_STATIC_WEB_APPS_API_TOKEN_DEV` | Frontend CD | Auto-refreshed by spin up; set manually after first deploy (see [deploy-setup.md](deploy-setup.md)) |
 
 See [deploy-setup.md](deploy-setup.md) for instructions on creating the service principal and adding these secrets.

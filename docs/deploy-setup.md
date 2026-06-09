@@ -178,30 +178,17 @@ Run the infra deploy workflow first (`infra-deploy`), then complete these steps.
 
 Go to GitHub Actions → run **Bootstrap RBAC (dev)**.
 
-This grants the Container App managed identity `AcrPull` and `Key Vault Secrets User` so it can pull images and read the database connection string.
+This grants the Container App managed identity `AcrPull` and `Key Vault Secrets User` so it can pull images and read the database connection string, and grants the CI service principal `Key Vault Secrets User` so the frontend deploy workflow reads the SWA deployment token directly from Key Vault.
 
 #### Why this exists?
 
 Role assignments (ACR pull, Key Vault access) require elevated permissions that should not be embedded in Bicep or the core CI/CD pipelines.
 
-### 3.2 Add the Static Web App deploy token
-
-The frontend deploy workflow needs a token scoped to the Static Web App. Run once after the first infra deploy:
-
-```bash
-TOKEN=$(az staticwebapp secrets list \
-  --name stapp-dostar-dev-aue-001 \
-  --resource-group rg-dostar-dev-aue-001 \
-  --query "properties.apiKey" -o tsv)
-
-gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN_DEV --body "$TOKEN"
-```
-
 ### Done
 
-GitHub Actions can now authenticate to Azure using OIDC.
+GitHub Actions can now authenticate to Azure using OIDC. The frontend deploy workflow reads the SWA deployment token directly from Key Vault — no manual secret management required.
 
-No passwords required.
+No passwords or manually-managed tokens required.
 
 ---
 
