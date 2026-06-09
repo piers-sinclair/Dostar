@@ -35,7 +35,9 @@ function App() {
                                     />
                                     <span
                                         className={
-                                            todo.isCompleted ? 'line-through text-muted-foreground' : ''
+                                            todo.isCompleted
+                                                ? 'line-through text-muted-foreground'
+                                                : ''
                                         }
                                     >
                                         {todo.title}
