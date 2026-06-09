@@ -30,6 +30,9 @@ jobs:
   summarize:
     name: Print environment URLs
     needs: deploy-frontend
+    environment:
+      name: dev
+      url: ${{ steps.print-urls.outputs.url }}
     runs-on: ubuntu-latest
     steps:
       - name: Azure login (OIDC)
@@ -40,6 +43,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Print environment URLs
+        id: print-urls
         run: |
           BACKEND_FQDN=$(az containerapp show \
             --name ca-dostar-dev-aue-001 \
@@ -49,6 +53,7 @@ jobs:
             --name stapp-dostar-dev-aue-001 \
             --resource-group rg-dostar-dev-aue-001 \
             --query defaultHostname -o tsv)
+          echo "url=https://$FRONTEND_HOSTNAME" >> "$GITHUB_OUTPUT"
           {
             echo "## Environment ready"
             echo ""

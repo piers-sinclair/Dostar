@@ -22,6 +22,9 @@ env:
 jobs:
   deploy:
     name: Deploy app (dev)
+    environment:
+      name: dev
+      url: ${{ steps.get-url.outputs.url }}
     runs-on: ubuntu-latest
 
     steps:
@@ -82,6 +85,7 @@ jobs:
             --resource-group $AZURE_RESOURCE_GROUP \
             --query properties.configuration.ingress.fqdn -o tsv)
           echo "fqdn=$FQDN" >> "$GITHUB_OUTPUT"
+          echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
         run: |
