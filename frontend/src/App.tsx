@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTodos, useDeleteTodo, useToggleTodo } from './hooks/useTodos';
-import { useApiError } from './hooks/useApiError';
+import { getApiError } from './hooks/getApiError';
 
 function App() {
     const { data: todos, isLoading, error } = useTodos();
     const deleteTodo = useDeleteTodo();
     const toggleTodo = useToggleTodo();
-    const errorMessage = useApiError(error);
+    const errorMessage = getApiError(error);
 
     return (
         <main className="min-h-screen bg-background p-8">
