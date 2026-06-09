@@ -75,11 +75,7 @@ echo "APP_ID=$APP_ID"
 
 ```bash
 az ad sp create --id "$APP_ID"
-SP_OBJ_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
-az ad app owner add --id "$APP_ID" --owner-object-id "$SP_OBJ_ID"
 ```
-
-Making the SP an owner of its own app registration allows the Bootstrap RBAC workflow to automatically register new OIDC subjects (such as GitHub environment credentials) without manual intervention.
 
 ---
 
@@ -156,7 +152,7 @@ az ad app federated-credential create \
   }"
 ```
 
-The Bootstrap RBAC workflow also creates this credential automatically (requires the SP to be an app owner per section 2.3).
+This is a one-time manual step. The credential lives on the Azure AD app registration and persists across all teardown/spinup cycles — you will not need to repeat this.
 
 ---
 
