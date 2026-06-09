@@ -2,8 +2,7 @@
 
 ## Getting started
 
-See [README.md](README.md) for prerequisites and local setup.
-See [docs/developer-guide.md](docs/developer-guide.md) for stack, repo structure, and running locally.
+See [README.md](README.md) for stack, repo structure, prerequisites, and local setup.
 See [CLAUDE.md](CLAUDE.md) for coding conventions (this file is also loaded as Claude Code AI context).
 
 ## Development workflow
@@ -119,7 +118,7 @@ Update `CLAUDE.md` whenever you:
 - Introduce a new library or swap an existing one
 - Add a new Claude Code skill
 
-Update `docs/developer-guide.md` whenever you:
+Update `README.md` whenever you:
 - Change how to run the app or tests locally
 - Add or remove CLI commands
 - Update the stack or repo structure

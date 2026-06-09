@@ -97,7 +97,7 @@ See `docs/module-pattern.md` for the full guide.
 
 ## Testing
 
-See [docs/developer-guide.md](docs/developer-guide.md) for how to run tests.
+See [README.md](README.md) for how to run tests.
 
 Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
 **Playwright TypeScript** (UI tests).
@@ -196,7 +196,7 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 - Introduce a new library or swap an existing one
 - Add a new Claude Code skill in `.claude/commands/`
 
-**Update `docs/developer-guide.md` whenever you:**
+**Update `README.md` whenever you:**
 - Change how to run the app or tests locally
 - Add or remove CLI commands
 - Update the stack or repo structure
