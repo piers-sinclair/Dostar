@@ -26,3 +26,35 @@ jobs:
     needs: deploy-backend
     uses: ./.github/workflows/cd-frontend.yml
     secrets: inherit
+
+  summarize:
+    name: Print environment URLs
+    needs: deploy-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Print environment URLs
+        run: |
+          BACKEND_FQDN=$(az containerapp show \
+            --name ca-dostar-dev-aue-001 \
+            --resource-group rg-dostar-dev-aue-001 \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          FRONTEND_HOSTNAME=$(az staticwebapp show \
+            --name stapp-dostar-dev-aue-001 \
+            --resource-group rg-dostar-dev-aue-001 \
+            --query defaultHostname -o tsv)
+          {
+            echo "## Environment ready"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---------|-----|"
+            echo "| Frontend | https://$FRONTEND_HOSTNAME |"
+            echo "| Backend health | https://$BACKEND_FQDN/healthz/live |"
+            echo "| API docs | https://$BACKEND_FQDN/scalar/v1 |"
+          } >> "$GITHUB_STEP_SUMMARY"

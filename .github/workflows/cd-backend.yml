@@ -74,13 +74,18 @@ jobs:
             --resource-group $AZURE_RESOURCE_GROUP \
             --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
 
-      - name: Smoke test
+      - name: Get Container App URL
+        id: get-url
         run: |
           FQDN=$(az containerapp show \
             --name $CONTAINER_APP_NAME \
             --resource-group $AZURE_RESOURCE_GROUP \
             --query properties.configuration.ingress.fqdn -o tsv)
+          echo "fqdn=$FQDN" >> "$GITHUB_OUTPUT"
 
+      - name: Smoke test
+        run: |
+          FQDN="${{ steps.get-url.outputs.fqdn }}"
           for i in {1..10}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
             if [ "$STATUS" = "200" ]; then
@@ -92,3 +97,15 @@ jobs:
           done
           echo "::error::Smoke test failed after 10 attempts"
           exit 1
+
+      - name: Print environment URLs
+        run: |
+          FQDN="${{ steps.get-url.outputs.fqdn }}"
+          {
+            echo "## Backend deployed"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---------|-----|"
+            echo "| Backend health | https://$FQDN/healthz/live |"
+            echo "| API docs | https://$FQDN/scalar/v1 |"
+          } >> "$GITHUB_STEP_SUMMARY"

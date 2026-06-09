@@ -84,3 +84,17 @@ jobs:
           app_location: frontend/dist
           skip_app_build: true
           skip_api_build: true
+
+      - name: Print environment URLs
+        run: |
+          HOSTNAME=$(az staticwebapp show \
+            --name stapp-dostar-dev-aue-001 \
+            --resource-group rg-dostar-dev-aue-001 \
+            --query defaultHostname -o tsv)
+          {
+            echo "## Frontend deployed"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---------|-----|"
+            echo "| Frontend | https://$HOSTNAME |"
+          } >> "$GITHUB_STEP_SUMMARY"
