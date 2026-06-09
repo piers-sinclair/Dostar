@@ -7,5 +7,6 @@ npm install -g @anthropic-ai/claude-code
 dotnet restore
 sudo chown vscode:vscode frontend/node_modules
 sudo chown -R vscode:vscode /home/vscode/.claude
+ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json
 cd frontend && pnpm install
 bash .devcontainer/shell-profile.sh
