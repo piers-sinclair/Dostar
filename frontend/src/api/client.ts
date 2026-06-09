@@ -1,3 +1,5 @@
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
 export async function apiClient<T>(
     url: string,
     options?: RequestInit & { data?: unknown; params?: Record<string, string> }
@@ -6,7 +8,7 @@ export async function apiClient<T>(
 
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
 
-    const res = await fetch(`${url}${query}`, {
+    const res = await fetch(`${BASE_URL}${url}${query}`, {
         ...init,
         headers: {
             'Content-Type': 'application/json',

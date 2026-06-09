@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CreateTodoRequest, Todo } from '../types/api';
 
-const BASE = '/api/todos';
+const BASE = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/v1/todos`;
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     const res = await fetch(url, init);
