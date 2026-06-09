@@ -1,16 +1,21 @@
+# Strip everything except project/solution/props files so the restore layer is
+# cached independently of source changes. New modules are picked up automatically.
+FROM alpine AS project-files
+WORKDIR /src
+COPY . .
+RUN find . -type f \
+    ! -name "*.csproj" \
+    ! -name "*.slnx" \
+    ! -name "*.props" \
+    ! -name "*.targets" \
+    -delete \
+  && find . -mindepth 1 -empty -type d -delete
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy project files only — this layer is cached until .csproj files change,
-# so NuGet restore is skipped on every normal source-code PR.
-# When adding a new module, add a COPY line here for its .csproj.
-COPY global.json .
-COPY Directory.Build.props .
-COPY Dostar.slnx .
-COPY backend/Dostar.Api/Dostar.Api.csproj                                                  backend/Dostar.Api/
-COPY backend/Dostar.SharedKernel/Dostar.SharedKernel.csproj                                backend/Dostar.SharedKernel/
-COPY backend/Modules/Todos/Dostar.Todos.Contracts/Dostar.Todos.Contracts.csproj            backend/Modules/Todos/Dostar.Todos.Contracts/
-COPY backend/Modules/Todos/Dostar.Todos.Implementation/Dostar.Todos.Implementation.csproj  backend/Modules/Todos/Dostar.Todos.Implementation/
+# Restore — cached until project/props files change
+COPY --from=project-files /src .
 RUN dotnet restore backend/Dostar.Api/Dostar.Api.csproj
 
 COPY backend/ backend/
