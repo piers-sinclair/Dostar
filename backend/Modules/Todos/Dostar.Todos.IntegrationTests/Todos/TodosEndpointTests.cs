@@ -36,7 +36,7 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
         var todo = await response.Content.ReadFromJsonAsync<TodoDto>(JsonOptions);
         todo.ShouldNotBeNull();
         todo.Title.ShouldBe("Buy milk");
-        todo.IsComplete.ShouldBeFalse();
+        todo.IsCompleted.ShouldBeFalse();
         todo.Id.ShouldNotBe(Guid.Empty);
         response.Headers.Location.ShouldNotBeNull();
     }
@@ -76,7 +76,7 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
         var todo = await response.Content.ReadFromJsonAsync<TodoDto>(JsonOptions);
         todo.ShouldNotBeNull();
         todo.Title.ShouldBe("Updated title");
-        todo.IsComplete.ShouldBeTrue();
+        todo.IsCompleted.ShouldBeTrue();
     }
 
     [Fact]
