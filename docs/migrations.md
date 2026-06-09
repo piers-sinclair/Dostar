@@ -60,6 +60,20 @@ The connection string key is `Default`, configured in `appsettings.Development.j
 
 In production this is set via Azure App Service environment variables (never committed to the repo).
 
+## Production migrations
+
+In production, migrations run as a dedicated step in `cd-backend.yml` **before** the app is deployed. The `migrate` job:
+
+1. Installs `dotnet-ef` globally
+2. Runs `dotnet ef database update` using the `DB_CONNECTION_STRING` secret (a GitHub secret containing the PostgreSQL connection string)
+3. Exits cleanly
+
+The `deploy` job has `needs: migrate` — the app only starts after migrations succeed. This prevents race conditions when multiple replicas start simultaneously and ensures a bad migration fails fast without taking down the app on boot.
+
+To add the required secret:
+1. Go to repo Settings → Secrets and variables → Actions
+2. Add `DB_CONNECTION_STRING` with the full PostgreSQL connection string for the environment
+
 ## Why `--startup-project backend/Dostar.Api`?
 
 `Dostar.Api` holds `Microsoft.EntityFrameworkCore.Design` and is the application host, so the `dotnet ef` tool uses it to instantiate the `DbContext` at design time. The `--project` flag tells it where to write the migration files.

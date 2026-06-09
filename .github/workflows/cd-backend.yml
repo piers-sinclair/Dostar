@@ -20,8 +20,52 @@ env:
   CONTAINER_APP_NAME: ca-dostar-dev-aue-001
 
 jobs:
+  migrate:
+    name: Run database migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ConnectionStrings__Default: ${{ secrets.DB_CONNECTION_STRING }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]              && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]              && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ]        && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$ConnectionStrings__Default" ]   && MISSING+=("DB_CONNECTION_STRING")
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            exit 1
+          fi
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Run EF Core migrations
+        env:
+          ConnectionStrings__Default: ${{ secrets.DB_CONNECTION_STRING }}
+        run: |
+          dotnet ef database update \
+            --project backend/Modules/Todos/Dostar.Todos.Implementation \
+            --startup-project backend/Dostar.Api \
+            --context TodosDbContext
+
   deploy:
     name: Deploy app (dev)
+    needs: migrate
     environment:
       name: dev
       url: ${{ steps.get-url.outputs.url }}
