@@ -1,7 +1,7 @@
 # Dostar — Claude Code Context
 
 > This file is loaded by Claude Code as AI context and instructions.
-> For human setup and reference, see [docs/developer-guide.md](docs/developer-guide.md).
+> For human setup and reference (running locally, testing, CLI, project structure) see [README.md](README.md).
 
 Dostar is a startup template for fullstack .NET modular monolith + React/Vite.
 Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerplate.
