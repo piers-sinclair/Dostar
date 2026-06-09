@@ -1,12 +1,12 @@
 {
-  "name": "dostar-e2etests",
+  "name": "dostar-uitests",
   "version": "1.0.0",
-  "description": "Playwright E2E tests for Dostar",
+  "description": "Playwright UI tests for Dostar",
   "private": true,
   "scripts": {
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:report": "playwright show-report"
+    "test:ui": "playwright test",
+    "test:ui:ui": "playwright test --ui",
+    "test:ui:report": "playwright show-report"
   },
   "keywords": [],
   "author": "",

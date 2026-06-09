@@ -110,11 +110,11 @@ jobs:
         run: pnpm build
 
       - name: Install UI test dependencies
-        working-directory: tests/Dostar.E2ETests
+        working-directory: tests/Dostar.UITests
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
-        working-directory: tests/Dostar.E2ETests
+        working-directory: tests/Dostar.UITests
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Start frontend preview server
@@ -129,18 +129,18 @@ jobs:
           done
 
       - name: Run UI tests
-        working-directory: tests/Dostar.E2ETests
+        working-directory: tests/Dostar.UITests
         env:
           CI: true
-          E2E_BASE_URL: http://localhost:5173
-        run: pnpm test:e2e
+          UI_BASE_URL: http://localhost:5173
+        run: pnpm test:ui
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: tests/Dostar.E2ETests/playwright-report/
+          path: tests/Dostar.UITests/playwright-report/
 
   trivy-scan:
     name: Security — Trivy vulnerability scan
