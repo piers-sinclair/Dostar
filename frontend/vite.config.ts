@@ -13,10 +13,7 @@ export default defineConfig({
         open: true,
         allowedHosts: true,
         proxy: {
-            '/api': {
-                target: 'http://localhost:5000',
-                rewrite: (path) => path.replace(/^\/api/, ''),
-            },
+            '/api': 'http://localhost:5000',
         },
     },
     test: {

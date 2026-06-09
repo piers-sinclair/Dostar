@@ -74,9 +74,20 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: frontend
 
+      - name: Get backend URL
+        id: backend
+        run: |
+          FQDN=$(az containerapp show \
+            --name ca-dostar-dev-aue-001 \
+            --resource-group rg-dostar-dev-aue-001 \
+            --query properties.configuration.ingress.fqdn -o tsv)
+          echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
+
       - name: Build
         run: pnpm build
         working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ steps.backend.outputs.url }}
 
       - name: Deploy to Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
