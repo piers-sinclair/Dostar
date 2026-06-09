@@ -19,28 +19,16 @@ Integration tests live in `backend/Modules/<Name>/Dostar.<Name>.IntegrationTests
 - **Shouldly** for assertions — never `Assert.*` or FluentAssertions
 - Method naming: `MethodName_Condition_ExpectedOutcome`
 
-If the Todos module is still present, `Dostar.Todos.IntegrationTests/` is the canonical reference. The full patterns are also inlined in Steps 3–6 below.
-
 ## Steps
 
-### 1. Check for a reference implementation
-
-If `backend/Modules/Todos/Dostar.Todos.IntegrationTests/` exists, read these files first:
-- `backend/Modules/Todos/Dostar.Todos.IntegrationTests/ApiFactory.cs`
-- `backend/Modules/Todos/Dostar.Todos.IntegrationTests/Todos/TodosEndpointTests.cs`
-- `backend/Modules/Todos/Dostar.Todos.IntegrationTests/GlobalUsings.cs`
-- `backend/Modules/Todos/Dostar.Todos.IntegrationTests/Dostar.Todos.IntegrationTests.csproj`
-
-If those files are absent (the Todos module has been deleted), skip this step — the full patterns are inlined in Steps 3–6.
-
-### 2. Identify the target module
+### 1. Identify the target module
 
 From `$ARGUMENTS`, determine:
 - Module name (PascalCase, e.g. `Orders`)
 - Which endpoint(s) to test (GET all, GET by id, POST, PUT, DELETE)
 - The DTO types from `<Module>.Contracts`
 
-### 3. Create or extend the `ApiFactory`
+### 2. Create or extend the `ApiFactory`
 
 If the module's integration test project already has an `ApiFactory.cs`, read it. Otherwise create one following this pattern exactly:
 
@@ -80,7 +68,7 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 }
 ```
 
-### 4. Create `GlobalUsings.cs`
+### 3. Create `GlobalUsings.cs`
 
 If the integration test project does not already have a `GlobalUsings.cs`, create one at the project root. Include global usings for every namespace used across multiple files — at minimum:
 
@@ -97,7 +85,7 @@ global using Dostar.<Name>.Implementation;
 
 Add any additional namespaces from `.Contracts` or the module's entities as needed.
 
-### 5. Write the test class
+### 4. Write the test class
 
 Create `backend/Modules/<Name>/Dostar.<Name>.IntegrationTests/<Name>/<Name>EndpointTests.cs`:
 
@@ -125,7 +113,7 @@ public class <Name>EndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 }
 ```
 
-### 6. Add test methods
+### 5. Add test methods
 
 For each endpoint, write a test. Follow these rules:
 - Each test is fully self-contained — `InitializeAsync` clears the DB before each test
@@ -148,7 +136,7 @@ public async Task GetAllAsync_WhenEmpty_ReturnsEmptyList()
 }
 ```
 
-### 7. Run the tests
+### 6. Run the tests
 
 ```bash
 dotnet test backend/Modules/<Name>/Dostar.<Name>.IntegrationTests
@@ -159,4 +147,3 @@ Fix any failures before reporting complete. Integration tests require Docker to 
 ## Reference
 
 - [docs/module-pattern.md](../../docs/module-pattern.md) — module structure guide
-- `backend/Modules/Todos/Dostar.Todos.IntegrationTests/` — canonical example (if still present)
