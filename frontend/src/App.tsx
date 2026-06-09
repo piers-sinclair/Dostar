@@ -19,7 +19,9 @@ function App() {
                             <Input id="title" placeholder="What needs doing?" />
                         </div>
                         <Button>Add Todo</Button>
-                        <Button variant="outline" className="ml-2">Cancel</Button>
+                        <Button variant="outline" className="ml-2">
+                            Cancel
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
