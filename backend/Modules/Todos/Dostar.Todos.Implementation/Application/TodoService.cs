@@ -4,6 +4,7 @@ public class TodoService(TodosDbContext db) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync() =>
         await db.Todos
+            .OrderBy(t => t.CreatedAt)
             .Select(t => new TodoDto(t.Id, t.Title, t.IsComplete, t.CreatedAt))
             .ToListAsync();
 
