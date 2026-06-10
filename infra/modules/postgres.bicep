@@ -41,6 +41,9 @@ param skuName string = 'Standard_B1ms'
 @minValue(32)
 param storageSizeGB int = 32
 
+@description('Enable SameZone High Availability. Requires a General Purpose or Memory Optimized SKU (Standard_D* or Standard_E*). Burstable SKUs (Standard_B*) do not support HA.')
+param enableHa bool = false
+
 var serverName = 'psql-${workload}-${env}-${region}-${instance}'
 var databaseName = workload
 
@@ -84,7 +87,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' =
       privateDnsZoneArmResourceId: privateDnsZone.id
     }
     highAvailability: {
-      mode: env == 'prod' ? 'SameZone' : 'Disabled'
+      mode: enableHa ? 'SameZone' : 'Disabled'
     }
     backup: {
       backupRetentionDays: env == 'prod' ? 14 : 7

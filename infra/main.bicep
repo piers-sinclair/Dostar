@@ -54,6 +54,9 @@ param postgresSkuName string = 'Standard_B1ms'
 @minValue(32)
 param postgresStorageSizeGB int = 32
 
+@description('Enable SameZone High Availability for PostgreSQL. Only supported on General Purpose (Standard_D*) or Memory Optimized (Standard_E*) SKUs — not Burstable (Standard_B*). Disabled by default to keep startup costs low; enable when uptime SLAs require it.')
+param postgresEnableHa bool = false
+
 var abbrev = {
   resourceGroup: 'rg'
   appServicePlan: 'asp'
@@ -168,6 +171,7 @@ module postgres 'modules/postgres.bicep' = {
     vnetId: vnet.outputs.vnetId
     skuName: postgresSkuName
     storageSizeGB: postgresStorageSizeGB
+    enableHa: postgresEnableHa
   }
 }
 

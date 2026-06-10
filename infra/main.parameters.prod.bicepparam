@@ -15,6 +15,6 @@ param containerMemory = '2Gi'
 param containerMinReplicas = 1
 param containerMaxReplicas = 10
 
-// PostgreSQL — larger SKU and storage for production
+// PostgreSQL — Burstable B2ms keeps costs low (~$65/month) at launch.
+// Upgrade to Standard_D* and set postgresEnableHa = true when uptime SLAs require it.
 param postgresSkuName = 'Standard_B2ms'
-param postgresStorageSizeGB = 64
