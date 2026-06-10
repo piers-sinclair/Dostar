@@ -58,6 +58,9 @@ jobs:
         with:
           dotnet-version: '10.x'
 
+      - name: Restore NuGet packages
+        run: dotnet restore
+
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef
 
