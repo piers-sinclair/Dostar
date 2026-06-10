@@ -14,7 +14,8 @@ export function useTodos() {
 export function useCreateTodo() {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: (req: CreateTodoRequest) => apiClient<Todo>(BASE, { method: 'POST', data: req }),
+        mutationFn: (req: CreateTodoRequest) =>
+            apiClient<Todo>(BASE, { method: 'POST', data: req }),
         onSuccess: () => client.invalidateQueries({ queryKey: ['todos'] }),
     });
 }
