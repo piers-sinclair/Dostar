@@ -1,30 +1,19 @@
-import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { getApiError } from '@/hooks/getApiError';
-import { useCreateTodo, useDeleteTodo, useTodos, useToggleTodo } from '@/hooks/useTodos';
+import { useDeleteTodo, useTodos, useToggleTodo } from '@/hooks/useTodos';
 import { cn } from '@/lib/utils';
+import { CreateTodoForm } from './CreateTodoForm';
 
 export function TodoList() {
-    const [newTitle, setNewTitle] = useState('');
-
     const { data: todos, isLoading, error: queryError } = useTodos();
-    const createTodo = useCreateTodo();
     const deleteTodo = useDeleteTodo();
     const toggleTodo = useToggleTodo();
 
     const queryErrorMessage = getApiError(queryError);
-    const mutationErrorMessage = getApiError(
-        createTodo.error ?? deleteTodo.error ?? toggleTodo.error
-    );
-
-    function handleCreate() {
-        if (!newTitle.trim()) return;
-        createTodo.mutate({ title: newTitle.trim() }, { onSuccess: () => setNewTitle('') });
-    }
+    const mutationErrorMessage = getApiError(deleteTodo.error ?? toggleTodo.error);
 
     return (
         <Card>
@@ -32,18 +21,7 @@ export function TodoList() {
                 <CardTitle>Todos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="What needs doing?"
-                        value={newTitle}
-                        disabled={createTodo.isPending}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                    />
-                    <Button onClick={handleCreate} disabled={createTodo.isPending}>
-                        Add
-                    </Button>
-                </div>
+                <CreateTodoForm />
                 {isLoading && <p className="text-muted-foreground">Loading…</p>}
                 {queryErrorMessage && <p className="text-destructive">{queryErrorMessage}</p>}
                 {mutationErrorMessage && <p className="text-destructive">{mutationErrorMessage}</p>}

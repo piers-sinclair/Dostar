@@ -13,7 +13,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | Layer | Technology |
 |-------|-----------|
 | Backend | .NET 10 Minimal APIs, modular monolith |
-| Frontend | React + Vite + TypeScript + **Tailwind v4** + **shadcn/ui** + **TanStack Query** + **orval** (generated API client) |
+| Frontend | React + Vite + TypeScript + **Tailwind v4** + **shadcn/ui** + **TanStack Query** + **orval** (generated API client) + **React Hook Form + Zod** |
 | Package manager (frontend) | **pnpm** — never npm or yarn |
 | Database | PostgreSQL via EF Core (Azure Flexible Server in prod) |
 | IaC | Bicep |
