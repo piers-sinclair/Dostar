@@ -45,7 +45,7 @@ param containerMinReplicas int = 0
 
 @description('Maximum Container App replicas.')
 @minValue(1)
-param containerMaxReplicas int = 3
+param containerMaxReplicas int = 1
 
 @description('PostgreSQL Flexible Server SKU (e.g. Standard_B1ms, Standard_B2ms, Standard_D2ds_v5).')
 param postgresSkuName string = 'Standard_B1ms'
