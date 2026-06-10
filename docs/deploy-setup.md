@@ -139,7 +139,7 @@ az ad app federated-credential create \
 
 ### 2.8 Allow environment deployments
 
-CD jobs use `environment: dev`, which changes the OIDC subject from `ref:refs/heads/main` to `environment:dev`. A separate federated credential is required.
+CD and infra jobs use `environment: dev` / `environment: prod`, which changes the OIDC subject from `ref:refs/heads/main` to `environment:<name>`. A separate federated credential is required for each environment name.
 
 ```bash
 az ad app federated-credential create \
@@ -150,9 +150,18 @@ az ad app federated-credential create \
     \"subject\": \"repo:$REPO:environment:dev\",
     \"audiences\": [\"api://AzureADTokenExchange\"]
   }"
+
+az ad app federated-credential create \
+  --id "$APP_ID" \
+  --parameters "{
+    \"name\": \"github-environment-prod\",
+    \"issuer\": \"https://token.actions.githubusercontent.com\",
+    \"subject\": \"repo:$REPO:environment:prod\",
+    \"audiences\": [\"api://AzureADTokenExchange\"]
+  }"
 ```
 
-This is a one-time manual step. The credential lives on the Azure AD app registration and persists across all teardown/spinup cycles — you will not need to repeat this.
+These are one-time manual steps. The credentials live on the Azure AD app registration and persist across all teardown/spinup cycles — you will not need to repeat them. If you add more GitHub environments in future, add a matching federated credential here.
 
 ---
 
@@ -203,11 +212,23 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 
 ---
 
-## 3. Post-infra setup (REQUIRED after first deploy)
+## 3. Enable GitHub Actions PR creation (ONE-TIME SETUP)
+
+Release Please needs permission to open pull requests from the Actions bot. GitHub disables this by default.
+
+1. Go to **Settings → Actions → General** in your GitHub repo.
+2. Under **Workflow permissions**, check **"Allow GitHub Actions to create and approve pull requests"**.
+3. Save.
+
+Without this, the `release-please` workflow will fail with _"GitHub Actions is not permitted to create or approve pull requests"_ when it tries to open a release PR.
+
+---
+
+## 4. Post-infra setup (REQUIRED after first deploy)
 
 Run the infra deploy workflow first (`infra-deploy`), then complete these steps.
 
-### 3.1 Run Bootstrap RBAC
+### 4.1 Run Bootstrap RBAC
 
 Go to GitHub Actions → run **Bootstrap RBAC (dev)**.
 
@@ -225,36 +246,34 @@ No passwords or manually-managed tokens required.
 
 ---
 
-## 4. Verifying the deployment
-
-> **Authentication note:** The template ships without authentication — the API is open by default. Add your own auth before going to production. See [auth.md](auth.md) for guidance.
+## 5. Verifying the deployment
 
 After a successful CD run, confirm the app is up before calling it done.
 
-### 4.1 Backend (Container App)
+### 5.1 Backend (Container App)
 
 Get the FQDN:
 
 ```bash
-FQDN=$(az containerapp show \
+az containerapp show \
   --name ca-dostar-dev-aue-001 \
   --resource-group rg-dostar-dev-aue-001 \
-  --query properties.configuration.ingress.fqdn -o tsv)
+  --query properties.configuration.ingress.fqdn -o tsv
 ```
 
-Check the health endpoint:
+Check the health endpoint (HTTP 200 = app is up):
 
 ```bash
-curl https://$FQDN/healthz/live
+curl https://<FQDN>/healthz/live
 ```
 
-Smoke-test the API (empty array `[]` = app + DB healthy; `500` = DB connection problem):
+Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connection problem):
 
 ```bash
-curl https://$FQDN/api/v1/todos
+curl https://<FQDN>/api/v1/todos
 ```
 
-> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://$FQDN/scalar/v1`. It is not available in prod.
+> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser. It is not available in prod.
 
 Tail logs if something is wrong:
 
@@ -267,7 +286,7 @@ az containerapp logs show \
 
 ---
 
-### 4.2 Frontend (Static Web App)
+### 5.2 Frontend (Static Web App)
 
 The `cd-frontend` workflow deploys automatically on pushes to `main` that touch `frontend/**`. To trigger an initial deploy manually, go to GitHub Actions → **CD — deploy frontend** → Run workflow.
 
@@ -283,6 +302,6 @@ Open the URL in a browser — it should show the React app. If it shows the Azur
 
 ---
 
-## 5. Managing the dev environment lifecycle
+## 6. Managing the dev environment lifecycle
 
 Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.

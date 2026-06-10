@@ -227,7 +227,7 @@ az containerapp update \
   --set-env-vars ASPNETCORE_ENVIRONMENT=Production
 ```
 
-> Easy Auth still applies in both modes — Scalar requires a Bearer token in the deployed environment.
+> Scalar is available in the deployed environment in both modes.
 
 ---
 
