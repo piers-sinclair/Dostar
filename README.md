@@ -35,8 +35,7 @@ The fastest path is the devcontainer — it installs all tooling, starts the dat
 **First time (after clone):**
 
 1. Open the repo in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically.
-2. Apply migrations: `Ctrl+Shift+P` → **Tasks: Run Task** → **`run: migrate`**
-3. Press **F5** → select **`Dostar (API + Frontend)`** → both services start.
+2. Press **F5** → select **`Dostar (API + Frontend)`** → migrations run, then both services start.
 
 **Every subsequent session:**
 
@@ -48,20 +47,18 @@ Just press **F5** — no other steps needed.
 | Backend health | http://localhost:5000/healthz/live |
 | API docs (Scalar) | http://localhost:5000/scalar/v1 |
 
-> Run **`run: migrate`** again any time you pull commits that contain new EF Core migrations.
-
 ## VS Code tasks
 
-All tasks are available via `Ctrl+Shift+P` → **Tasks: Run Task**.
+Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the terminal (see the Terminal equivalent column). Each background task opens its own tab in the Terminal panel so you can watch its output.
 
-| Task | What it does |
-|------|-------------|
-| `run: migrate` | Runs `tools/run-migrations.sh`, which auto-discovers every module with a `Migrations/` directory and applies pending EF Core migrations. Run once after clone, then again whenever new migrations are pulled. |
-| `run: backend` | Starts the .NET API on `http://localhost:5000` without a debugger attached. Use when you want to run the backend independently (e.g. while working on the frontend). |
-| `run: frontend` | Starts the Vite dev server on `http://localhost:5173` with hot-module replacement. |
-| `run: dev` | Starts both `run: backend` and `run: frontend` in parallel — the terminal equivalent of F5 without a debugger. |
-| `build: solution` | Builds the entire .NET solution. This is the default build task (`Ctrl+Shift+B`). |
-| `build: Dostar.Api` | Builds only `Dostar.Api` — used internally as the pre-launch step for F5. |
+| Task | What it does | Terminal equivalent |
+|------|-------------|---------------------|
+| `run: migrate` | Runs `tools/run-migrations.sh`, which auto-discovers every module with a `Migrations/` directory and applies any pending EF Core migrations. Fast when nothing is pending. | `bash tools/run-migrations.sh` |
+| `run: backend` | Applies migrations (via `run: migrate`) then starts the .NET API on `http://localhost:5000` without a debugger. | `bash tools/run-migrations.sh && dotnet run --project backend/Dostar.Api --launch-profile http` |
+| `run: frontend` | Starts the Vite dev server on `http://localhost:5173` with hot-module replacement. | `cd frontend && pnpm dev` |
+| `run: dev` | Runs `run: backend` (which includes migrations) and `run: frontend` in parallel — full stack without a debugger. | Run `run: backend` and `run: frontend` terminal commands in two separate terminals. |
+| `build: solution` | Builds the entire .NET solution. This is the default build task (`Ctrl+Shift+B`). | `dotnet build` |
+| `build: Dostar.Api` | Builds only `Dostar.Api` — used internally as the pre-launch step for F5. | `dotnet build backend/Dostar.Api/Dostar.Api.csproj` |
 
 ## F5 launch configurations
 
