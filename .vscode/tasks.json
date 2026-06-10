@@ -17,6 +17,7 @@
       "options": {
         "cwd": "${workspaceFolder}"
       },
+      "dependsOn": "run: migrate",
       "isBackground": true,
       "problemMatcher": {
         "pattern": {
