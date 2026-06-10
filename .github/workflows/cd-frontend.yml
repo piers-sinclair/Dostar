@@ -29,13 +29,11 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_ENTRA_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
         run: |
           MISSING=()
           [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
           [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
           [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
-          [ -z "$AZURE_ENTRA_CLIENT_ID" ] && MISSING+=("AZURE_ENTRA_CLIENT_ID")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
@@ -90,8 +88,6 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_BASE_URL: ${{ steps.backend.outputs.url }}
-          VITE_AZURE_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
-          VITE_AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Deploy to Static Web Apps
         uses: Azure/static-web-apps-deploy@v1

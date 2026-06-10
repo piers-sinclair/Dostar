@@ -29,7 +29,6 @@ Use after a full teardown, or for first-time setup as an alternative to running 
 | `AZURE_TENANT_ID` | Azure AD tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Strong random password for PostgreSQL |
-| `AZURE_ENTRA_CLIENT_ID` | API app registration client ID (Easy Auth) |
 
 **Steps:**
 
@@ -49,7 +48,6 @@ The spinup workflow:
 - Bootstraps RBAC role assignments (AcrPush, AcrPull, Key Vault Secrets User)
 - Stores the SWA deployment token in Key Vault (automatically retrieved by the frontend CD workflow)
 - Triggers backend and frontend deploy workflows
-- **Automatically updates the Entra SPA redirect URI** with the new SWA hostname (which changes on every recreate)
 
 ---
 
@@ -75,6 +73,5 @@ To bring the environment back, run **Dev — spin up** (see above).
 | `AZURE_TENANT_ID` | All lifecycle workflows | Azure AD tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | All lifecycle workflows | Subscription ID |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Infra deploy/what-if | Strong random password for PostgreSQL |
-| `AZURE_ENTRA_CLIENT_ID` | Infra deploy/what-if | API app registration client ID (Easy Auth) |
 
 See [deploy-setup.md](deploy-setup.md) for instructions on creating the service principal and adding these secrets.

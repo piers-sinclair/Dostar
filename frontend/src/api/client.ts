@@ -1,5 +1,3 @@
-import { getAccessToken } from '../lib/auth';
-
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 export async function apiClient<T>(
@@ -9,13 +7,11 @@ export async function apiClient<T>(
     const { data, params, ...init } = options ?? {};
 
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    const token = await getAccessToken();
 
     const res = await fetch(`${BASE_URL}${url}${query}`, {
         ...init,
         headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
             ...init?.headers,
         },
         body: data !== undefined ? JSON.stringify(data) : init?.body,

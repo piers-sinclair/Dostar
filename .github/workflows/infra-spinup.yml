@@ -42,31 +42,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Update Entra SPA redirect URI
-        env:
-          AZURE_ENTRA_CLIENT_ID: ${{ secrets.AZURE_ENTRA_CLIENT_ID }}
-        run: |
-          SWA_HOSTNAME=$(az staticwebapp show \
-            --name stapp-dostar-dev-aue-001 \
-            --resource-group rg-dostar-dev-aue-001 \
-            --query defaultHostname -o tsv)
-
-          API_OBJECT_ID=$(az ad app show --id "$AZURE_ENTRA_CLIENT_ID" --query id -o tsv)
-
-          az rest --method PATCH \
-            --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
-            --headers "Content-Type=application/json" \
-            --body "{
-              \"spa\": {
-                \"redirectUris\": [
-                  \"http://localhost:5173\",
-                  \"https://$SWA_HOSTNAME\"
-                ]
-              }
-            }"
-
-          echo "Updated SPA redirect URI to https://$SWA_HOSTNAME"
-
       - name: Print environment URLs
         id: print-urls
         run: |

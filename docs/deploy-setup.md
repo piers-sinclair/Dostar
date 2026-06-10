@@ -200,124 +200,14 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 | `AZURE_TENANT_ID` | Tenant ID | All workflows |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Generated in step 2.10 | Infra workflows |
-| `AZURE_ENTRA_CLIENT_ID` | API app client ID (step 3 below) | Infra workflows |
-
-`AZURE_ENTRA_CLIENT_ID` is set in step 3 — complete that section first.
 
 ---
 
-## 3. Create API app registration (ONE-TIME SETUP)
-
-Easy Auth is always enabled on the Container App — every API request must carry a valid Entra Bearer token. This step creates a separate app registration that represents your API (distinct from the CI service principal in section 2).
-
-### 3.1 Create the app registration
-
-```bash
-API_APP_ID=$(az ad app create \
-  --display-name "$APP_NAME-api" \
-  --query appId -o tsv)
-
-API_OBJECT_ID=$(az ad app show --id "$API_APP_ID" --query id -o tsv)
-echo "API_APP_ID=$API_APP_ID"
-```
-
-### 3.2 Set the Application ID URI
-
-```bash
-az ad app update \
-  --id "$API_APP_ID" \
-  --identifier-uris "api://$API_APP_ID"
-```
-
-This is the audience that Easy Auth validates Bearer tokens against.
-
-### 3.3 Expose the `access_as_user` scope
-
-The frontend acquires tokens scoped to `api://<clientId>/access_as_user`. This scope must be declared on the app registration.
-
-```bash
-SCOPE_ID=$(openssl rand -hex 16)
-
-az rest --method PATCH \
-  --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
-  --headers "Content-Type=application/json" \
-  --body "{
-    \"api\": {
-      \"oauth2PermissionScopes\": [
-        {
-          \"id\": \"$SCOPE_ID\",
-          \"adminConsentDescription\": \"Allow the frontend to call the API on behalf of the signed-in user.\",
-          \"adminConsentDisplayName\": \"Access API as user\",
-          \"isEnabled\": true,
-          \"type\": \"User\",
-          \"userConsentDescription\": \"Allow this app to access the API on your behalf.\",
-          \"userConsentDisplayName\": \"Access API\",
-          \"value\": \"access_as_user\"
-        }
-      ]
-    }
-  }"
-```
-
-### 3.4 Add SPA redirect URI for local development
-
-MSAL uses redirect URIs to return auth codes to the frontend. Add `localhost` here for local development — the deployed SWA hostname is set automatically on every spinup by the `infra-spinup` workflow.
-
-```bash
-az rest --method PATCH \
-  --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
-  --headers "Content-Type=application/json" \
-  --body '{
-    "spa": {
-      "redirectUris": [
-        "http://localhost:5173"
-      ]
-    }
-  }'
-```
-
-### 3.5 Grant CI service principal permission to update this app registration
-
-The `infra-spinup` workflow automatically updates the SPA redirect URI after each deploy (since the Azure Static Web App hostname changes on every recreate). For this to work, the CI service principal must be an **owner** of the API app registration and have the `Application.ReadWrite.OwnedBy` Microsoft Graph permission.
-
-```bash
-# Get the CI service principal's object ID (the SP created in section 2)
-CI_SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
-
-# Make the CI service principal an owner of the API app registration
-az ad app owner add \
-  --id "$API_APP_ID" \
-  --owner-object-id "$CI_SP_OBJECT_ID"
-
-# Grant Application.ReadWrite.OwnedBy to the CI service principal
-# (allows it to update only app registrations it owns)
-GRAPH_SP_ID=$(az ad sp show --id 00000003-0000-0000-c000-000000000000 --query id -o tsv)
-
-az rest --method POST \
-  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$CI_SP_OBJECT_ID/appRoleAssignments" \
-  --headers "Content-Type=application/json" \
-  --body "{
-    \"principalId\": \"$CI_SP_OBJECT_ID\",
-    \"resourceId\": \"$GRAPH_SP_ID\",
-    \"appRoleId\": \"18a4783c-866b-4cc7-a460-3d5e5662c884\"
-  }"
-```
-
-> `18a4783c-866b-4cc7-a460-3d5e5662c884` is the well-known GUID for the `Application.ReadWrite.OwnedBy` app role in Microsoft Graph. This is a one-time setup — the permission persists and does not need to be re-applied after teardown.
-
-### 3.6 Add GitHub secret
-
-```bash
-gh secret set AZURE_ENTRA_CLIENT_ID --body "$API_APP_ID"
-```
-
----
-
-## 4. Post-infra setup (REQUIRED after first deploy)
+## 3. Post-infra setup (REQUIRED after first deploy)
 
 Run the infra deploy workflow first (`infra-deploy`), then complete these steps.
 
-### 4.1 Run Bootstrap RBAC
+### 3.1 Run Bootstrap RBAC
 
 Go to GitHub Actions → run **Bootstrap RBAC (dev)**.
 
@@ -335,11 +225,13 @@ No passwords or manually-managed tokens required.
 
 ---
 
-## 5. Verifying the deployment
+## 4. Verifying the deployment
+
+> **Authentication note:** The template ships without authentication — the API is open by default. Add your own auth before going to production. See [auth.md](auth.md) for guidance.
 
 After a successful CD run, confirm the app is up before calling it done.
 
-### 5.1 Backend (Container App)
+### 4.1 Backend (Container App)
 
 Get the FQDN:
 
@@ -350,25 +242,19 @@ FQDN=$(az containerapp show \
   --query properties.configuration.ingress.fqdn -o tsv)
 ```
 
-Check the health endpoint — no token needed (excluded from Easy Auth):
+Check the health endpoint:
 
 ```bash
 curl https://$FQDN/healthz/live
 ```
 
-Call the API — requires a Bearer token:
+Smoke-test the API (empty array `[]` = app + DB healthy; `500` = DB connection problem):
 
 ```bash
-TOKEN=$(az account get-access-token \
-  --resource "api://$API_APP_ID" \
-  --query accessToken -o tsv)
-
-curl -H "Authorization: Bearer $TOKEN" https://$FQDN/api/v1/todos
+curl https://$FQDN/api/v1/todos
 ```
 
-> `[]` = app and DB are healthy. `401` = token missing or invalid. `500` = DB connection problem.
->
-> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://$FQDN/scalar/v1`. Browse it in a browser after acquiring a Bearer token (Easy Auth applies; see above). It is not available in prod.
+> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://$FQDN/scalar/v1`. It is not available in prod.
 
 Tail logs if something is wrong:
 
@@ -397,6 +283,6 @@ Open the URL in a browser — it should show the React app. If it shows the Azur
 
 ---
 
-## 6. Managing the dev environment lifecycle
+## 5. Managing the dev environment lifecycle
 
 Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.

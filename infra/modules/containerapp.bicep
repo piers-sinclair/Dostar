@@ -33,9 +33,6 @@ param postgresConnectionString string
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
-@description('Client ID of the Entra app registration used for Easy Auth.')
-param entraClientId string
-
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
 
@@ -47,13 +44,6 @@ var acrLoginServer = '${acrName}.azurecr.io'
 // Scale-to-zero in dev saves cost; keep warm in prod to avoid cold starts
 var minReplicas = env == 'prod' ? 1 : 0
 var maxReplicas = env == 'prod' ? 10 : 3
-
-// Health checks are always open; Scalar is also open in non-prod for developer convenience
-var authExcludedPaths = concat(
-  ['/healthz/live', '/healthz/ready'],
-  env != 'prod' ? ['/scalar', '/scalar/*'] : []
-)
-
 
 resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
@@ -146,37 +136,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         minReplicas: minReplicas
         maxReplicas: maxReplicas
       }
-    }
-  }
-}
-
-resource authConfig 'Microsoft.App/containerApps/authConfigs@2024-03-01' = {
-  parent: containerApp
-  name: 'current'
-  properties: {
-    platform: {
-      enabled: true
-    }
-    globalValidation: {
-      unauthenticatedClientAction: 'Return401'
-      excludedPaths: authExcludedPaths
-    }
-    identityProviders: {
-      azureActiveDirectory: {
-        enabled: true
-        registration: {
-          clientId: entraClientId
-          openIdIssuer: 'https://sts.windows.net/${subscription().tenantId}/'
-        }
-        validation: {
-          allowedAudiences: [
-            'api://${entraClientId}'
-          ]
-        }
-      }
-    }
-    httpSettings: {
-      requireHttps: true
     }
   }
 }
