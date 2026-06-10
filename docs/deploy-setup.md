@@ -248,6 +248,8 @@ No passwords or manually-managed tokens required.
 
 ## 5. Verifying the deployment
 
+> **Authentication note:** The template ships without authentication — the API is open by default. Add your own auth before going to production. See [auth.md](auth.md) for guidance.
+
 After a successful CD run, confirm the app is up before calling it done.
 
 ### 5.1 Backend (Container App)
