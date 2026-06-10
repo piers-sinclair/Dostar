@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Dostar.Api.Cors;
 using Dostar.Api.HealthChecks;
 using Dostar.Api.Middleware;
@@ -11,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
+using Npgsql;
+using OpenTelemetry;
 using Scalar.AspNetCore;
 
 const string V1DocumentName = "v1";
@@ -21,7 +24,10 @@ const string RateLimitRejectionMessage = "Too many requests. Please try again la
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddOpenTelemetry()
+    .UseAzureMonitor()
+    .WithTracing(tracing => tracing.AddNpgsql())
+    .WithMetrics(metrics => metrics.AddNpgsqlInstrumentation());
 
 builder.Services.AddOpenApi(V1DocumentName);
 builder.Services.AddHealthChecks();

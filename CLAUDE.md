@@ -23,6 +23,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | Auth | None in template |
 | Test assertions | **Shouldly** — never FluentAssertions |
 | Validation | **FluentValidation** via `ValidationFilter<T>` in SharedKernel |
+| Observability | **Azure.Monitor.OpenTelemetry.AspNetCore** + **Npgsql.OpenTelemetry** — no-op locally when `APPLICATIONINSIGHTS_CONNECTION_STRING` is unset |
 
 ---
 

@@ -57,6 +57,9 @@ param postgresStorageSizeGB int = 32
 @description('Enable SameZone High Availability for PostgreSQL. Only supported on General Purpose (Standard_D*) or Memory Optimized (Standard_E*) SKUs — not Burstable (Standard_B*). Disabled by default to keep startup costs low; enable when uptime SLAs require it.')
 param postgresEnableHa bool = false
 
+@description('Email address for P1 alert notifications (error rate, latency, health check failure). Leave empty to skip email notifications.')
+param alertEmailAddress string = ''
+
 var abbrev = {
   resourceGroup: 'rg'
   appServicePlan: 'asp'
@@ -172,6 +175,21 @@ module postgres 'modules/postgres.bicep' = {
     skuName: postgresSkuName
     storageSizeGB: postgresStorageSizeGB
     enableHa: postgresEnableHa
+  }
+}
+
+module alerting 'modules/alerting.bicep' = {
+  name: 'alerting'
+  scope: rg
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+    appInsightsId: appinsights.outputs.appInsightsId
+    containerAppFqdn: containerapp.outputs.fqdn
+    alertEmailAddress: alertEmailAddress
   }
 }
 
