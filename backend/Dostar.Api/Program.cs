@@ -24,10 +24,12 @@ const string RateLimitRejectionMessage = "Too many requests. Please try again la
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenTelemetry()
-    .UseAzureMonitor()
+var otelBuilder = builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing.AddNpgsql())
     .WithMetrics(metrics => metrics.AddNpgsqlInstrumentation());
+
+if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
+    otelBuilder.UseAzureMonitor();
 
 builder.Services.AddOpenApi(V1DocumentName);
 builder.Services.AddHealthChecks();
