@@ -1,3 +1,18 @@
+# Runs on every push to main and manages a single cumulative "Release PR".
+#
+# How it works:
+#   1. Scans unreleased conventional commits since the last v* tag.
+#   2. If feat: or fix: commits exist, opens (or updates) one PR titled
+#      "chore(main): release X.Y.Z" with a CHANGELOG.md diff and a version
+#      bump in .release-please-manifest.json.
+#   3. If only hidden types (chore:, ci:, refactor:, test:) exist, does nothing.
+#   4. Merging the Release PR creates a GitHub Release + git tag (e.g. v0.2.0),
+#      which triggers cd-release.yml to deploy to prod.
+#
+# Semver rules:  fix: → patch   feat: → minor   feat!:/BREAKING CHANGE: → major
+# Config:        .release-please-config.json  (changelog sections)
+# Version state: .release-please-manifest.json (current version)
+
 name: Release Please
 
 on:
