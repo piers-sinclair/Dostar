@@ -56,7 +56,7 @@ All tasks are available via `Ctrl+Shift+P` → **Tasks: Run Task**.
 
 | Task | What it does |
 |------|-------------|
-| `run: migrate` | Applies pending EF Core migrations against the local PostgreSQL database. Run once after clone, then again whenever new migrations are pulled. |
+| `run: migrate` | Runs `tools/run-migrations.sh`, which auto-discovers every module with a `Migrations/` directory and applies pending EF Core migrations. Run once after clone, then again whenever new migrations are pulled. |
 | `run: backend` | Starts the .NET API on `http://localhost:5000` without a debugger attached. Use when you want to run the backend independently (e.g. while working on the frontend). |
 | `run: frontend` | Starts the Vite dev server on `http://localhost:5173` with hot-module replacement. |
 | `run: dev` | Starts both `run: backend` and `run: frontend` in parallel — the terminal equivalent of F5 without a debugger. |
