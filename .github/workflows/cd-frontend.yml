@@ -6,7 +6,20 @@ on:
     paths:
       - "frontend/**"
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: choice
+        options: [dev, prod]
   workflow_call:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: string
 
 permissions:
   id-token: write
@@ -14,11 +27,11 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy frontend (dev)
-    environment:
-      name: dev
-      url: ${{ steps.print-urls.outputs.url }}
+    name: Deploy frontend (${{ inputs.environment || 'dev' }})
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment || 'dev' }} (frontend)
+      url: ${{ steps.print-urls.outputs.url }}
 
     steps:
       - name: Checkout
@@ -51,8 +64,9 @@ jobs:
       - name: Retrieve SWA deployment token from Key Vault
         id: swa_token
         run: |
+          KV_NAME="kv-dostar-${{ inputs.environment || 'dev' }}-aue-001"
           TOKEN=$(az keyvault secret show \
-            --vault-name kv-dostar-dev-aue-001 \
+            --vault-name "$KV_NAME" \
             --name swa-deployment-token \
             --query value -o tsv)
           echo "::add-mask::$TOKEN"
@@ -78,8 +92,8 @@ jobs:
         id: backend
         run: |
           FQDN=$(az containerapp show \
-            --name ca-dostar-dev-aue-001 \
-            --resource-group rg-dostar-dev-aue-001 \
+            --name "ca-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
+            --resource-group "rg-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
             --query properties.configuration.ingress.fqdn -o tsv)
           echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
 
@@ -103,8 +117,8 @@ jobs:
         id: print-urls
         run: |
           HOSTNAME=$(az staticwebapp show \
-            --name stapp-dostar-dev-aue-001 \
-            --resource-group rg-dostar-dev-aue-001 \
+            --name "stapp-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
+            --resource-group "rg-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
             --query defaultHostname -o tsv)
           echo "url=https://$HOSTNAME" >> "$GITHUB_OUTPUT"
           {

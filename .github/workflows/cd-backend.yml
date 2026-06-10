@@ -7,18 +7,36 @@ on:
       - "backend/**"
       - "Dockerfile"
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: choice
+        options: [dev, prod]
+      image_tag:
+        description: Image tag to deploy (prod only; omit to build from current commit)
+        required: false
+        type: string
   workflow_call:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: string
 
 permissions:
   id-token: write
   contents: read
 
 env:
-  AZURE_RESOURCE_GROUP: rg-dostar-dev-aue-001
-  ACR_NAME: crdostardevaue001
+  ENV: ${{ inputs.environment || 'dev' }}
+  AZURE_RESOURCE_GROUP: rg-dostar-${{ inputs.environment || 'dev' }}-aue-001
+  ACR_NAME: crdostar${{ inputs.environment || 'dev' }}aue001
   IMAGE_NAME: api
   MIGRATOR_IMAGE_NAME: migrator
-  CONTAINER_APP_NAME: ca-dostar-dev-aue-001
+  CONTAINER_APP_NAME: ca-dostar-${{ inputs.environment || 'dev' }}-aue-001
   CONTAINER_APP_ENV_NAME: cae-dostar-dev-aue-001
   MIGRATE_JOB_NAME: ca-migrate
 
@@ -138,12 +156,12 @@ jobs:
             --yes --no-wait
 
   deploy:
-    name: Deploy app (dev)
+    name: Deploy backend (${{ inputs.environment || 'dev' }})
     needs: migrate
-    environment:
-      name: dev
-      url: ${{ steps.get-url.outputs.url }}
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment || 'dev' }} (backend)
+      url: ${{ steps.get-url.outputs.url }}
 
     steps:
       - name: Checkout
@@ -172,40 +190,63 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Record current image (for rollback on failure)
+        id: rollback_ref
+        run: |
+          IMAGE=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query "properties.template.containers[0].image" -o tsv 2>/dev/null || echo "")
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve image tag
+        id: image_tag
+        run: |
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            echo "tag=${{ inputs.image_tag }}" >> "$GITHUB_OUTPUT"
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build API Docker image
+        if: steps.image_tag.outputs.build == 'true'
         run: |
           docker build -f Dockerfile -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }} .
 
       - name: Login to ACR
-        run: az acr login --name $ACR_NAME
+        run: az acr login --name "$ACR_NAME"
 
       - name: Push image
+        if: steps.image_tag.outputs.build == 'true'
         run: |
           docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
 
       - name: Update Container App
         run: |
           az containerapp registry set \
-            --name $CONTAINER_APP_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
             --server $ACR_NAME.azurecr.io \
             --identity system
           az containerapp update \
-            --name $CONTAINER_APP_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.sha }}
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --image $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ steps.image_tag.outputs.tag }}
 
       - name: Get Container App URL
         id: get-url
         run: |
           FQDN=$(az containerapp show \
-            --name $CONTAINER_APP_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
             --query properties.configuration.ingress.fqdn -o tsv)
           echo "fqdn=$FQDN" >> "$GITHUB_OUTPUT"
           echo "url=https://$FQDN" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
+        id: smoke_test
         run: |
           FQDN="${{ steps.get-url.outputs.fqdn }}"
           for i in {1..10}; do
@@ -221,6 +262,7 @@ jobs:
           exit 1
 
       - name: Print environment URLs
+        if: success()
         run: |
           FQDN="${{ steps.get-url.outputs.fqdn }}"
           {
@@ -231,3 +273,13 @@ jobs:
             echo "| Backend health | https://$FQDN/healthz/live |"
             echo "| API docs | https://$FQDN/scalar/v1 |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Rollback on smoke test failure (prod only)
+        if: failure() && steps.smoke_test.outcome == 'failure' && env.ENV == 'prod' && steps.rollback_ref.outputs.image != ''
+        run: |
+          echo "::warning::Smoke test failed — rolling back to ${{ steps.rollback_ref.outputs.image }}"
+          az containerapp update \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --image "${{ steps.rollback_ref.outputs.image }}"
+          echo "Rollback complete."

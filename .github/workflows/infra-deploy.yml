@@ -5,7 +5,21 @@ on:
     branches: [main]
     paths:
       - "infra/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: choice
+        options: [dev, prod]
   workflow_call:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: string
 
 permissions:
   id-token: write
@@ -13,8 +27,9 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy Bicep (dev)
+    name: Deploy Bicep (${{ inputs.environment || 'dev' }})
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
 
     steps:
       - name: Checkout
@@ -25,17 +40,14 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
         run: |
           MISSING=()
-          [ -z "$AZURE_CLIENT_ID" ]               && MISSING+=("AZURE_CLIENT_ID")
-          [ -z "$AZURE_TENANT_ID" ]               && MISSING+=("AZURE_TENANT_ID")
-          [ -z "$AZURE_SUBSCRIPTION_ID" ]         && MISSING+=("AZURE_SUBSCRIPTION_ID")
-          [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ] && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+          [ -z "$AZURE_CLIENT_ID" ] && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ] && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
-            echo "See docs/deploy-setup.md for setup instructions."
             exit 1
           fi
 
@@ -47,14 +59,12 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy infrastructure
-        env:
-          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
         run: |
           az deployment sub create \
             --name dostar-dev \
             --location australiaeast \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.dev.bicepparam \
+            --parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam \
             --only-show-errors
 
       - name: Print environment URLs

@@ -3,6 +3,12 @@ name: Infra — tear down
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: choice
+        options: [dev, prod]
       confirm:
         description: 'Type "teardown" to confirm'
         required: true
@@ -14,8 +20,9 @@ permissions:
 
 jobs:
   teardown:
-    name: Tear down dev environment
+    name: Tear down ${{ inputs.environment || 'dev' }} environment
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
 
     steps:
       - name: Confirm
@@ -51,7 +58,7 @@ jobs:
       - name: Delete resource group
         run: |
           az group delete \
-            --name rg-dostar-dev-aue-001 \
+            --name "rg-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
             --yes
           echo "Resource group deleted."
-          echo "Run the 'Dev — spin up' workflow to re-provision the dev environment."
+          echo "Run the 'Infra — spin up' workflow to re-provision."

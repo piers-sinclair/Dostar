@@ -2,7 +2,20 @@ name: Infra — bootstrap RBAC
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: choice
+        options: [dev, prod]
   workflow_call:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: string
 
 permissions:
   id-token: write
@@ -10,7 +23,9 @@ permissions:
 
 jobs:
   rbac:
+    name: Bootstrap RBAC (${{ inputs.environment || 'dev' }})
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -42,8 +57,9 @@ jobs:
       - name: Assign CI service principal AcrPush role
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ENV: ${{ inputs.environment || 'dev' }}
         run: |
-          ACR_NAME="crdostardevaue001"
+          ACR_NAME="crdostar${ENV}aue001"
           ACR_ID=$(az acr show --name "$ACR_NAME" --query id -o tsv)
 
           # Role assignments require the SP's object ID, not the app/client ID
@@ -66,13 +82,15 @@ jobs:
           fi
 
       - name: Assign Container App managed identity AcrPull role
+        env:
+          ENV: ${{ inputs.environment || 'dev' }}
         run: |
-          ACR_NAME="crdostardevaue001"
+          ACR_NAME="crdostar${ENV}aue001"
           ACR_ID=$(az acr show --name "$ACR_NAME" --query id -o tsv)
 
           CA_PRINCIPAL_ID=$(az containerapp show \
-            --name "ca-dostar-dev-aue-001" \
-            --resource-group "rg-dostar-dev-aue-001" \
+            --name "ca-dostar-${ENV}-aue-001" \
+            --resource-group "rg-dostar-${ENV}-aue-001" \
             --query identity.principalId -o tsv)
 
           EXISTING=$(az role assignment list \
@@ -92,13 +110,15 @@ jobs:
           fi
 
       - name: Assign Container App managed identity Key Vault Secrets User role
+        env:
+          ENV: ${{ inputs.environment || 'dev' }}
         run: |
-          KV_NAME="kv-dostar-dev-aue-001"
+          KV_NAME="kv-dostar-${ENV}-aue-001"
           KV_ID=$(az keyvault show --name "$KV_NAME" --query id -o tsv)
 
           CA_PRINCIPAL_ID=$(az containerapp show \
-            --name "ca-dostar-dev-aue-001" \
-            --resource-group "rg-dostar-dev-aue-001" \
+            --name "ca-dostar-${ENV}-aue-001" \
+            --resource-group "rg-dostar-${ENV}-aue-001" \
             --query identity.principalId -o tsv)
 
           EXISTING=$(az role assignment list \
@@ -120,8 +140,9 @@ jobs:
       - name: Assign CI service principal Key Vault Secrets User role
         env:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ENV: ${{ inputs.environment || 'dev' }}
         run: |
-          KV_NAME="kv-dostar-dev-aue-001"
+          KV_NAME="kv-dostar-${ENV}-aue-001"
           KV_ID=$(az keyvault show --name "$KV_NAME" --query id -o tsv)
 
           # Role assignments require the SP's object ID, not the app/client ID
@@ -142,4 +163,3 @@ jobs:
               --role "Key Vault Secrets User" \
               --scope "$KV_ID"
           fi
-
