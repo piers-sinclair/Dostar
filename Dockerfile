@@ -21,6 +21,12 @@ RUN dotnet publish backend/Dostar.Api/Dostar.Api.csproj \
     -o /app/publish \
     --no-restore
 
+FROM build AS migrator
+COPY tools/ tools/
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+ENTRYPOINT ["bash", "tools/run-migrations.sh"]
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS runtime
 WORKDIR /app
 
