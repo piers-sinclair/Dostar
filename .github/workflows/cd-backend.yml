@@ -20,8 +20,63 @@ env:
   CONTAINER_APP_NAME: ca-dostar-dev-aue-001
 
 jobs:
+  migrate:
+    name: Run database migrations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]                  && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]                  && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ]            && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ]    && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            exit 1
+          fi
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Run EF Core migrations
+        env:
+          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+        run: |
+          FQDN=$(az deployment sub show \
+            --name dostar-dev \
+            --query 'properties.outputs.postgresServerFqdn.value' -o tsv)
+          DB_NAME=$(az deployment sub show \
+            --name dostar-dev \
+            --query 'properties.outputs.postgresDatabaseName.value' -o tsv)
+          export ConnectionStrings__Default="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=dostaradmin;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
+          bash tools/run-migrations.sh
+
   deploy:
     name: Deploy app (dev)
+    needs: migrate
     environment:
       name: dev
       url: ${{ steps.get-url.outputs.url }}
