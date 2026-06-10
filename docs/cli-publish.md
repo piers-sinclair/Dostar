@@ -45,7 +45,9 @@ The template is always sourced from `main`, so users always get the latest versi
 
 ## Publishing a new CLI release (maintainer steps)
 
-Releases are published to [NuGet.org](https://www.nuget.org/packages/Dostar.Cli) automatically when a version tag is pushed to [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli).
+Releases are published to [NuGet.org](https://www.nuget.org/packages/Dostar.Cli) and a GitHub Release is created automatically when a version bump is merged to `main` in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli).
+
+The `Release` workflow reads `<Version>` from `Dostar.Cli.csproj`, checks whether a GitHub Release for that tag already exists, and skips publishing if it does — so the workflow is safe to re-run.
 
 ### Step-by-step
 
@@ -54,22 +56,17 @@ Releases are published to [NuGet.org](https://www.nuget.org/packages/Dostar.Cli)
    <Version>0.2.0</Version>
    ```
 
-2. **Commit** the version bump:
+2. **Merge to `main`** via a PR (the `Release` workflow triggers on push to `main` when `Dostar.Cli.csproj` changes):
    ```bash
    git add Dostar.Cli.csproj
    git commit -m "chore: bump version to 0.2.0"
    git push
+   # open and merge a PR
    ```
 
-3. **Tag the release** — the tag name must match the version:
-   ```bash
-   git tag v0.2.0
-   git push origin v0.2.0
-   ```
+3. The `Release` workflow creates a GitHub Release (with auto-generated release notes), packs the tool, and pushes the `.nupkg` to NuGet.
 
-4. The `Release` GitHub Actions workflow in `Dostar.Cli` triggers automatically, packs the tool, and pushes the `.nupkg` to NuGet.
-
-5. The package appears on NuGet within a few minutes. NuGet may take up to 30 minutes to index it and make it searchable.
+4. The package appears on NuGet within a few minutes. NuGet may take up to 30 minutes to index it and make it searchable.
 
 ### Prerequisites for the workflow
 
