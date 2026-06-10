@@ -49,10 +49,7 @@ docker compose up -d
 
 # 3. Apply migrations (first time, and after pulling new migrations)
 dotnet tool install --global dotnet-ef
-dotnet ef database update \
-  --project backend/Modules/Todos/Dostar.Todos.Implementation \
-  --startup-project backend/Dostar.Api \
-  --context TodosDbContext
+bash tools/run-migrations.sh
 
 # 4. Start the backend
 dotnet run --project backend/Dostar.Api --launch-profile http
