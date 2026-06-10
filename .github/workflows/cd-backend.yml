@@ -17,7 +17,10 @@ env:
   AZURE_RESOURCE_GROUP: rg-dostar-dev-aue-001
   ACR_NAME: crdostardevaue001
   IMAGE_NAME: api
+  MIGRATOR_IMAGE_NAME: migrator
   CONTAINER_APP_NAME: ca-dostar-dev-aue-001
+  CONTAINER_APP_ENV_NAME: cae-dostar-dev-aue-001
+  MIGRATE_JOB_NAME: ca-migrate
 
 jobs:
   migrate:
@@ -53,29 +56,86 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.x'
+      - name: Build migrator image
+        run: |
+          docker build --target migrator \
+            -t $ACR_NAME.azurecr.io/$MIGRATOR_IMAGE_NAME:${{ github.sha }} .
 
-      - name: Restore NuGet packages
-        run: dotnet restore
+      - name: Push migrator image
+        run: |
+          az acr login --name $ACR_NAME
+          docker push $ACR_NAME.azurecr.io/$MIGRATOR_IMAGE_NAME:${{ github.sha }}
 
-      - name: Install dotnet-ef
-        run: dotnet tool install --global dotnet-ef
-
-      - name: Run EF Core migrations
+      - name: Run migrations via Container Apps Job
         env:
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
         run: |
+          # Construct connection string from Bicep deployment outputs
           FQDN=$(az deployment sub show \
             --name dostar-dev \
             --query 'properties.outputs.postgresServerFqdn.value' -o tsv)
           DB_NAME=$(az deployment sub show \
             --name dostar-dev \
             --query 'properties.outputs.postgresDatabaseName.value' -o tsv)
-          export ConnectionStrings__Default="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=dostaradmin;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
-          bash tools/run-migrations.sh
+          CONNECTION_STRING="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=dostaradmin;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
+
+          # Temporary ACR token (1h TTL) so the job can pull the migrator image
+          ACR_TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
+
+          # Remove any stale job left by a previous failed run
+          az containerapp job delete \
+            --name $MIGRATE_JOB_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP \
+            --yes 2>/dev/null || true
+
+          # Create the job inside the VNet-integrated CAE so it can reach the private PostgreSQL server
+          az containerapp job create \
+            --name $MIGRATE_JOB_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP \
+            --environment $CONTAINER_APP_ENV_NAME \
+            --trigger-type Manual \
+            --replica-timeout 300 \
+            --replica-retry-limit 0 \
+            --image "$ACR_NAME.azurecr.io/$MIGRATOR_IMAGE_NAME:${{ github.sha }}" \
+            --registry-server "$ACR_NAME.azurecr.io" \
+            --registry-username "00000000-0000-0000-0000-000000000000" \
+            --registry-password "$ACR_TOKEN" \
+            --secrets "conn-string=$CONNECTION_STRING" \
+            --env-vars "ConnectionStrings__Default=secretref:conn-string"
+
+          # Trigger an execution
+          EXECUTION_NAME=$(az containerapp job start \
+            --name $MIGRATE_JOB_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP \
+            --query name -o tsv)
+          echo "Execution: $EXECUTION_NAME"
+
+          # Poll until Succeeded or Failed (max 5 min)
+          for i in $(seq 1 30); do
+            STATUS=$(az containerapp job execution list \
+              --name $MIGRATE_JOB_NAME \
+              --resource-group $AZURE_RESOURCE_GROUP \
+              --query "[?name=='$EXECUTION_NAME'].properties.status | [0]" \
+              --output tsv 2>/dev/null)
+            [ -z "$STATUS" ] && STATUS="Pending"
+            echo "[$i/30] $STATUS"
+            if [ "$STATUS" = "Succeeded" ]; then
+              echo "Migrations completed"
+              break
+            fi
+            if [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Stopped" ] || [ "$STATUS" = "Degraded" ]; then
+              echo "::error::Migration job $STATUS"
+              exit 1
+            fi
+            [ "$i" -eq 30 ] && { echo "::error::Timed out waiting for migration"; exit 1; }
+            sleep 10
+          done
+
+          # Clean up
+          az containerapp job delete \
+            --name $MIGRATE_JOB_NAME \
+            --resource-group $AZURE_RESOURCE_GROUP \
+            --yes --no-wait
 
   deploy:
     name: Deploy app (dev)

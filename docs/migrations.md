@@ -62,19 +62,22 @@ In production this is set via Azure App Service environment variables (never com
 
 ## Production migrations
 
-In production, migrations run as a dedicated step in `cd-backend.yml` **before** the app is deployed. The `migrate` job:
+The PostgreSQL Flexible Server uses private-only VNet access — no public endpoint exists. Migrations must therefore run from inside the VNet, not from a GitHub-hosted runner.
 
-1. Logs in via Azure OIDC
-2. Queries the Bicep deployment outputs to get the PostgreSQL FQDN and database name
-3. Constructs `ConnectionStrings__Default` from those outputs and `AZURE_POSTGRES_ADMIN_PASSWORD`
-4. Runs `bash tools/run-migrations.sh`, which discovers every `Dostar.<Name>.Implementation` project that has a `Migrations/` directory and calls `dotnet ef database update` for each one
-5. Exits cleanly
+In production, the `migrate` job in `cd-backend.yml`:
 
-The `deploy` job has `needs: migrate` — the app only starts after migrations succeed. This prevents race conditions when multiple replicas start simultaneously and ensures a bad migration fails fast without taking down the app on boot.
+1. Builds a `migrator` Docker image (the `migrator` target in the Dockerfile — SDK image with `dotnet-ef` and `tools/run-migrations.sh` as the entrypoint)
+2. Pushes it to ACR using a short-lived ACR token (`az acr login --expose-token`)
+3. Constructs the PostgreSQL connection string from Bicep deployment outputs + `AZURE_POSTGRES_ADMIN_PASSWORD`
+4. Creates a Container Apps Job (`ca-migrate`) inside the existing VNet-integrated Container Apps Environment (`cae-dostar-dev-aue-001`), which can reach the private database
+5. Starts the job, polls until `Succeeded`, then deletes the job
+6. The job runs `run-migrations.sh`, which auto-discovers every module with a `Migrations/` directory and calls `dotnet ef database update`
+
+The `deploy` job has `needs: migrate` — the app only starts after migrations succeed.
 
 Adding a new module requires no changes to the workflow — the script picks it up automatically.
 
-No extra secret is required beyond the existing `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, and `AZURE_POSTGRES_ADMIN_PASSWORD` secrets already needed for infra deploy.
+No extra secret is required beyond the existing `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, and `AZURE_POSTGRES_ADMIN_PASSWORD` secrets.
 
 ## Why `--startup-project backend/Dostar.Api`?
 
