@@ -156,9 +156,18 @@ cd .claude/worktrees/issue-<N>
 
 # 4. Clean up after the PR merges
 git worktree remove .claude/worktrees/issue-<N>
+git branch -d feat/issue-<N>-<short-description>
 ```
 
 `.claude/worktrees/` is gitignored — worktrees never appear as untracked files in the main repo.
+
+**Stale worktree cleanup** — before starting any new task, prune worktrees whose branches have already been merged or deleted:
+
+```bash
+git fetch --prune                 # remove stale remote-tracking refs
+git worktree prune                # remove worktree metadata for deleted paths
+# then manually remove any .claude/worktrees/<name> folders still present
+```
 
 ### Branch & PR workflow
 
