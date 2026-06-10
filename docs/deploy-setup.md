@@ -216,6 +216,9 @@ Easy Auth is always enabled on the Container App — every API request must carr
 API_APP_ID=$(az ad app create \
   --display-name "$APP_NAME-api" \
   --query appId -o tsv)
+
+API_OBJECT_ID=$(az ad app show --id "$API_APP_ID" --query id -o tsv)
+echo "API_APP_ID=$API_APP_ID"
 ```
 
 ### 3.2 Set the Application ID URI
@@ -228,7 +231,63 @@ az ad app update \
 
 This is the audience that Easy Auth validates Bearer tokens against.
 
-### 3.3 Add GitHub secret
+### 3.3 Expose the `access_as_user` scope
+
+The frontend acquires tokens scoped to `api://<clientId>/access_as_user`. This scope must be declared on the app registration.
+
+```bash
+SCOPE_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+az rest --method PATCH \
+  --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
+  --headers "Content-Type=application/json" \
+  --body "{
+    \"api\": {
+      \"oauth2PermissionScopes\": [
+        {
+          \"id\": \"$SCOPE_ID\",
+          \"adminConsentDescription\": \"Allow the frontend to call the API on behalf of the signed-in user.\",
+          \"adminConsentDisplayName\": \"Access API as user\",
+          \"isEnabled\": true,
+          \"type\": \"User\",
+          \"userConsentDescription\": \"Allow this app to access the API on your behalf.\",
+          \"userConsentDisplayName\": \"Access API\",
+          \"value\": \"access_as_user\"
+        }
+      ]
+    }
+  }"
+```
+
+### 3.4 Add SPA redirect URIs
+
+MSAL uses redirect URIs to return auth codes to the frontend. Add `localhost` for local development; add the deployed SWA URL once you know the hostname (available after first infra deploy).
+
+```bash
+SWA_HOSTNAME="<your-swa-hostname>.azurestaticapps.net"
+
+az rest --method PATCH \
+  --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
+  --headers "Content-Type=application/json" \
+  --body "{
+    \"spa\": {
+      \"redirectUris\": [
+        \"http://localhost:5173\",
+        \"https://$SWA_HOSTNAME\"
+      ]
+    }
+  }"
+```
+
+You can add the SWA hostname after the first infra deploy — retrieve it with:
+
+```bash
+az staticwebapp list \
+  --resource-group rg-dostar-dev-aue-001 \
+  --query "[0].defaultHostname" -o tsv
+```
+
+### 3.5 Add GitHub secret
 
 ```bash
 gh secret set AZURE_ENTRA_CLIENT_ID --body "$API_APP_ID"
