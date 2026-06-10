@@ -273,7 +273,7 @@ Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connectio
 curl https://<FQDN>/api/v1/todos
 ```
 
-> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser after acquiring a Bearer token (Easy Auth applies; see above). It is not available in prod.
+> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser. It is not available in prod.
 
 Tail logs if something is wrong:
 
