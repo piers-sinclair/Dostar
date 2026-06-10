@@ -2,6 +2,41 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "run: migrate",
+      "type": "shell",
+      "command": "dotnet ef database update --project backend/Modules/Todos/Dostar.Todos.Implementation --startup-project backend/Dostar.Api --context TodosDbContext",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "run: backend",
+      "type": "shell",
+      "command": "dotnet run --project backend/Dostar.Api --launch-profile http",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Building\\.\\.\\.",
+          "endsPattern": "Now listening on:"
+        }
+      }
+    },
+    {
+      "label": "run: dev",
+      "dependsOn": ["run: backend", "run: frontend"],
+      "dependsOrder": "parallel",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
       "label": "run: frontend",
       "type": "shell",
       "command": "pnpm dev",
