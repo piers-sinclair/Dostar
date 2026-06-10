@@ -1,19 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../api/client';
 import type { CreateTodoRequest, Todo } from '../types/api';
 
-const BASE = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/v1/todos`;
-
-async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(url, init);
-    if (!res.ok) throw await res.json();
-    if (res.status === 204) return undefined as T;
-    return res.json() as Promise<T>;
-}
+const BASE = '/api/v1/todos';
 
 export function useTodos() {
     return useQuery<Todo[]>({
         queryKey: ['todos'],
-        queryFn: () => fetchJson<Todo[]>(BASE),
+        queryFn: () => apiClient<Todo[]>(BASE),
     });
 }
 
@@ -21,11 +15,7 @@ export function useCreateTodo() {
     const client = useQueryClient();
     return useMutation({
         mutationFn: (req: CreateTodoRequest) =>
-            fetchJson<Todo>(BASE, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(req),
-            }),
+            apiClient<Todo>(BASE, { method: 'POST', data: req }),
         onSuccess: () => client.invalidateQueries({ queryKey: ['todos'] }),
     });
 }
@@ -33,7 +23,7 @@ export function useCreateTodo() {
 export function useDeleteTodo() {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: (id: string) => fetchJson<void>(`${BASE}/${id}`, { method: 'DELETE' }),
+        mutationFn: (id: string) => apiClient<void>(`${BASE}/${id}`, { method: 'DELETE' }),
         onMutate: async (id) => {
             await client.cancelQueries({ queryKey: ['todos'] });
             const previous = client.getQueryData<Todo[]>(['todos']);
@@ -59,10 +49,9 @@ export function useUpdateTodo() {
             title: string;
             isCompleted: boolean;
         }) =>
-            fetchJson<Todo>(`${BASE}/${id}`, {
+            apiClient<Todo>(`${BASE}/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, isComplete: isCompleted }),
+                data: { title, isComplete: isCompleted },
             }),
         onMutate: async ({ id, title, isCompleted }) => {
             await client.cancelQueries({ queryKey: ['todos'] });

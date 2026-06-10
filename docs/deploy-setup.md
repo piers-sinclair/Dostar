@@ -227,6 +227,8 @@ No passwords or manually-managed tokens required.
 
 ## 4. Verifying the deployment
 
+> **Authentication note:** The template ships without authentication — the API is open by default. Add your own auth before going to production. See [auth.md](auth.md) for guidance.
+
 After a successful CD run, confirm the app is up before calling it done.
 
 ### 4.1 Backend (Container App)
@@ -234,25 +236,25 @@ After a successful CD run, confirm the app is up before calling it done.
 Get the FQDN:
 
 ```bash
-az containerapp show \
+FQDN=$(az containerapp show \
   --name ca-dostar-dev-aue-001 \
   --resource-group rg-dostar-dev-aue-001 \
-  --query properties.configuration.ingress.fqdn -o tsv
+  --query properties.configuration.ingress.fqdn -o tsv)
 ```
 
-Check the health endpoint (HTTP 200 = app is up):
+Check the health endpoint:
 
 ```bash
-curl https://<FQDN>/healthz/live
+curl https://$FQDN/healthz/live
 ```
 
-Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connection problem):
+Smoke-test the API (empty array `[]` = app + DB healthy; `500` = DB connection problem):
 
 ```bash
-curl https://<FQDN>/api/v1/todos
+curl https://$FQDN/api/v1/todos
 ```
 
-> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser after acquiring a Bearer token (Easy Auth applies; see above). It is not available in prod.
+> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://$FQDN/scalar/v1`. It is not available in prod.
 
 Tail logs if something is wrong:
 

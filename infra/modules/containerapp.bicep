@@ -45,7 +45,6 @@ var acrLoginServer = '${acrName}.azurecr.io'
 var minReplicas = env == 'prod' ? 1 : 0
 var maxReplicas = env == 'prod' ? 10 : 3
 
-
 resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
   location: location
