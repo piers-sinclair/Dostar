@@ -47,7 +47,7 @@ export function useDeleteTodo() {
     });
 }
 
-export function useToggleTodo() {
+export function useUpdateTodo() {
     const client = useQueryClient();
     return useMutation({
         mutationFn: ({
@@ -64,12 +64,12 @@ export function useToggleTodo() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, isComplete: isCompleted }),
             }),
-        onMutate: async ({ id, isCompleted }) => {
+        onMutate: async ({ id, title, isCompleted }) => {
             await client.cancelQueries({ queryKey: ['todos'] });
             const previous = client.getQueryData<Todo[]>(['todos']);
             client.setQueryData<Todo[]>(
                 ['todos'],
-                (old) => old?.map((t) => (t.id === id ? { ...t, isCompleted } : t)) ?? []
+                (old) => old?.map((t) => (t.id === id ? { ...t, title, isCompleted } : t)) ?? []
             );
             return { previous };
         },
