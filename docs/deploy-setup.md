@@ -139,7 +139,7 @@ az ad app federated-credential create \
 
 ### 2.8 Allow environment deployments
 
-CD jobs use `environment: dev`, which changes the OIDC subject from `ref:refs/heads/main` to `environment:dev`. A separate federated credential is required.
+CD and infra jobs use `environment: dev` / `environment: prod`, which changes the OIDC subject from `ref:refs/heads/main` to `environment:<name>`. A separate federated credential is required for each environment name.
 
 ```bash
 az ad app federated-credential create \
@@ -150,9 +150,18 @@ az ad app federated-credential create \
     \"subject\": \"repo:$REPO:environment:dev\",
     \"audiences\": [\"api://AzureADTokenExchange\"]
   }"
+
+az ad app federated-credential create \
+  --id "$APP_ID" \
+  --parameters "{
+    \"name\": \"github-environment-prod\",
+    \"issuer\": \"https://token.actions.githubusercontent.com\",
+    \"subject\": \"repo:$REPO:environment:prod\",
+    \"audiences\": [\"api://AzureADTokenExchange\"]
+  }"
 ```
 
-This is a one-time manual step. The credential lives on the Azure AD app registration and persists across all teardown/spinup cycles — you will not need to repeat this.
+These are one-time manual steps. The credentials live on the Azure AD app registration and persist across all teardown/spinup cycles — you will not need to repeat them. If you add more GitHub environments in future, add a matching federated credential here.
 
 ---
 
@@ -248,25 +257,25 @@ After a successful CD run, confirm the app is up before calling it done.
 Get the FQDN:
 
 ```bash
-FQDN=$(az containerapp show \
+az containerapp show \
   --name ca-dostar-dev-aue-001 \
   --resource-group rg-dostar-dev-aue-001 \
-  --query properties.configuration.ingress.fqdn -o tsv)
+  --query properties.configuration.ingress.fqdn -o tsv
 ```
 
-Check the health endpoint:
+Check the health endpoint (HTTP 200 = app is up):
 
 ```bash
-curl https://$FQDN/healthz/live
+curl https://<FQDN>/healthz/live
 ```
 
-Smoke-test the API (empty array `[]` = app + DB healthy; `500` = DB connection problem):
+Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connection problem):
 
 ```bash
-curl https://$FQDN/api/v1/todos
+curl https://<FQDN>/api/v1/todos
 ```
 
-> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://$FQDN/scalar/v1`. It is not available in prod.
+> The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser. It is not available in prod.
 
 Tail logs if something is wrong:
 
