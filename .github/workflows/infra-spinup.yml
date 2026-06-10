@@ -2,6 +2,13 @@ name: Infra — spin up
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: false
+        default: dev
+        type: choice
+        options: [dev, prod]
 
 permissions:
   id-token: write
@@ -10,21 +17,29 @@ permissions:
 jobs:
   deploy-infra:
     uses: ./.github/workflows/infra-deploy.yml
+    with:
+      environment: ${{ inputs.environment || 'dev' }}
     secrets: inherit
 
   bootstrap-rbac:
     needs: deploy-infra
     uses: ./.github/workflows/infra-bootstrap-rbac.yml
+    with:
+      environment: ${{ inputs.environment || 'dev' }}
     secrets: inherit
 
   deploy-backend:
     needs: bootstrap-rbac
     uses: ./.github/workflows/cd-backend.yml
+    with:
+      environment: ${{ inputs.environment || 'dev' }}
     secrets: inherit
 
   deploy-frontend:
     needs: deploy-backend
     uses: ./.github/workflows/cd-frontend.yml
+    with:
+      environment: ${{ inputs.environment || 'dev' }}
     secrets: inherit
 
   summarize:
