@@ -49,6 +49,7 @@ The spinup workflow:
 - Bootstraps RBAC role assignments (AcrPush, AcrPull, Key Vault Secrets User)
 - Stores the SWA deployment token in Key Vault (automatically retrieved by the frontend CD workflow)
 - Triggers backend and frontend deploy workflows
+- **Automatically updates the Entra SPA redirect URI** with the new SWA hostname (which changes on every recreate)
 
 ---
 

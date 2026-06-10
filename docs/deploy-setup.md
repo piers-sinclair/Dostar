@@ -259,35 +259,53 @@ az rest --method PATCH \
   }"
 ```
 
-### 3.4 Add SPA redirect URIs
+### 3.4 Add SPA redirect URI for local development
 
-MSAL uses redirect URIs to return auth codes to the frontend. Add `localhost` for local development; add the deployed SWA URL once you know the hostname (available after first infra deploy).
+MSAL uses redirect URIs to return auth codes to the frontend. Add `localhost` here for local development — the deployed SWA hostname is set automatically on every spinup by the `infra-spinup` workflow.
 
 ```bash
-SWA_HOSTNAME="<your-swa-hostname>.azurestaticapps.net"
-
 az rest --method PATCH \
   --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
   --headers "Content-Type=application/json" \
-  --body "{
-    \"spa\": {
-      \"redirectUris\": [
-        \"http://localhost:5173\",
-        \"https://$SWA_HOSTNAME\"
+  --body '{
+    "spa": {
+      "redirectUris": [
+        "http://localhost:5173"
       ]
     }
+  }'
+```
+
+### 3.5 Grant CI service principal permission to update this app registration
+
+The `infra-spinup` workflow automatically updates the SPA redirect URI after each deploy (since the Azure Static Web App hostname changes on every recreate). For this to work, the CI service principal must be an **owner** of the API app registration and have the `Application.ReadWrite.OwnedBy` Microsoft Graph permission.
+
+```bash
+# Get the CI service principal's object ID (the SP created in section 2)
+CI_SP_OBJECT_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
+
+# Make the CI service principal an owner of the API app registration
+az ad app owner add \
+  --id "$API_APP_ID" \
+  --owner-object-id "$CI_SP_OBJECT_ID"
+
+# Grant Application.ReadWrite.OwnedBy to the CI service principal
+# (allows it to update only app registrations it owns)
+GRAPH_SP_ID=$(az ad sp show --id 00000003-0000-0000-c000-000000000000 --query id -o tsv)
+
+az rest --method POST \
+  --uri "https://graph.microsoft.com/v1.0/servicePrincipals/$CI_SP_OBJECT_ID/appRoleAssignments" \
+  --headers "Content-Type=application/json" \
+  --body "{
+    \"principalId\": \"$CI_SP_OBJECT_ID\",
+    \"resourceId\": \"$GRAPH_SP_ID\",
+    \"appRoleId\": \"18a4783c-866b-4cc7-a460-3d5e5662c884\"
   }"
 ```
 
-You can add the SWA hostname after the first infra deploy — retrieve it with:
+> `18a4783c-866b-4cc7-a460-3d5e5662c884` is the well-known GUID for the `Application.ReadWrite.OwnedBy` app role in Microsoft Graph. This is a one-time setup — the permission persists and does not need to be re-applied after teardown.
 
-```bash
-az staticwebapp list \
-  --resource-group rg-dostar-dev-aue-001 \
-  --query "[0].defaultHostname" -o tsv
-```
-
-### 3.5 Add GitHub secret
+### 3.6 Add GitHub secret
 
 ```bash
 gh secret set AZURE_ENTRA_CLIENT_ID --body "$API_APP_ID"
