@@ -29,11 +29,15 @@ param postgresSubnetId string
 @description('Resource ID of the VNet (used for private DNS zone VNet link).')
 param vnetId string
 
+@description('PostgreSQL Flexible Server SKU name (e.g. Standard_B1ms, Standard_B2ms, Standard_D2ds_v5).')
+param skuName string = 'Standard_B1ms'
+
+@description('Storage size in GB.')
+@minValue(32)
+param storageSizeGB int = 32
+
 var serverName = 'psql-${workload}-${env}-${region}-${instance}'
 var databaseName = workload
-
-// Burstable B2ms for prod; B1ms (~$12/month) for dev
-var skuName = env == 'prod' ? 'Standard_B2ms' : 'Standard_B1ms'
 
 // Required by PostgreSQL Flexible Server VNet integration.
 // Name must follow the pattern: <serverName>.private.postgres.database.azure.com
@@ -77,7 +81,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' =
       geoRedundantBackup: 'Disabled'
     }
     storage: {
-      storageSizeGB: 32
+      storageSizeGB: storageSizeGB
     }
   }
   dependsOn: [privateDnsZoneVnetLink]

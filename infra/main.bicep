@@ -33,6 +33,27 @@ param postgresAdminUsername string = 'dostaradmin'
 @secure()
 param postgresAdminPassword string
 
+@description('vCPU cores for each Container App replica (e.g. "0.5", "1.0", "2.0").')
+param containerCpu string = '0.5'
+
+@description('Memory for each Container App replica (e.g. "1Gi", "2Gi").')
+param containerMemory string = '1Gi'
+
+@description('Minimum Container App replicas. Use 0 for scale-to-zero in dev.')
+@minValue(0)
+param containerMinReplicas int = 0
+
+@description('Maximum Container App replicas.')
+@minValue(1)
+param containerMaxReplicas int = 3
+
+@description('PostgreSQL Flexible Server SKU (e.g. Standard_B1ms, Standard_B2ms, Standard_D2ds_v5).')
+param postgresSkuName string = 'Standard_B1ms'
+
+@description('PostgreSQL storage size in GB.')
+@minValue(32)
+param postgresStorageSizeGB int = 32
+
 var abbrev = {
   resourceGroup: 'rg'
   appServicePlan: 'asp'
@@ -125,6 +146,10 @@ module containerapp 'modules/containerapp.bicep' = {
     appInsightsConnectionString: appinsights.outputs.connectionString
     postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
     frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
+    containerCpu: containerCpu
+    containerMemory: containerMemory
+    minReplicas: containerMinReplicas
+    maxReplicas: containerMaxReplicas
   }
 }
 
@@ -141,6 +166,8 @@ module postgres 'modules/postgres.bicep' = {
     adminPassword: postgresAdminPassword
     postgresSubnetId: vnet.outputs.postgresSubnetId
     vnetId: vnet.outputs.vnetId
+    skuName: postgresSkuName
+    storageSizeGB: postgresStorageSizeGB
   }
 }
 
