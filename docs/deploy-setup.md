@@ -203,11 +203,23 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 
 ---
 
-## 3. Post-infra setup (REQUIRED after first deploy)
+## 3. Enable GitHub Actions PR creation (ONE-TIME SETUP)
+
+Release Please needs permission to open pull requests from the Actions bot. GitHub disables this by default.
+
+1. Go to **Settings → Actions → General** in your GitHub repo.
+2. Under **Workflow permissions**, check **"Allow GitHub Actions to create and approve pull requests"**.
+3. Save.
+
+Without this, the `release-please` workflow will fail with _"GitHub Actions is not permitted to create or approve pull requests"_ when it tries to open a release PR.
+
+---
+
+## 4. Post-infra setup (REQUIRED after first deploy)
 
 Run the infra deploy workflow first (`infra-deploy`), then complete these steps.
 
-### 3.1 Run Bootstrap RBAC
+### 4.1 Run Bootstrap RBAC
 
 Go to GitHub Actions → run **Bootstrap RBAC (dev)**.
 
@@ -225,13 +237,13 @@ No passwords or manually-managed tokens required.
 
 ---
 
-## 4. Verifying the deployment
+## 5. Verifying the deployment
 
 > **Authentication note:** The template ships without authentication — the API is open by default. Add your own auth before going to production. See [auth.md](auth.md) for guidance.
 
 After a successful CD run, confirm the app is up before calling it done.
 
-### 4.1 Backend (Container App)
+### 5.1 Backend (Container App)
 
 Get the FQDN:
 
@@ -267,7 +279,7 @@ az containerapp logs show \
 
 ---
 
-### 4.2 Frontend (Static Web App)
+### 5.2 Frontend (Static Web App)
 
 The `cd-frontend` workflow deploys automatically on pushes to `main` that touch `frontend/**`. To trigger an initial deploy manually, go to GitHub Actions → **CD — deploy frontend** → Run workflow.
 
@@ -283,6 +295,6 @@ Open the URL in a browser — it should show the React app. If it shows the Azur
 
 ---
 
-## 5. Managing the dev environment lifecycle
+## 6. Managing the dev environment lifecycle
 
 Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.
