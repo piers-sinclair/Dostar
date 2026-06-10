@@ -28,43 +28,51 @@ graph LR
 | Package manager | **pnpm** — never npm or yarn |
 | Tests | xUnit + Shouldly + NSubstitute / Testcontainers / Playwright |
 
-## Prerequisites
-
-| Tool | Version |
-|------|---------|
-| .NET SDK | 10 (`global.json` pins exact version) |
-| Node.js | 20+ |
-| pnpm | 10+ (`npm install -g pnpm`) |
-| Docker Desktop | Latest |
-
 ## Quick start
 
-```sh
-# 1. Clone
-git clone https://github.com/piers-sinclair/Dostar.git
-cd Dostar
+The fastest path is the devcontainer — it installs all tooling, starts the database, and has one-click launch built in.
 
-# 2. Start the database
-docker compose up -d
+**First time (after clone):**
 
-# 3. Apply migrations (first time, and after pulling new migrations)
-dotnet tool install --global dotnet-ef
-bash tools/run-migrations.sh
+1. Open the repo in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically.
+2. Apply migrations: `Ctrl+Shift+P` → **Tasks: Run Task** → **`run: migrate`**
+3. Press **F5** → select **`Dostar (API + Frontend)`** → both services start.
 
-# 4. Start the backend
-dotnet run --project backend/Dostar.Api --launch-profile http
+**Every subsequent session:**
 
-# 5. Start the frontend (new terminal)
-cd frontend
-pnpm install
-pnpm dev
-```
+Just press **F5** — no other steps needed.
 
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
 | Backend health | http://localhost:5000/healthz/live |
 | API docs (Scalar) | http://localhost:5000/scalar/v1 |
+
+> Run **`run: migrate`** again any time you pull commits that contain new EF Core migrations.
+
+## VS Code tasks
+
+All tasks are available via `Ctrl+Shift+P` → **Tasks: Run Task**.
+
+| Task | What it does |
+|------|-------------|
+| `run: migrate` | Applies pending EF Core migrations against the local PostgreSQL database. Run once after clone, then again whenever new migrations are pulled. |
+| `run: backend` | Starts the .NET API on `http://localhost:5000` without a debugger attached. Use when you want to run the backend independently (e.g. while working on the frontend). |
+| `run: frontend` | Starts the Vite dev server on `http://localhost:5173` with hot-module replacement. |
+| `run: dev` | Starts both `run: backend` and `run: frontend` in parallel — the terminal equivalent of F5 without a debugger. |
+| `build: solution` | Builds the entire .NET solution. This is the default build task (`Ctrl+Shift+B`). |
+| `build: Dostar.Api` | Builds only `Dostar.Api` — used internally as the pre-launch step for F5. |
+
+## F5 launch configurations
+
+Configurations are in `.vscode/launch.json` and selected from the **Run and Debug** panel (`Ctrl+Shift+D`).
+
+| Configuration | What it does |
+|---------------|-------------|
+| `Dostar.Api (http)` | Builds and launches the backend with the .NET debugger attached. Opens Scalar (`/scalar/v1`) in the browser once the API is ready. Use this when you only need to debug the backend. |
+| `Dostar (API + Frontend)` | Starts the Vite frontend first, then launches the backend with the debugger. **This is the recommended default for full-stack work.** Select it once in the Run panel; it becomes the target for every subsequent F5 press. |
+
+To make `Dostar (API + Frontend)` your persistent F5 target: open the Run and Debug panel (`Ctrl+Shift+D`), click the dropdown at the top, and select **`Dostar (API + Frontend)`**.
 
 ## Project structure
 
