@@ -236,7 +236,7 @@ This is the audience that Easy Auth validates Bearer tokens against.
 The frontend acquires tokens scoped to `api://<clientId>/access_as_user`. This scope must be declared on the app registration.
 
 ```bash
-SCOPE_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+SCOPE_ID=$(openssl rand -hex 16)
 
 az rest --method PATCH \
   --uri "https://graph.microsoft.com/v1.0/applications/$API_OBJECT_ID" \
