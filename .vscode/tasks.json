@@ -4,7 +4,7 @@
     {
       "label": "run: migrate",
       "type": "shell",
-      "command": "dotnet ef database update --project backend/Modules/Todos/Dostar.Todos.Implementation --startup-project backend/Dostar.Api --context TodosDbContext",
+      "command": "bash tools/run-migrations.sh",
       "options": {
         "cwd": "${workspaceFolder}"
       },
