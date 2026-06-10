@@ -104,11 +104,59 @@ Do not merge Dependabot PRs until CI passes.
 
 ## Release process
 
-Releases are automated via release-please:
+Releases are automated via [release-please](https://github.com/googleapis/release-please). Understanding the two-phase flow is important — **dev and prod deploy on different triggers.**
 
-1. Merge `feat:` or `fix:` commits to `main`
-2. release-please opens a versioned release PR with an updated `CHANGELOG.md`
-3. Merging the release PR creates a GitHub Release with a version tag
+### Phase 1 — continuous dev deploys (automatic)
+
+Every merge to `main` auto-deploys to dev if the relevant paths changed:
+
+| Changed paths | Workflow triggered |
+|---|---|
+| `backend/**`, `Dockerfile` | `cd-backend.yml` → migrate + deploy to dev |
+| `frontend/**` | `cd-frontend.yml` → build + deploy to dev |
+| `infra/**` | `infra-deploy.yml` → Bicep deploy to dev |
+
+### Phase 2 — prod release (deliberate)
+
+release-please runs on every push to `main` and manages a single cumulative Release PR:
+
+1. **Commits land on `main`** using conventional commit format (see above).
+2. **release-please opens or updates one Release PR** titled `chore(main): release X.Y.Z` containing:
+   - An updated `CHANGELOG.md` with all visible unreleased changes grouped by type
+   - A version bump in `.release-please-manifest.json`
+   - **Note:** only commits since the last `v*` tag are included. The PR updates itself as more commits land — there is only ever one open Release PR.
+3. **Review the Release PR** when the team is ready to ship. The CHANGELOG diff shows exactly what's going out.
+4. **Merge the Release PR** → release-please creates a GitHub Release and a `vX.Y.Z` tag.
+5. **The tag triggers `cd-release.yml`** → deploys backend then frontend to prod.
+
+```
+main merge (feat:/fix:)
+  │
+  ├── cd-backend.yml ──────────────────────────────► dev Container App
+  ├── cd-frontend.yml ─────────────────────────────► dev Static Web App
+  │
+  └── release-please.yml ──► opens/updates Release PR
+                                       │
+                             team merges when ready
+                                       │
+                                  v* tag created
+                                       │
+                             cd-release.yml ─────────► prod Container App
+                                                        prod Static Web App
+```
+
+### Version bumping rules
+
+| Commit type | Version bump |
+|---|---|
+| `fix:` | Patch (0.1.0 → 0.1.1) |
+| `feat:` | Minor (0.1.0 → 0.2.0) |
+| `feat!:` or `BREAKING CHANGE:` in body | Major (0.1.0 → 1.0.0) |
+| `chore:`, `ci:`, `refactor:`, `test:` | No bump — hidden from changelog |
+
+### What the Release PR touches
+
+The Release PR only modifies `CHANGELOG.md` and `.release-please-manifest.json`. Neither file matches the path filters on the dev deploy workflows, so merging a Release PR **never** triggers a spurious dev redeploy.
 
 ## Keeping docs up to date
 

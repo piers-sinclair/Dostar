@@ -1,0 +1,38 @@
+# Triggered when release-please creates a v* tag after the Release PR is merged.
+#
+# This is the prod promotion gate — dev deploys happen automatically on every
+# main merge (path-filtered), but prod only deploys when a release is cut here.
+#
+# Flow:
+#   1. Merge feat:/fix: commits to main  →  auto-deploys to dev
+#   2. release-please opens/updates a Release PR (chore(main): release X.Y.Z)
+#   3. Team merges the Release PR when ready to ship  →  creates tag vX.Y.Z
+#   4. This workflow fires  →  migrates + deploys backend to prod, then frontend
+#
+# The Release PR only touches CHANGELOG.md and .release-please-manifest.json,
+# so it never matches the path filters on cd-backend.yml or cd-frontend.yml
+# and will not trigger a spurious dev redeploy.
+
+name: CD — release to prod
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-backend:
+    uses: ./.github/workflows/cd-backend.yml
+    with:
+      environment: prod
+    secrets: inherit
+
+  deploy-frontend:
+    needs: deploy-backend
+    uses: ./.github/workflows/cd-frontend.yml
+    with:
+      environment: prod
+    secrets: inherit
