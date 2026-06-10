@@ -64,17 +64,17 @@ In production this is set via Azure App Service environment variables (never com
 
 In production, migrations run as a dedicated step in `cd-backend.yml` **before** the app is deployed. The `migrate` job:
 
-1. Installs `dotnet-ef` globally
-2. Runs `bash tools/run-migrations.sh`, which discovers every `Dostar.<Name>.Implementation` project that has a `Migrations/` directory and calls `dotnet ef database update` for each one using the `DB_CONNECTION_STRING` secret
-3. Exits cleanly
+1. Logs in via Azure OIDC
+2. Queries the Bicep deployment outputs to get the PostgreSQL FQDN and database name
+3. Constructs `ConnectionStrings__Default` from those outputs and `AZURE_POSTGRES_ADMIN_PASSWORD`
+4. Runs `bash tools/run-migrations.sh`, which discovers every `Dostar.<Name>.Implementation` project that has a `Migrations/` directory and calls `dotnet ef database update` for each one
+5. Exits cleanly
 
 The `deploy` job has `needs: migrate` — the app only starts after migrations succeed. This prevents race conditions when multiple replicas start simultaneously and ensures a bad migration fails fast without taking down the app on boot.
 
 Adding a new module requires no changes to the workflow — the script picks it up automatically.
 
-To add the required secret:
-1. Go to repo Settings → Secrets and variables → Actions
-2. Add `DB_CONNECTION_STRING` with the full PostgreSQL connection string for the environment
+No extra secret is required beyond the existing `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, and `AZURE_POSTGRES_ADMIN_PASSWORD` secrets already needed for infra deploy.
 
 ## Why `--startup-project backend/Dostar.Api`?
 
