@@ -29,7 +29,12 @@ param postgresSubnetId string
 @description('Resource ID of the VNet (used for private DNS zone VNet link).')
 param vnetId string
 
-@description('PostgreSQL Flexible Server SKU name (e.g. Standard_B1ms, Standard_B2ms, Standard_D2ds_v5).')
+@description('''
+PostgreSQL Flexible Server SKU name. The tier is derived automatically from the SKU prefix:
+  Standard_B* → Burstable    (e.g. Standard_B1ms, Standard_B2ms)
+  Standard_D* → GeneralPurpose  (e.g. Standard_D2ds_v5, Standard_D4ds_v5)
+  Standard_E* → MemoryOptimized (e.g. Standard_E2ds_v5, Standard_E4ds_v5)
+''')
 param skuName string = 'Standard_B1ms'
 
 @description('Storage size in GB.')
@@ -38,6 +43,11 @@ param storageSizeGB int = 32
 
 var serverName = 'psql-${workload}-${env}-${region}-${instance}'
 var databaseName = workload
+
+// Derive tier from SKU prefix so callers only need to set skuName.
+var skuTier = startsWith(skuName, 'Standard_B')
+  ? 'Burstable'
+  : startsWith(skuName, 'Standard_E') ? 'MemoryOptimized' : 'GeneralPurpose'
 
 // Required by PostgreSQL Flexible Server VNet integration.
 // Name must follow the pattern: <serverName>.private.postgres.database.azure.com
@@ -63,7 +73,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' =
   location: location
   sku: {
     name: skuName
-    tier: 'Burstable'
+    tier: skuTier
   }
   properties: {
     version: '16'
