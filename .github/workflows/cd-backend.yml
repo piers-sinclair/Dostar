@@ -37,7 +37,7 @@ env:
   IMAGE_NAME: api
   MIGRATOR_IMAGE_NAME: migrator
   CONTAINER_APP_NAME: ca-dostar-${{ inputs.environment || 'dev' }}-aue-001
-  CONTAINER_APP_ENV_NAME: cae-dostar-dev-aue-001
+  CONTAINER_APP_ENV_NAME: cae-dostar-${{ inputs.environment || 'dev' }}-aue-001
   MIGRATE_JOB_NAME: ca-migrate
 
 jobs:
@@ -90,10 +90,10 @@ jobs:
         run: |
           # Construct connection string from Bicep deployment outputs
           FQDN=$(az deployment sub show \
-            --name dostar-dev \
+            --name dostar-$ENV \
             --query 'properties.outputs.postgresServerFqdn.value' -o tsv)
           DB_NAME=$(az deployment sub show \
-            --name dostar-dev \
+            --name dostar-$ENV \
             --query 'properties.outputs.postgresDatabaseName.value' -o tsv)
           CONNECTION_STRING="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=dostaradmin;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
 
@@ -160,7 +160,7 @@ jobs:
     needs: migrate
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.environment || 'dev' }} (backend)
+      name: ${{ inputs.environment || 'dev' }}
       url: ${{ steps.get-url.outputs.url }}
 
     steps:

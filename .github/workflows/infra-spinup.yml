@@ -46,7 +46,7 @@ jobs:
     name: Print environment URLs
     needs: deploy-frontend
     environment:
-      name: dev
+      name: ${{ inputs.environment || 'dev' }}
       url: ${{ steps.print-urls.outputs.url }}
     runs-on: ubuntu-latest
     steps:
@@ -60,13 +60,14 @@ jobs:
       - name: Print environment URLs
         id: print-urls
         run: |
+          ENV="${{ inputs.environment || 'dev' }}"
           BACKEND_FQDN=$(az containerapp show \
-            --name ca-dostar-dev-aue-001 \
-            --resource-group rg-dostar-dev-aue-001 \
+            --name "ca-dostar-${ENV}-aue-001" \
+            --resource-group "rg-dostar-${ENV}-aue-001" \
             --query properties.configuration.ingress.fqdn -o tsv)
           FRONTEND_HOSTNAME=$(az staticwebapp show \
-            --name stapp-dostar-dev-aue-001 \
-            --resource-group rg-dostar-dev-aue-001 \
+            --name "stapp-dostar-${ENV}-aue-001" \
+            --resource-group "rg-dostar-${ENV}-aue-001" \
             --query defaultHostname -o tsv)
           echo "url=https://$FRONTEND_HOSTNAME" >> "$GITHUB_OUTPUT"
           {
