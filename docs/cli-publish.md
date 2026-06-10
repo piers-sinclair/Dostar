@@ -44,10 +44,12 @@ The template is always sourced from `main`, so users always get the latest versi
 
 ---
 
-## Release pipeline
+## CLI release pipeline
 
-The CLI uses the same release-please model as the Dostar template repo itself.
+The CLI uses the same release-please model as this template repo (documented in [CONTRIBUTING.md](../CONTRIBUTING.md#release-process)).
 **No manual version bumps, no manual git tags.**
+
+All workflows below live in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli).
 
 ```
 conventional commits land on main in piers-sinclair/Dostar.Cli
@@ -66,10 +68,8 @@ GitHub Release + git tag created (e.g. v0.2.0)
 nuget-publish.yml fires → packs Dostar.Cli.csproj → pushes to NuGet.org
 ```
 
-The two workflows involved:
-
-| Workflow | File | Trigger | What it does |
-|----------|------|---------|--------------|
+| Workflow | File in Dostar.Cli | Trigger | What it does |
+|----------|--------------------|---------|--------------|
 | Release Please | `release-please.yml` | push to `main` | opens/updates the Release PR; on merge creates the GitHub Release + tag |
 | NuGet Publish | `nuget-publish.yml` | `release.published` event | packs + pushes the `.nupkg` to NuGet.org |
 
