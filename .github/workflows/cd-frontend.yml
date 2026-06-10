@@ -30,7 +30,7 @@ jobs:
     name: Deploy frontend (${{ inputs.environment || 'dev' }})
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.environment || 'dev' }} (frontend)
+      name: ${{ inputs.environment || 'dev' }}
       url: ${{ steps.print-urls.outputs.url }}
 
     steps:
