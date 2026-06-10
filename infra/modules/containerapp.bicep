@@ -33,6 +33,20 @@ param postgresConnectionString string
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
+@description('vCPU cores allocated to each container replica (e.g. "0.5", "1.0", "2.0").')
+param containerCpu string = '0.5'
+
+@description('Memory allocated to each container replica (e.g. "1Gi", "2Gi").')
+param containerMemory string = '1Gi'
+
+@description('Minimum number of replicas. Use 0 to allow scale-to-zero.')
+@minValue(0)
+param minReplicas int = 0
+
+@description('Maximum number of replicas.')
+@minValue(1)
+param maxReplicas int = 3
+
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
 
@@ -40,10 +54,6 @@ var caName = 'ca-${workload}-${env}-${region}-${instance}'
 var acrNameRaw = 'cr${workload}${env}${region}${instance}'
 var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
 var acrLoginServer = '${acrName}.azurecr.io'
-
-// Scale-to-zero in dev saves cost; keep warm in prod to avoid cold starts
-var minReplicas = env == 'prod' ? 1 : 0
-var maxReplicas = env == 'prod' ? 10 : 3
 
 resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
@@ -95,8 +105,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: workload
           image: containerImage
           resources: {
-            cpu: json('0.5')
-            memory: '1Gi'
+            cpu: json(containerCpu)
+            memory: containerMemory
           }
           env: concat(
             [
