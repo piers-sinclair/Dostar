@@ -139,11 +139,13 @@ CI/CD is managed by GitHub Actions workflows in `.github/workflows/`.
 The `dostar` CLI scaffolds new projects and modules:
 
 ```bash
-npm install -g dostar            # or: dotnet tool install -g Dostar.Cli
-dostar new-project my-app        # clone + rename template
-dostar add-module Products       # scaffold a new feature module
-dostar remove-module Products    # remove a module (with dry-run flag)
+dotnet tool install -g Dostar.Cli   # install once
+dostar new-project MyStartup        # clone + rename template
+dostar add-module Products          # scaffold a new feature module
+dostar remove-module Products       # remove a module (with dry-run flag)
 ```
+
+See [docs/cli-publish.md](docs/cli-publish.md) for the full distribution model and publish workflow.
 
 Source: [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli)
 
