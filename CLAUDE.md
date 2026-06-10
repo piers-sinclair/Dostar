@@ -60,6 +60,7 @@ CLAUDE.md               ← this file
 | `/audit-azure-costs` | `.claude/commands/audit-azure-costs.md` | Audit Azure infra + CI/CD for startup cost optimisation |
 | `/integration-tests` | `.claude/commands/integration-tests.md` | Add integration tests for a module endpoint |
 | `/playwright` | `.claude/commands/playwright.md` | Write a Playwright UI test for a user journey |
+| `/create-issue` | `.claude/commands/create-issue.md` | Create a GitHub issue with labels and milestone |
 
 > Future (build after M9): `/scaffold-page`
 
