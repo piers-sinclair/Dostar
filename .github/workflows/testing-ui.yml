@@ -3,6 +3,12 @@ name: Testing — UI
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "tests/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
 
 jobs:
   ui:
