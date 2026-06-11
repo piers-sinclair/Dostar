@@ -74,9 +74,9 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
       allOf: [
         {
           query: '''
-requests
-| where timestamp > ago(5m)
-| summarize Total = count(), Failed = countif(success == false)
+AppRequests
+| where TimeGenerated > ago(5m)
+| summarize Total = count(), Failed = countif(Success == false)
 | extend ErrorRatePct = iff(Total > 10, Failed * 100.0 / Total, 0.0)
 | project ErrorRatePct
 '''
@@ -115,9 +115,9 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
       allOf: [
         {
           query: '''
-requests
-| where timestamp > ago(5m)
-| summarize P99 = percentile(duration, 99)
+AppRequests
+| where TimeGenerated > ago(5m)
+| summarize P99 = percentile(DurationMs, 99)
 | project P99
 '''
           timeAggregation: 'Maximum'
