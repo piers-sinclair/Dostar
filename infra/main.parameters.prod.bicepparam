@@ -5,7 +5,7 @@ param env = 'prod'
 param region = 'aue'
 param instance = '001'
 param location = 'australiaeast'
-param postgresAdminUsername = readEnvironmentVariable('POSTGRES_ADMIN_USERNAME')
+param postgresAdminUsername = readEnvironmentVariable('AZURE_POSTGRES_ADMIN_USERNAME')
 param postgresAdminPassword = readEnvironmentVariable('AZURE_POSTGRES_ADMIN_PASSWORD')
 
 // Container App — scale up from dev defaults for production load

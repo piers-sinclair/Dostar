@@ -191,7 +191,7 @@ POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')
 gh secret set AZURE_POSTGRES_ADMIN_PASSWORD --body "$POSTGRES_PASSWORD"
 
 # Choose a username unique to your deployment — avoid dictionary words
-gh secret set POSTGRES_ADMIN_USERNAME --body "myadminuser"
+gh secret set AZURE_POSTGRES_ADMIN_USERNAME --body "myadminuser"
 ```
 
 ---
@@ -212,7 +212,7 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 | `AZURE_TENANT_ID` | Tenant ID | All workflows |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Generated in step 2.10 | Infra workflows |
-| `POSTGRES_ADMIN_USERNAME` | Chosen in step 2.10 | Infra workflows |
+| `AZURE_POSTGRES_ADMIN_USERNAME` | Chosen in step 2.10 | Infra workflows |
 
 ---
 
@@ -321,7 +321,7 @@ Work through this list before exposing your deployment to users.
 | # | Check | Why |
 |---|-------|-----|
 | 1 | **Change the `workload` parameter** from `dostar` to your project name in both `.bicepparam` files | Prevents resource-name collisions if multiple teams use the template in the same subscription |
-| 2 | **Set `POSTGRES_ADMIN_USERNAME`** to a value unique to your deployment (not a dictionary word) | Reduces credential-guessing risk if the VNet is ever misconfigured |
+| 2 | **Set `AZURE_POSTGRES_ADMIN_USERNAME`** to a value unique to your deployment (not a dictionary word) | Reduces credential-guessing risk if the VNet is ever misconfigured |
 | 3 | **Set `POSTGRES_ADMIN_PASSWORD`** to a randomly generated value (step 2.10 above) | Required — no default exists |
 | 4 | **Add authentication** before exposing the API to end users | The template ships without auth by design; see [auth.md](auth.md) |
 | 5 | **Review CORS origins** — confirm `Cors__AllowedOrigins__0` is set to your actual frontend URL | Prevents cross-origin requests from untrusted domains |

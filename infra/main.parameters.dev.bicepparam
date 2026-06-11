@@ -4,7 +4,7 @@ param workload = 'dostar'
 param region = 'aue'
 param instance = '001'
 param location = readEnvironmentVariable('AZURE_LOCATION', 'australiaeast')
-param postgresAdminUsername = readEnvironmentVariable('POSTGRES_ADMIN_USERNAME')
+param postgresAdminUsername = readEnvironmentVariable('AZURE_POSTGRES_ADMIN_USERNAME')
 param postgresAdminPassword = readEnvironmentVariable('AZURE_POSTGRES_ADMIN_PASSWORD')
 param env = readEnvironmentVariable('AZURE_ENV_NAME', 'dev')
 
