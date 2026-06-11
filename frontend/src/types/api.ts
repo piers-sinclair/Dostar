@@ -18,5 +18,9 @@ export interface ProblemDetails {
 }
 
 export function isProblemDetails(error: unknown): error is ProblemDetails {
-    return typeof error === 'object' && error !== null && ('detail' in error || 'title' in error || 'errors' in error);
+    return (
+        typeof error === 'object' &&
+        error !== null &&
+        ('detail' in error || 'title' in error || 'errors' in error)
+    );
 }

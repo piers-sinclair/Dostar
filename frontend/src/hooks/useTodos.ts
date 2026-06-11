@@ -45,7 +45,12 @@ export function useDeleteTodo(): UseMutationResult<void, Error, string, Optimist
     });
 }
 
-export function useUpdateTodo(): UseMutationResult<Todo, Error, UpdateTodoVariables, OptimisticContext> {
+export function useUpdateTodo(): UseMutationResult<
+    Todo,
+    Error,
+    UpdateTodoVariables,
+    OptimisticContext
+> {
     const client = useQueryClient();
     return useMutation<Todo, Error, UpdateTodoVariables, OptimisticContext>({
         mutationFn: ({ id, title, isCompleted }) =>

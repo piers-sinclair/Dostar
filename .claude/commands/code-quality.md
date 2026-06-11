@@ -187,7 +187,7 @@ Flag:
 - **N+1 query patterns** — iterating a collection and calling the DB per item; fix with `Include()`/`ThenInclude()` or a single projected query
 - **Loading full entities when a projection suffices** — `db.Todos.ToListAsync()` then mapping in code instead of `db.Todos.Select(x => new TodoDto(...)).ToListAsync()`
 - **Synchronous EF Core methods** — `ToList()`, `FirstOrDefault()`, `Count()`, etc. must be `ToListAsync()`, `FirstOrDefaultAsync()`, `CountAsync()` etc.
-- **Bulk operations that load entities unnecessarily** — loading entities only to delete or update them; prefer `ExecuteDeleteAsync()` / `ExecuteUpdateAsync()` (EF Core 7+) for set-based operations
+- **Bulk operations that load entities unnecessarily** — loading entities only to delete or update them; prefer `ExecuteDeleteAsync()` / `ExecuteUpdateAsync()` (EF Core 7+) for set-based operations. **Note:** these methods are not supported by the `InMemory` provider — only apply this optimisation if unit tests use a real database (e.g. Testcontainers); otherwise keep the load-then-remove pattern
 - **`DateTime` instead of `DateTimeOffset`** for timestamp columns — `DateTimeOffset` maps to `timestamptz` in PostgreSQL and preserves timezone context; `DateTime` maps to `timestamp without time zone`
 - **Case-insensitive string comparisons using `ToLower()`/`ToUpper()`** — `x.Title.ToLower() == input.ToLower()` generates `LOWER()` SQL that prevents index use; prefer `EF.Functions.ILike(x.Title, input)` for PostgreSQL case-insensitive search
 - **Raw SQL with string interpolation** — `FromSqlRaw($"... {value}")` is an injection risk; use `FromSqlInterpolated($"... {value}")` or parameterised `FromSqlRaw("... {0}", value)`

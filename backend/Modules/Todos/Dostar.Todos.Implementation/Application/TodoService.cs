@@ -41,8 +41,11 @@ public class TodoService(TodosDbContext db) : ITodoService
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var count = await db.Todos.Where(t => t.Id == id).ExecuteDeleteAsync(cancellationToken);
-        return count > 0;
+        var todo = await db.Todos.FindAsync([id], cancellationToken);
+        if (todo is null) return false;
+        db.Todos.Remove(todo);
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private static TodoDto ToDto(Todo todo) =>
