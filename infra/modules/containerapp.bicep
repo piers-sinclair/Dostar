@@ -20,6 +20,9 @@ param instance string
 param containerAppSubnetId string
 
 
+@description('Resource ID of the Log Analytics workspace used for container log ingestion.')
+param logAnalyticsWorkspaceId string
+
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
 param appInsightsConnectionString string = ''
 
@@ -64,6 +67,13 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
       internal: false
     }
     zoneRedundant: false
+    appLogsConfiguration: {
+      destination: 'log-analytics'
+      logAnalyticsConfiguration: {
+        customerId: reference(logAnalyticsWorkspaceId, '2023-09-01').customerId
+        sharedKey: listKeys(logAnalyticsWorkspaceId, '2023-09-01').primarySharedKey
+      }
+    }
   }
 }
 
