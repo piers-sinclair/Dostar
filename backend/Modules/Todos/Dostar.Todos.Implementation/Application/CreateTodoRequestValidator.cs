@@ -5,8 +5,6 @@ public class CreateTodoRequestValidator : AbstractValidator<CreateTodoRequest>
 {
     public CreateTodoRequestValidator()
     {
-        RuleFor(x => x.Title)
-            .NotEmpty()
-            .MaximumLength(200);
+        RuleFor(x => x.Title).MustBeValidTitle();
     }
 }

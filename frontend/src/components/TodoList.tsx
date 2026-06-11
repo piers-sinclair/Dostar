@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { useDeleteTodo, useTodos, useUpdateTodo } from '@/hooks/useTodos';
 import { cn } from '@/lib/utils';
 import { CreateTodoForm } from './CreateTodoForm';
 
-export function TodoList() {
+export function TodoList(): JSX.Element {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editValue, setEditValue] = useState('');
 

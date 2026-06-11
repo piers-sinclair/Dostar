@@ -20,7 +20,8 @@ public class TodosModule : IEndpointModule
         services.AddDbContext<TodosDbContext>((sp, options) =>
             options.UseNpgsql(sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName)));
         services.AddHealthChecks().AddNpgSql(
-            connectionStringFactory: sp => sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName)!,
+            connectionStringFactory: sp => sp.GetRequiredService<IConfiguration>().GetConnectionString(ConnectionStringName)
+                ?? throw new InvalidOperationException($"Missing connection string '{ConnectionStringName}'."),
             name: HealthCheckName);
         services.AddScoped<ITodoService, TodoService>();
         services.AddScoped<IValidator<CreateTodoRequest>, CreateTodoRequestValidator>();
@@ -31,38 +32,35 @@ public class TodosModule : IEndpointModule
     {
         var group = app.MapGroup(RoutePrefix).WithTags("Todos");
 
-        group.MapGet(RootRoute, async (ITodoService service) =>
-            Results.Ok(await service.GetAllAsync()))
+        group.MapGet(RootRoute, async (ITodoService service, CancellationToken ct) =>
+            Results.Ok(await service.GetAllAsync(ct)))
             .WithName(GetTodosOperationId);
 
-        group.MapGet(IdRoute, async (Guid id, ITodoService service) =>
+        group.MapGet(IdRoute, async (Guid id, ITodoService service, CancellationToken ct) =>
         {
-            var todo = await service.GetByIdAsync(id);
+            var todo = await service.GetByIdAsync(id, ct);
             return todo is null ? Results.NotFound() : Results.Ok(todo);
         }).WithName(GetTodoOperationId);
 
-        group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service) =>
+        group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service, CancellationToken ct) =>
         {
-            var todo = await service.CreateAsync(request.Title);
+            var todo = await service.CreateAsync(request.Title, ct);
             return Results.Created($"{ResourceRoute}/{todo.Id}", todo);
         }).AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
           .RequireRateLimiting(RateLimitPolicy.Strict)
           .WithName(CreateTodoOperationId);
 
-        group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service) =>
+        group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service, CancellationToken ct) =>
         {
-            var todo = await service.UpdateAsync(id, request.Title, request.IsComplete);
+            var todo = await service.UpdateAsync(id, request.Title, request.IsComplete, ct);
             return todo is null ? Results.NotFound() : Results.Ok(todo);
         }).AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
           .WithName(UpdateTodoOperationId);
 
-        group.MapDelete(IdRoute, async (Guid id, ITodoService service) =>
+        group.MapDelete(IdRoute, async (Guid id, ITodoService service, CancellationToken ct) =>
         {
-            var deleted = await service.DeleteAsync(id);
+            var deleted = await service.DeleteAsync(id, ct);
             return deleted ? Results.NoContent() : Results.NotFound();
         }).WithName(DeleteTodoOperationId);
     }
 }
-
-public record CreateTodoRequest(string Title);
-public record UpdateTodoRequest(string Title, bool IsComplete);

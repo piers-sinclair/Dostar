@@ -53,7 +53,7 @@ Then ask: **"Which findings would you like me to fix? List numbers, 'all', or 'n
 
 #### 1. SOLID
 
-Check each principle:
+**All five principles must be checked.** For each one, either report a finding or explicitly confirm it is clean. Do not silently skip any principle.
 
 - **SRP** (Single Responsibility): flag classes or files doing multiple unrelated things — e.g. a service that also owns HTTP-response shaping, a module class mixing business logic with DI wiring.
 - **OCP** (Open/Closed): flag `if`/`switch` chains that would need editing to add a new case where a strategy or polymorphism pattern would avoid the edit.
@@ -67,9 +67,13 @@ Flag **proven** duplicate logic only — the same algorithm, query expression, o
 
 #### 3. Composition over Inheritance
 
+**Must be checked for all classes.** Report "clean" explicitly if no violations are found.
+
 Flag inheritance chains deeper than one level (excluding framework base classes such as `DbContext`, `AbstractValidator`, `IEndpointFilter`). Suggest an interface + composition alternative when the inheritance is purely for code reuse rather than a true is-a relationship.
 
 #### 4. Separation of Concerns
+
+**Must be checked for all layers.** Report "clean" explicitly if no violations are found.
 
 Flag:
 - Business or domain logic inside endpoint handlers (should be in a service)
@@ -77,6 +81,8 @@ Flag:
 - Cross-cutting concerns (logging, auth checks, validation) inlined in business code rather than handled by middleware or endpoint filters
 
 #### 5. Loose Coupling
+
+**Must be checked for all modules.** Report "clean" explicitly if no violations are found.
 
 Flag:
 - `new ConcreteType()` for a dependency that should be injected via constructor
@@ -181,7 +187,7 @@ Flag:
 - **N+1 query patterns** — iterating a collection and calling the DB per item; fix with `Include()`/`ThenInclude()` or a single projected query
 - **Loading full entities when a projection suffices** — `db.Todos.ToListAsync()` then mapping in code instead of `db.Todos.Select(x => new TodoDto(...)).ToListAsync()`
 - **Synchronous EF Core methods** — `ToList()`, `FirstOrDefault()`, `Count()`, etc. must be `ToListAsync()`, `FirstOrDefaultAsync()`, `CountAsync()` etc.
-- **Bulk operations that load entities unnecessarily** — loading entities only to delete or update them; prefer `ExecuteDeleteAsync()` / `ExecuteUpdateAsync()` (EF Core 7+) for set-based operations
+- **Bulk operations that load entities unnecessarily** — loading entities only to delete or update them; prefer `ExecuteDeleteAsync()` / `ExecuteUpdateAsync()` (EF Core 7+) for set-based operations. **Note:** these methods are not supported by the `InMemory` provider — only apply this optimisation if unit tests use a real database (e.g. Testcontainers); otherwise keep the load-then-remove pattern
 - **`DateTime` instead of `DateTimeOffset`** for timestamp columns — `DateTimeOffset` maps to `timestamptz` in PostgreSQL and preserves timezone context; `DateTime` maps to `timestamp without time zone`
 - **Case-insensitive string comparisons using `ToLower()`/`ToUpper()`** — `x.Title.ToLower() == input.ToLower()` generates `LOWER()` SQL that prevents index use; prefer `EF.Functions.ILike(x.Title, input)` for PostgreSQL case-insensitive search
 - **Raw SQL with string interpolation** — `FromSqlRaw($"... {value}")` is an injection risk; use `FromSqlInterpolated($"... {value}")` or parameterised `FromSqlRaw("... {0}", value)`
@@ -192,11 +198,31 @@ Flag:
 Apply only to test files (`*Tests.cs`, `*Tests/*.cs`).
 
 Flag:
-- Method name does not follow `MethodName_Condition_ExpectedOutcome` pattern
+- Method name does not follow `Method_Scenario_ExpectedBehaviour` pattern — use `WhenCalled` as the scenario when there is no special precondition (e.g. `LiveEndpoint_WhenCalled_ReturnsHealthy`)
 - Shared mutable state between tests (static fields, shared DbContext instances)
 - Assertions using `Assert.*` (xUnit) or FluentAssertions — must use **Shouldly**
 - A single `[Fact]` covering multiple unrelated scenarios (each scenario needs its own `[Fact]`)
 - `InMemoryDatabase` not using `Guid.NewGuid().ToString()` as the DB name — tests must be fully isolated
+
+#### 16. Access modifiers / Least Exposure (.NET)
+
+Apply the principle of least privilege to every type and member. Use the most restrictive access modifier that still satisfies all callers.
+
+Flag:
+- **`public` types that are never used outside their own assembly** — they should be `internal`. Common examples:
+  - Middleware classes in the same assembly as `Program.cs` (e.g. `public class FooMiddleware` → `internal sealed class FooMiddleware`)
+  - Helper/utility classes only consumed within one project
+  - Domain entities and DbContext that never cross an assembly boundary
+- **`public` or `internal` members that are only used within the same class** — they should be `private`
+- **Instance members that could be `static`** — if a method or field has no instance state, declare it `static`
+- **Mutable `public` properties that are only ever set by the owning class** — prefer `{ get; private set; }` or `{ get; init; }`
+
+**Exceptions — leave `public` when:**
+- The type is used by cross-assembly callers (e.g. a type referenced from a different project)
+- The type participates in `System.Text.Json` deserialization via reflection — JSON deserialization requires a `public` type and `public` constructor (e.g. request record types in Minimal API handlers)
+- The type is registered with the DI container and activated via `ActivatorUtilities` — the default activator requires a `public` constructor on the implementation type (e.g. service classes, validators)
+- The type inherits from or implements a framework-mandated `public` base (e.g. `DbContext`, `AbstractValidator<T>`)
+- xUnit test classes and fixtures — xUnit requires `public` for test discovery and `IClassFixture<T>` resolution
 
 ---
 
@@ -204,15 +230,23 @@ Flag:
 
 Apply these checks only to `.ts` and `.tsx` files.
 
-#### 16. TypeScript strictness
+#### 17. TypeScript strictness
 
 Flag:
 - `any` type — suggest `unknown` and a type guard, or a proper named type
 - `!` non-null assertion, except on well-known always-present DOM nodes (e.g. `document.getElementById('root')!` in `main.tsx` is acceptable; add a comment if it is not obvious)
 - `as T` type assertion without an accompanying comment explaining why the cast is safe
-- Exported functions or React components missing an explicit return type annotation
+- Exported functions or React components missing an explicit return type annotation — for React components use `JSX.Element`; note that `JSX` is not a global in projects using the new React JSX transform, so add `import type { JSX } from 'react'` (or inline it: `import { useState, type JSX } from 'react'`) to any file that uses it
 
-#### 17. Test quality (frontend)
+#### 18. Access modifiers / Least Exposure (TypeScript)
+
+Flag:
+- **`export` on functions, constants, or types that are only used within the same file** — remove the export
+- **Module-level `const`/`let` that could be scoped inside the function that uses it** — move it inward
+- **Missing `readonly`** on class properties and object fields that are never reassigned after construction
+- **`public` class members that should be `private`** — if a method or property is only called from within the same class
+
+#### 19. Test quality (frontend)
 
 Apply only to test files (`*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*.spec.tsx`).
 

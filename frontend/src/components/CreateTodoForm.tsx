@@ -1,3 +1,4 @@
+import type { JSX } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -12,7 +13,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function CreateTodoForm() {
+export function CreateTodoForm(): JSX.Element {
     const createTodo = useCreateTodo();
     const {
         register,
