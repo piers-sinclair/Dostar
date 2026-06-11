@@ -143,7 +143,7 @@ AppRequests
   }
 }
 
-resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(containerAppFqdn)) {
+resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if (!empty(containerAppFqdn)) {
   name: availabilityTestName
   location: location
   kind: 'standard'
@@ -156,6 +156,7 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
     Enabled: true
     Frequency: pingFrequencySeconds
     Timeout: pingTimeoutSeconds
+    RetryEnabled: false
     Locations: [
       { Id: 'us-va-ash-azr' }
       { Id: 'us-il-ch1-azr' }
@@ -163,9 +164,11 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
     ]
     Request: {
       RequestUrl: 'https://${containerAppFqdn}/healthz/live'
+      HttpVerb: 'GET'
     }
     ValidationRules: {
       ExpectedHttpStatusCode: 200
+      SSLCheck: true
     }
     SyntheticMonitorId: availabilityTestName
   }
