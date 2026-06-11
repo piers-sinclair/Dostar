@@ -41,12 +41,14 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          ALERT_EMAIL_ADDRESS: ${{ secrets.ALERT_EMAIL_ADDRESS }}
         run: |
           MISSING=()
           [ -z "$AZURE_CLIENT_ID" ]               && MISSING+=("AZURE_CLIENT_ID")
           [ -z "$AZURE_TENANT_ID" ]               && MISSING+=("AZURE_TENANT_ID")
           [ -z "$AZURE_SUBSCRIPTION_ID" ]         && MISSING+=("AZURE_SUBSCRIPTION_ID")
           [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ] && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+          [ -z "$ALERT_EMAIL_ADDRESS" ] && MISSING+=("ALERT_EMAIL_ADDRESS")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
@@ -63,6 +65,7 @@ jobs:
       - name: Deploy infrastructure
         env:
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          ALERT_EMAIL_ADDRESS: ${{ secrets.ALERT_EMAIL_ADDRESS }}
         run: |
           az deployment sub create \
             --name dostar-${{ inputs.environment || 'dev' }} \
