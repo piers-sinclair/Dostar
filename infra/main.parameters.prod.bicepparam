@@ -5,7 +5,7 @@ param env = 'prod'
 param region = 'aue'
 param instance = '001'
 param location = 'australiaeast'
-param repositoryUrl = 'https://github.com/piers-sinclair/Dostar'
+param repositoryUrl = 'https://github.com/__GITHUB_ORG__/Dostar'
 param postgresAdminUsername = 'dostaradmin'
 param postgresAdminPassword = readEnvironmentVariable('AZURE_POSTGRES_ADMIN_PASSWORD')
 

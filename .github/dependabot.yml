@@ -8,9 +8,9 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     assignees:
-      - "piers-sinclair"
+      - "__GITHUB_ORG__"
     reviewers:
-      - "piers-sinclair"
+      - "__GITHUB_ORG__"
     groups:
       nuget-minor-patch:
         update-types:
@@ -28,9 +28,9 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     assignees:
-      - "piers-sinclair"
+      - "__GITHUB_ORG__"
     reviewers:
-      - "piers-sinclair"
+      - "__GITHUB_ORG__"
     groups:
       npm-minor-patch:
         update-types:
@@ -48,9 +48,9 @@ updates:
       day: "monday"
     open-pull-requests-limit: 5
     assignees:
-      - "piers-sinclair"
+      - "__GITHUB_ORG__"
     reviewers:
-      - "piers-sinclair"
+      - "__GITHUB_ORG__"
     groups:
       github-actions-all:
         patterns:

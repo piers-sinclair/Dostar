@@ -173,4 +173,4 @@ Update `README.md` whenever you:
 
 ## Questions?
 
-Open a [GitHub issue](https://github.com/piers-sinclair/Dostar/issues) or start a discussion.
+Open a [GitHub issue](https://github.com/__GITHUB_ORG__/Dostar/issues) or start a discussion.

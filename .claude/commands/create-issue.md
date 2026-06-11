@@ -1,6 +1,6 @@
 # create-issue
 
-Create a GitHub issue in the `piers-sinclair/Dostar` repository with labels and an optional milestone.
+Create a GitHub issue in the `__GITHUB_ORG__/Dostar` repository with labels and an optional milestone.
 
 ## Usage
 
@@ -16,12 +16,12 @@ Create a GitHub issue in the `piers-sinclair/Dostar` repository with labels and 
 
 1. **Resolve the milestone number** (if `--milestone` is provided):
    ```
-   gh api repos/piers-sinclair/Dostar/milestones | jq '.[] | select(.title == "<title>") | .number'
+   gh api repos/__GITHUB_ORG__/Dostar/milestones | jq '.[] | select(.title == "<title>") | .number'
    ```
 
 2. **Validate labels** — confirm each label exists in the repo before creating the issue:
    ```
-   gh label list --repo piers-sinclair/Dostar
+   gh label list --repo __GITHUB_ORG__/Dostar
    ```
 
 3. **Draft the body** — if `--body` was not provided, write a clear, actionable issue body from the title and any context given. Include an **Acceptance criteria** section.
@@ -29,7 +29,7 @@ Create a GitHub issue in the `piers-sinclair/Dostar` repository with labels and 
 4. **Create the issue**:
    ```
    gh issue create \
-     --repo piers-sinclair/Dostar \
+     --repo __GITHUB_ORG__/Dostar \
      --title "..." \
      --body "..." \
      --label "<label>" \
