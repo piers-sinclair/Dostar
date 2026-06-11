@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/piers-sinclair/Dostar/compare/v0.2.0...v0.2.1) (2026-06-11)
+
+
+### Bug Fixes
+
+* **ci:** chain cd-release from release-please instead of relying on tag push event ([#283](https://github.com/piers-sinclair/Dostar/issues/283)) ([8038322](https://github.com/piers-sinclair/Dostar/commit/8038322b37dbd56d6e51588bd2c37516cfc2d3ba))
+* **ci:** grant id-token: write to release-please workflow for workflow_call ([#284](https://github.com/piers-sinclair/Dostar/issues/284)) ([69a4c82](https://github.com/piers-sinclair/Dostar/commit/69a4c82a400bbb8b1ef22d71cef8fdc1b9505f82))
+
 ## [0.2.0](https://github.com/piers-sinclair/Dostar/compare/v0.1.0...v0.2.0) (2026-06-11)
 
 
