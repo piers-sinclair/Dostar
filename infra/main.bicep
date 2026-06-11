@@ -178,7 +178,7 @@ module postgres 'modules/postgres.bicep' = {
   }
 }
 
-module alerting 'modules/alerting.bicep' = {
+module alerting 'modules/alerting.bicep' = if (env == 'prod') {
   name: 'alerting'
   scope: rg
   params: {
