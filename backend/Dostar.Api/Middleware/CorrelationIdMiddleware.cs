@@ -1,6 +1,6 @@
 namespace Dostar.Api.Middleware;
 
-public class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
+internal sealed class CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
 {
     private const string HeaderName = "X-Correlation-ID";
 

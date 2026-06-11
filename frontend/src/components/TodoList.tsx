@@ -9,7 +9,7 @@ import { useDeleteTodo, useTodos, useUpdateTodo } from '@/hooks/useTodos';
 import { cn } from '@/lib/utils';
 import { CreateTodoForm } from './CreateTodoForm';
 
-export function TodoList() {
+export function TodoList(): JSX.Element {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editValue, setEditValue] = useState('');
 

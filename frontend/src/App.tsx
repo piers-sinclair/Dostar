@@ -1,6 +1,6 @@
 import { TodoList } from './components/TodoList';
 
-function App() {
+function App(): JSX.Element {
     return (
         <main className="min-h-screen bg-background p-8">
             <div className="mx-auto max-w-lg space-y-6">

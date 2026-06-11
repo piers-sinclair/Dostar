@@ -12,7 +12,7 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function CreateTodoForm() {
+export function CreateTodoForm(): JSX.Element {
     const createTodo = useCreateTodo();
     const {
         register,

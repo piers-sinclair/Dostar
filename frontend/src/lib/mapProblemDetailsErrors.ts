@@ -9,6 +9,7 @@ export function mapProblemDetailsErrors<T extends FieldValues>(
     error: unknown,
     setError: UseFormSetError<T>
 ): void {
+    // apiClient always throws the parsed JSON body; shape matches ProblemDetails from the API
     const p = error as ProblemDetails;
     if (p?.errors) {
         for (const [field, messages] of Object.entries(p.errors)) {

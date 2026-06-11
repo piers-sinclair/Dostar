@@ -8,7 +8,7 @@ public class HealthCheckTests(ApiFactory factory) : IClassFixture<ApiFactory>
     private readonly HttpClient _client = factory.CreateClient();
 
     [Fact]
-    public async Task LiveEndpoint_ReturnsHealthy()
+    public async Task LiveEndpoint_Always_ReturnsHealthy()
     {
         var response = await _client.GetAsync(LiveEndpoint);
 

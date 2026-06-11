@@ -52,18 +52,18 @@ builder.Services.AddRateLimiter(options =>
                 partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? RateLimitPolicy.UnknownIpPartition,
                 factory: _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = 100,
-                    Window = TimeSpan.FromSeconds(60),
+                    PermitLimit = RateLimitPolicy.GlobalPermitLimit,
+                    Window = RateLimitPolicy.RateLimitWindow,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 0
+                    QueueLimit = RateLimitPolicy.NoQueueLimit
                 }));
 
     options.AddFixedWindowLimiter(RateLimitPolicy.Strict, o =>
     {
-        o.PermitLimit = isTestEnvironment ? int.MaxValue : 10;
-        o.Window = TimeSpan.FromMinutes(1);
+        o.PermitLimit = isTestEnvironment ? int.MaxValue : RateLimitPolicy.StrictPermitLimit;
+        o.Window = RateLimitPolicy.RateLimitWindow;
         o.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        o.QueueLimit = 0;
+        o.QueueLimit = RateLimitPolicy.NoQueueLimit;
     });
 
     options.OnRejected = async (context, token) =>
