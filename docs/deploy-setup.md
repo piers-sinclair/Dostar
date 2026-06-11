@@ -213,6 +213,7 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Generated in step 2.10 | Infra workflows |
 | `AZURE_POSTGRES_ADMIN_USERNAME` | Chosen in step 2.10 | Infra workflows |
+| `ALERT_EMAIL_ADDRESS` | Email address(es) for P1 alerts (comma or semicolon-separated) | Infra workflows |
 
 ---
 
