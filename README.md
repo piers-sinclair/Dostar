@@ -148,6 +148,47 @@ dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.IntegrationTests
 cd tests && pnpm exec playwright test
 ```
 
+## Observability
+
+Dostar ships a full OpenTelemetry stack wired to Azure Monitor in production. No local setup is needed — the Azure Monitor exporter is only enabled in deployed environments where `APPLICATIONINSIGHTS_CONNECTION_STRING` is injected automatically by the Bicep deployment.
+
+### What is collected
+
+| Signal | Source | Destination |
+|--------|--------|-------------|
+| Structured logs (JSON) | `ILogger` → OTEL pipeline | Application Insights / Log Analytics |
+| Distributed traces | ASP.NET Core + Npgsql (auto-instrumented) | Application Insights |
+| Metrics | ASP.NET Core request metrics (rate, error rate, latency) | Application Insights |
+| DB query duration | Npgsql OTEL instrumentation | Application Insights (dependencies) |
+
+### Viewing logs and traces in production
+
+1. Open the **Azure Portal** and navigate to your Application Insights resource (`appi-<workload>-<env>-<region>-<instance>`).
+2. **Live stream** — _Live Metrics_ shows real-time request rate, failure rate, and server health.
+3. **Logs** — _Logs_ → query the `requests`, `traces`, `dependencies`, and `exceptions` tables with KQL. Example:
+   ```kql
+   requests
+   | where timestamp > ago(1h) and success == false
+   | project timestamp, name, resultCode, duration, operation_Id
+   | order by timestamp desc
+   ```
+4. **End-to-end traces** — copy an `operation_Id` from above and search in _Transaction search_ to see the full distributed trace, including SQL query spans.
+5. **Dashboard** — open _Workbooks_ inside the Application Insights resource and select **API Observability**. It shows request rate, error rate, P95/P99 latency, and DB query duration for the last hour.
+
+### Alerting
+
+Three P1 alert rules are provisioned automatically:
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| High Error Rate | >10% of requests fail in a 5-minute window | Critical (0) |
+| High P99 Latency | P99 latency exceeds 2000 ms in a 5-minute window | Critical (0) |
+| Health Check Failure | 2+ probe locations fail `/healthz/live` | Critical (0) |
+
+Alert rules are visible in **Azure Monitor → Alerts**. To receive email notifications, set `ALERT_EMAIL_ADDRESS` as a secret in your CI environment — the Bicep deployment picks it up automatically from the parameter files. Multiple addresses are supported as a comma or semicolon-separated list.
+
+A new incident should be detectable within 5 minutes via the workbook or an alert firing.
+
 ## Deploy
 
 See [docs/deploy-setup.md](docs/deploy-setup.md) for full deployment instructions.

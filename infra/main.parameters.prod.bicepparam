@@ -18,3 +18,6 @@ param containerMaxReplicas = 10
 // PostgreSQL — Burstable B2ms keeps costs low (~$65/month) at launch.
 // Upgrade to Standard_D* and set postgresEnableHa = true when uptime SLAs require it.
 param postgresSkuName = 'Standard_B2ms'
+
+// Alerting — set ALERT_EMAIL_ADDRESS in your CI environment to receive P1 notifications (comma/semicolon-separated for multiple)
+param alertEmailAddress = readEnvironmentVariable('ALERT_EMAIL_ADDRESS', '')

@@ -122,6 +122,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 name: 'ConnectionStrings__Default'
                 secretRef: 'connectionstrings--default'
               }
+              {
+                name: 'Logging__Console__FormatterName'
+                value: 'json'
+              }
             ],
             !empty(appInsightsConnectionString)
               ? [
