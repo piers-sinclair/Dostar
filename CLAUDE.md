@@ -180,7 +180,12 @@ git worktree prune                # remove worktree metadata for deleted paths
    az deployment sub what-if --location australiaeast --template-file infra/main.bicep --parameters infra/main.parameters.dev.bicepparam   # infra (if changed)
    ```
 4. **Commit** with a message that references the issue (`Closes #N`).
-5. **Push** and open a PR targeting `main`:
+5. **Check the PR is still open before pushing** — if resuming work on an existing branch, verify the PR has not already been merged:
+   ```bash
+   gh pr view <branch> --json state,url
+   # If state is MERGED, create a new branch from origin/main instead of pushing to the old one
+   ```
+6. **Push** and open a PR targeting `main`:
    ```bash
    git push -u origin <branch>
    gh pr create --title "..." --body "..."
