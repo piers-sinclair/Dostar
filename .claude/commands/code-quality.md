@@ -198,7 +198,7 @@ Flag:
 Apply only to test files (`*Tests.cs`, `*Tests/*.cs`).
 
 Flag:
-- Method name does not follow `MethodName_Condition_ExpectedOutcome` pattern
+- Method name does not follow `MethodName_Condition_ExpectedOutcome` pattern — only flag this if the test has a meaningful condition to express; do **not** force a placeholder like `_Always_` when there is no real condition (a 2-part `MethodName_ExpectedOutcome` is acceptable when one scenario covers all cases)
 - Shared mutable state between tests (static fields, shared DbContext instances)
 - Assertions using `Assert.*` (xUnit) or FluentAssertions — must use **Shouldly**
 - A single `[Fact]` covering multiple unrelated scenarios (each scenario needs its own `[Fact]`)
