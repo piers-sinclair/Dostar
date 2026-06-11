@@ -25,7 +25,7 @@ param appInsightsId string
 @description('FQDN of the Container App (used for the availability ping test). Leave empty to skip.')
 param containerAppFqdn string = ''
 
-@description('Email address for P1 alert notifications.')
+@description('Comma or semicolon-separated email addresses for alert notifications. If empty, alerts are not created.')
 @minLength(1)
 param alertEmailAddress string
 
@@ -37,13 +37,15 @@ var emailAddresses = filter(
   e => !empty(e)
 )
 
+var enableAlerting = !empty(emailAddresses)
+
 var errorRateThresholdPct = 10
 var latencyThresholdMs = 2000
 var availabilityFailedLocations = 2
 var pingFrequencySeconds = 300
 var pingTimeoutSeconds = 30
 
-resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
+resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (enableAlerting) {
   name: actionGroupName
   location: 'global'
   properties: {
@@ -66,7 +68,7 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
     displayName: '[P1] High Error Rate'
     description: 'Fires when API error rate exceeds 10% over 5 minutes.'
     severity: 0
-    enabled: true
+    enabled: enableAlerting
     scopes: [appInsightsId]
     evaluationFrequency: 'PT5M'
     windowSize: 'PT5M'
@@ -74,9 +76,9 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
       allOf: [
         {
           query: '''
-requests
-| where timestamp > ago(5m)
-| summarize Total = count(), Failed = countif(success == false)
+AppRequests
+| where TimeGenerated > ago(5m)
+| summarize Total = count(), Failed = countif(Success == false)
 | extend ErrorRatePct = iff(Total > 10, Failed * 100.0 / Total, 0.0)
 | project ErrorRatePct
 '''
@@ -91,10 +93,10 @@ requests
         }
       ]
     }
-    actions: {
-      actionGroups: [
-        actionGroup.id
-      ]
+    actions: enableAlerting ? {
+      actionGroups: [actionGroup.id]
+    } : {
+      actionGroups: []
     }
     autoMitigate: true
   }
@@ -107,7 +109,7 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
     displayName: '[P1] High P99 Latency'
     description: 'Fires when P99 latency exceeds 2000ms over 5 minutes.'
     severity: 0
-    enabled: true
+    enabled: enableAlerting
     scopes: [appInsightsId]
     evaluationFrequency: 'PT5M'
     windowSize: 'PT5M'
@@ -115,9 +117,9 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
       allOf: [
         {
           query: '''
-requests
-| where timestamp > ago(5m)
-| summarize P99 = percentile(duration, 99)
+AppRequests
+| where TimeGenerated > ago(5m)
+| summarize P99 = percentile(DurationMs, 99)
 | project P99
 '''
           timeAggregation: 'Maximum'
@@ -131,10 +133,10 @@ requests
         }
       ]
     }
-    actions: {
-      actionGroups: [
-        actionGroup.id
-      ]
+    actions: enableAlerting ? {
+      actionGroups: [actionGroup.id]
+    } : {
+      actionGroups: []
     }
     autoMitigate: true
   }
@@ -171,7 +173,7 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
   }
 }
 
-resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!empty(containerAppFqdn)) {
+resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!empty(containerAppFqdn) && enableAlerting) {
   name: 'alert-availability-${workload}-${env}'
   location: 'global'
   properties: {
