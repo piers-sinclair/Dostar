@@ -22,6 +22,9 @@ param instance string
 @description('Resource ID of the Application Insights component.')
 param appInsightsId string
 
+@description('Resource ID of the Log Analytics Workspace backing Application Insights.')
+param logAnalyticsWorkspaceId string
+
 @description('FQDN of the Container App (used for the availability ping test). Leave empty to skip.')
 param containerAppFqdn string = ''
 
@@ -67,7 +70,7 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
     description: 'Fires when API error rate exceeds 10% over 5 minutes.'
     severity: 0
     enabled: true
-    scopes: [appInsightsId]
+    scopes: [logAnalyticsWorkspaceId]
     evaluationFrequency: 'PT5M'
     windowSize: 'PT5M'
     criteria: {
@@ -108,7 +111,7 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
     description: 'Fires when P99 latency exceeds 2000ms over 5 minutes.'
     severity: 0
     enabled: true
-    scopes: [appInsightsId]
+    scopes: [logAnalyticsWorkspaceId]
     evaluationFrequency: 'PT5M'
     windowSize: 'PT5M'
     criteria: {
@@ -153,7 +156,6 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
     Enabled: true
     Frequency: pingFrequencySeconds
     Timeout: pingTimeoutSeconds
-    RetryEnabled: false
     Locations: [
       { Id: 'us-va-ash-azr' }
       { Id: 'us-il-ch1-azr' }
@@ -161,11 +163,9 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
     ]
     Request: {
       RequestUrl: 'https://${containerAppFqdn}/healthz/live'
-      HttpVerb: 'GET'
     }
     ValidationRules: {
       ExpectedHttpStatusCode: 200
-      SSLCheck: true
     }
     SyntheticMonitorId: availabilityTestName
   }
