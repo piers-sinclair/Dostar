@@ -28,6 +28,12 @@ param alertEmailAddress string = ''
 var actionGroupName = 'ag-${workload}-${env}-${region}-${instance}'
 var availabilityTestName = 'webtest-healthz-${workload}-${env}-${region}-${instance}'
 
+var errorRateThresholdPct = 10
+var latencyThresholdMs = 2000
+var availabilityFailedLocations = 2
+var pingFrequencySeconds = 300
+var pingTimeoutSeconds = 30
+
 resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   name: actionGroupName
   location: 'global'
@@ -46,13 +52,12 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   }
 }
 
-// P1: error rate spike — fires when >10% of requests fail over a 5-minute window
 resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   name: 'alert-error-rate-${workload}-${env}'
   location: location
   properties: {
     displayName: '[P1] High Error Rate'
-    description: 'Fires when the API error rate exceeds 10% over a 5-minute window.'
+    description: 'Fires when the API error rate exceeds 10% over a 5-minute window. Skipped when fewer than 10 requests arrive in the window to suppress cold-start noise.'
     severity: 0
     enabled: true
     scopes: [appInsightsId]
@@ -71,7 +76,7 @@ requests
           timeAggregation: 'Maximum'
           metricMeasureColumn: 'ErrorRatePct'
           operator: 'GreaterThan'
-          threshold: 10
+          threshold: errorRateThresholdPct
           failingPeriods: {
             numberOfEvaluationPeriods: 1
             minFailingPeriodsToAlert: 1
@@ -86,7 +91,6 @@ requests
   }
 }
 
-// P1: latency breach — fires when P99 request latency exceeds 2 seconds
 resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   name: 'alert-latency-${workload}-${env}'
   location: location
@@ -110,7 +114,7 @@ requests
           timeAggregation: 'Maximum'
           metricMeasureColumn: 'P99'
           operator: 'GreaterThan'
-          threshold: 2000
+          threshold: latencyThresholdMs
           failingPeriods: {
             numberOfEvaluationPeriods: 1
             minFailingPeriodsToAlert: 1
@@ -125,7 +129,6 @@ requests
   }
 }
 
-// Standard ping test targeting /healthz/live — only provisioned when containerAppFqdn is known
 resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(containerAppFqdn)) {
   name: availabilityTestName
   location: location
@@ -137,8 +140,8 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
     Name: 'Healthz live'
     Description: 'Pings /healthz/live from 3 Azure regions every 5 minutes.'
     Enabled: true
-    Frequency: 300
-    Timeout: 30
+    Frequency: pingFrequencySeconds
+    Timeout: pingTimeoutSeconds
     Kind: 'standard'
     RetryEnabled: false
     Locations: [
@@ -159,7 +162,6 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
   }
 }
 
-// P1: health check failure — fires when 2+ regions report unavailability
 resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!empty(containerAppFqdn)) {
   name: 'alert-availability-${workload}-${env}'
   location: 'global'
@@ -176,7 +178,7 @@ resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!e
     criteria: {
       'odata.type': 'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria'
       componentId: appInsightsId
-      failedLocationCount: 2
+      failedLocationCount: availabilityFailedLocations
       webTestId: availabilityTest.id
     }
     actions: [
