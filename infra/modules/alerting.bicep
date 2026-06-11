@@ -23,7 +23,8 @@ param appInsightsId string
 param containerAppFqdn string = ''
 
 @description('Comma or semicolon-separated email addresses for P1 alert notifications. Leave empty to skip email notifications.')
-param alertEmailAddress string = ''
+@minLength(1)
+param alertEmailAddress string
 
 var actionGroupName = 'ag-${workload}-${env}-${region}-${instance}'
 var availabilityTestName = 'webtest-healthz-${workload}-${env}-${region}-${instance}'
