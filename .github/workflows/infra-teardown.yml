@@ -22,7 +22,6 @@ jobs:
   teardown:
     name: Tear down ${{ inputs.environment || 'dev' }} environment
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment || 'dev' }}
 
     steps:
       - name: Confirm
