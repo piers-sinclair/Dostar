@@ -33,9 +33,7 @@
     {
       "label": "run: dev",
       "dependsOn": ["run: backend", "run: frontend"],
-      "dependsOrder": "parallel",
-      "isBackground": true,
-      "problemMatcher": []
+      "dependsOrder": "parallel"
     },
     {
       "label": "run: frontend",
@@ -55,6 +53,12 @@
           "endsPattern": "ready in"
         }
       }
+    },
+    {
+      "label": "launch: prepare",
+      "dependsOn": ["run: migrate", "build: Dostar.Api"],
+      "dependsOrder": "sequence",
+      "problemMatcher": "$msCompile"
     },
     {
       "label": "build: Dostar.Api",

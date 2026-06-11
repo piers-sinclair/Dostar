@@ -49,11 +49,11 @@ The fastest path is the devcontainer — it installs all tooling, starts the dat
 **First time:**
 
 1. Open the project folder in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically.
-2. Press **F5** → select the **`(API + Frontend)`** launch configuration → migrations run, then both services start.
+2. Open the **Run and Debug** panel (`Ctrl+Shift+D`), select **`Dostar (API + Frontend)`** from the configuration dropdown at the top, then press **F5**. Migrations run automatically, then both services start.
 
 **Every subsequent session:**
 
-Just press **F5** — no other steps needed.
+Press **F5** — VS Code remembers the selected configuration.
 
 | Service | URL |
 |---------|-----|
@@ -95,18 +95,18 @@ Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the termina
 | `run: frontend` | Starts the Vite dev server on `http://localhost:5173` with hot-module replacement. | `cd frontend && pnpm dev` |
 | `run: dev` | Runs `run: backend` (which includes migrations) and `run: frontend` in parallel — full stack without a debugger. | Run `run: backend` and `run: frontend` terminal commands in two separate terminals. |
 | `build: solution` | Builds the entire .NET solution. This is the default build task (`Ctrl+Shift+B`). | `dotnet build` |
-| `build: <ProjectName>.Api` | Builds only the API project — used internally as the pre-launch step for F5. | `dotnet build backend/<ProjectName>.Api/<ProjectName>.Api.csproj` |
+| `build: <ProjectName>.Api` | Builds only the API project. Used internally by `launch: prepare`. | `dotnet build backend/<ProjectName>.Api/<ProjectName>.Api.csproj` |
 
 ## F5 launch configurations
 
-Configurations are in `.vscode/launch.json` and selected from the **Run and Debug** panel (`Ctrl+Shift+D`).
+Configurations are in `.vscode/launch.json` and selected from the **Run and Debug** panel (`Ctrl+Shift+D`). Both run migrations before starting — no separate migration step needed.
 
 | Configuration | What it does |
 |---------------|-------------|
-| `<ProjectName>.Api (http)` | Builds and launches the backend with the .NET debugger attached. Opens Scalar (`/scalar/v1`) in the browser once the API is ready. Use this when you only need to debug the backend. |
-| `<ProjectName> (API + Frontend)` | Starts the Vite frontend first, then launches the backend with the debugger. **This is the recommended default for full-stack work.** Select it once in the Run panel; it becomes the target for every subsequent F5 press. |
+| `<ProjectName>.Api (http)` | Runs migrations, builds, then launches the backend with the .NET debugger attached. Opens Scalar (`/scalar/v1`) in the browser once the API is ready. Use this when you only need to debug the backend. |
+| `<ProjectName> (API + Frontend)` | Starts the Vite frontend, then runs migrations, builds, and launches the backend with the debugger. **This is the recommended default for full-stack work.** |
 
-To make `<ProjectName> (API + Frontend)` your persistent F5 target: open the Run and Debug panel (`Ctrl+Shift+D`), click the dropdown at the top, and select it.
+To set `<ProjectName> (API + Frontend)` as your persistent F5 target: open the Run and Debug panel (`Ctrl+Shift+D`), click the configuration dropdown at the top, and select it. VS Code remembers this selection across sessions.
 
 ## Project structure
 

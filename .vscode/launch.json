@@ -5,7 +5,7 @@
       "name": "Dostar.Api (http)",
       "type": "coreclr",
       "request": "launch",
-      "preLaunchTask": "build: Dostar.Api",
+      "preLaunchTask": "launch: prepare",
       "program": "${workspaceFolder}/backend/Dostar.Api/bin/Debug/net10.0/Dostar.Api.dll",
       "args": [],
       "cwd": "${workspaceFolder}/backend/Dostar.Api",
