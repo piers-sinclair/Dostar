@@ -205,6 +205,27 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 
 ---
 
+## CI/CD pipeline
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `ci.yml` | push / PR | Build + test |
+| `cd-backend.yml` | push to `main` (`backend/**`) | Deploy backend to **dev** |
+| `cd-frontend.yml` | push to `main` (`frontend/**`) | Deploy frontend to **dev** |
+| `infra-deploy.yml` | push to `main` (`infra/**`) | Deploy Bicep to **dev** |
+| `release-please.yml` | push to `main` | Opens/updates Release PR; on merge calls `cd-release.yml` |
+| `cd-release.yml` | `workflow_call` from release-please, or `workflow_dispatch` | Deploy backend + frontend to **prod** |
+
+**Why `workflow_call` instead of `push: tags`:** GitHub does not trigger workflows from events
+authored by `GITHUB_TOKEN`. Since release-please uses `GITHUB_TOKEN` to push the release tag,
+a `push: tags` trigger on `cd-release.yml` would never fire. The fix is to chain `cd-release.yml`
+directly from `release-please.yml` using its `release_created` output — no PAT or GitHub App
+needed, and no extra setup for template consumers.
+
+**Manual prod deploy:** Go to Actions → "CD — release to prod" → Run workflow.
+
+---
+
 ## Keeping this file up to date
 
 **Update `CLAUDE.md` whenever you:**
