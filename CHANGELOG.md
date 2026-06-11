@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/piers-sinclair/Dostar/compare/v0.2.1...v0.3.0) (2026-06-11)
+
+
+### Features
+
+* **observability:** implement OpenTelemetry stack for production incident response ([#270](https://github.com/piers-sinclair/Dostar/issues/270)) ([1595214](https://github.com/piers-sinclair/Dostar/commit/1595214c1d149593290558c9ad308ecf313d1090))
+
+
+### Bug Fixes
+
+* **infra:** wire Container Apps Environment to Log Analytics ([#288](https://github.com/piers-sinclair/Dostar/issues/288)) ([754ea0d](https://github.com/piers-sinclair/Dostar/commit/754ea0d9c840b0d42e891773127ef6ece9acfc88))
+
 ## [0.2.1](https://github.com/piers-sinclair/Dostar/compare/v0.2.0...v0.2.1) (2026-06-11)
 
 
