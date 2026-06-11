@@ -81,7 +81,8 @@ jobs:
             --parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam \
             --only-show-errors
 
-      - name: Print environment URLs
+      - name: Get environment URLs
+        id: get-urls
         run: |
           BACKEND_FQDN=$(az deployment sub show \
             --name dostar-${{ inputs.environment || 'dev' }} \
@@ -89,6 +90,30 @@ jobs:
           FRONTEND_HOSTNAME=$(az deployment sub show \
             --name dostar-${{ inputs.environment || 'dev' }} \
             --query 'properties.outputs.staticWebAppHostname.value' -o tsv)
+          echo "backend_fqdn=$BACKEND_FQDN" >> "$GITHUB_OUTPUT"
+          echo "frontend_hostname=$FRONTEND_HOSTNAME" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test
+        run: |
+          FQDN="${{ steps.get-urls.outputs.backend_fqdn }}"
+          for i in {1..10}; do
+            LIVE=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
+            READY=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/ready")
+            if [ "$LIVE" = "200" ] && [ "$READY" = "200" ]; then
+              echo "Smoke tests passed (/healthz/live=$LIVE, /healthz/ready=$READY)"
+              exit 0
+            fi
+            echo "Attempt $i: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
+            sleep 15
+          done
+          echo "::error::Smoke test failed after 10 attempts"
+          exit 1
+
+      - name: Print environment URLs
+        if: success()
+        run: |
+          BACKEND_FQDN="${{ steps.get-urls.outputs.backend_fqdn }}"
+          FRONTEND_HOSTNAME="${{ steps.get-urls.outputs.frontend_hostname }}"
           {
             echo "## Infrastructure deployed"
             echo ""
