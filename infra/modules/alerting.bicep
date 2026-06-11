@@ -156,6 +156,7 @@ resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if 
     Enabled: true
     Frequency: pingFrequencySeconds
     Timeout: pingTimeoutSeconds
+    RetryEnabled: false
     Locations: [
       { Id: 'us-va-ash-azr' }
       { Id: 'us-il-ch1-azr' }
@@ -163,9 +164,11 @@ resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if 
     ]
     Request: {
       RequestUrl: 'https://${containerAppFqdn}/healthz/live'
+      HttpVerb: 'GET'
     }
     ValidationRules: {
       ExpectedHttpStatusCode: 200
+      SSLCheck: true
     }
     SyntheticMonitorId: availabilityTestName
   }
