@@ -143,7 +143,7 @@ AppRequests
   }
 }
 
-resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(containerAppFqdn)) {
+resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if (!empty(containerAppFqdn)) {
   name: availabilityTestName
   location: location
   kind: 'standard'
