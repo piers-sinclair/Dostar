@@ -110,7 +110,7 @@ Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers**
 
 **Project location**: `backend/Modules/<Module>/Dostar.<Module>.UnitTests/` — colocated with the module, referencing `.Implementation` directly. All four module projects travel together to support microservice extraction.
 
-**Method naming**: `MethodName_Condition_ExpectedOutcome`
+**Method naming**: `Method_Scenario_ExpectedBehaviour`
 - `GetAllAsync_WhenEmpty_ReturnsEmptyList`
 - `DeleteAsync_WhenNotFound_ReturnsFalse`
 

@@ -1,16 +1,11 @@
 import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form';
-
-interface ProblemDetails {
-    errors?: Record<string, string[]>;
-    detail?: string;
-}
+import { isProblemDetails } from '../types/api';
 
 export function mapProblemDetailsErrors<T extends FieldValues>(
     error: unknown,
     setError: UseFormSetError<T>
 ): void {
-    // apiClient always throws the parsed JSON body; shape matches ProblemDetails from the API
-    const p = error as ProblemDetails;
+    const p = isProblemDetails(error) ? error : undefined;
     if (p?.errors) {
         for (const [field, messages] of Object.entries(p.errors)) {
             const key = (field.charAt(0).toLowerCase() + field.slice(1)) as FieldPath<T>;

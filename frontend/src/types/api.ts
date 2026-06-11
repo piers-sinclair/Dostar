@@ -16,3 +16,7 @@ export interface ProblemDetails {
     detail?: string;
     errors?: Record<string, string[]>;
 }
+
+export function isProblemDetails(error: unknown): error is ProblemDetails {
+    return typeof error === 'object' && error !== null && ('detail' in error || 'title' in error || 'errors' in error);
+}
