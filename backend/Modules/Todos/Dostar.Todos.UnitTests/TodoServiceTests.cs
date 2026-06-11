@@ -2,6 +2,7 @@ namespace Dostar.Todos.UnitTests;
 
 public class TodoServiceTests(PostgresContainerFixture fixture) : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
+    // Set in InitializeAsync before any test runs; IAsyncLifetime guarantees this
     private TodosDbContext _db = null!;
 
     public Task InitializeAsync()
