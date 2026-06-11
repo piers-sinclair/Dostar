@@ -27,7 +27,7 @@ public class TodoServiceTests(PostgresContainerFixture fixture) : IClassFixture<
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldReturnTodoDto_WithCorrectData()
+    public async Task CreateAsync_WhenCalled_ReturnsTodoDtoWithCorrectData()
     {
         var service = new TodoService(_db);
 

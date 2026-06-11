@@ -4,7 +4,7 @@ namespace Dostar.Api.HealthChecks;
 
 internal static class HealthCheckResponseWriter
 {
-    internal static Task WriteResponse(HttpContext context, HealthReport report)
+    internal static Task WriteResponseAsync(HttpContext context, HealthReport report)
     {
         context.Response.ContentType = "application/json";
         var response = new
