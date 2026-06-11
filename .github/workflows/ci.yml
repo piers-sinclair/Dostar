@@ -16,6 +16,115 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  backend-checks:
+    name: Backend — build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'backend/**'
+              - 'tools/**'
+              - '*.slnx'
+              - '*.sln'
+
+      - uses: actions/setup-dotnet@v5
+        if: steps.changes.outputs.src == 'true'
+        with:
+          dotnet-version: '10.x'
+
+      - name: Cache NuGet packages
+        if: steps.changes.outputs.src == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        if: steps.changes.outputs.src == 'true'
+        run: dotnet restore
+
+      - name: Build
+        if: steps.changes.outputs.src == 'true'
+        run: dotnet build --no-restore -c Release
+
+      - name: Verify formatting
+        if: steps.changes.outputs.src == 'true'
+        run: dotnet format --verify-no-changes
+
+      - name: Install coverlet
+        if: steps.changes.outputs.src == 'true'
+        run: dotnet tool install coverlet.console --tool-path ./tools
+
+      - name: Unit tests
+        if: steps.changes.outputs.src == 'true'
+        timeout-minutes: 15
+        run: bash tools/run-tests.sh unit
+
+      - name: Integration tests
+        if: steps.changes.outputs.src == 'true'
+        timeout-minutes: 30
+        run: bash tools/run-tests.sh integration
+
+      - name: Upload test results
+        if: failure() && steps.changes.outputs.src == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults/
+
+  frontend-checks:
+    name: Frontend — build & lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'frontend/**'
+
+      - uses: pnpm/action-setup@v6
+        if: steps.changes.outputs.src == 'true'
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        if: steps.changes.outputs.src == 'true'
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        if: steps.changes.outputs.src == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        if: steps.changes.outputs.src == 'true'
+        run: pnpm lint
+
+      - name: Prettier
+        if: steps.changes.outputs.src == 'true'
+        run: pnpm format:check
+
+      - name: Build
+        if: steps.changes.outputs.src == 'true'
+        run: pnpm build
+
   trivy-scan:
     name: Security — Trivy vulnerability scan
     runs-on: ubuntu-latest

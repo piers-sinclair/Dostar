@@ -210,9 +210,7 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `ci.yml` | PR to `main` (all) | PR title check + security scans (Trivy, OpenGrep) |
-| `ci-backend.yml` | PR to `main` (`backend/**`, `tools/**`, `*.slnx`) | Backend build & test |
-| `ci-frontend.yml` | PR to `main` (`frontend/**`) | Frontend build & lint |
+| `ci.yml` | PR to `main` (all) | PR title, security scans (always); backend build & test (`backend/**`); frontend build & lint (`frontend/**`) — path-skipped via `dorny/paths-filter` |
 | `testing-ui.yml` | PR to `main` (`frontend/**`, `tests/Dostar.UITests/**`) | Playwright UI tests (frontend-only; API calls mocked via `page.route()`) |
 | `cd-backend.yml` | push to `main` (`backend/**`) | Deploy backend to **dev** |
 | `cd-frontend.yml` | push to `main` (`frontend/**`) | Deploy frontend to **dev** |
