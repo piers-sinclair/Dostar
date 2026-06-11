@@ -186,6 +186,7 @@ Three P1 alert rules are provisioned automatically:
 | Health Check Failure | 2+ probe locations fail `/healthz/live` | Critical (0) |
 
 Alert rules are visible in **Azure Monitor → Alerts**. To receive email notifications, set `ALERT_EMAIL_ADDRESS` as a secret in your CI environment — the Bicep deployment picks it up automatically from the parameter files. Multiple addresses are supported as a comma or semicolon-separated list.
+Alert rules are visible in **Azure Monitor → Alerts**. To receive email notifications, set `ALERT_EMAIL_ADDRESS` as a secret in your CI environment — the Bicep deployment picks it up automatically from the parameter files.
 
 A new incident should be detectable within 5 minutes via the workbook or an alert firing.
 

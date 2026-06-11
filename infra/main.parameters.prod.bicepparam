@@ -20,4 +20,5 @@ param containerMaxReplicas = 10
 param postgresSkuName = 'Standard_B2ms'
 
 // Alerting — set ALERT_EMAIL_ADDRESS in your CI environment to receive P1 notifications (comma/semicolon-separated for multiple)
+// Alerting — set ALERT_EMAIL_ADDRESS in your CI environment to receive P1 notifications
 param alertEmailAddress = readEnvironmentVariable('ALERT_EMAIL_ADDRESS', '')
