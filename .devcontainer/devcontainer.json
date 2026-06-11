@@ -17,7 +17,9 @@
     "source=dostar-claude-config,target=/home/vscode/.claude,type=volume"
   ],
   "containerEnv": {
-    "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar"
+    "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar",
+    "TESTCONTAINERS_RYUK_DISABLED": "true",
+    "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal"
   },
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",

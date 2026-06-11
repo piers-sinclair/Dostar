@@ -117,7 +117,7 @@ Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers**
 **Assertions**: always use **Shouldly** (`result.ShouldBe(...)`, `result.ShouldBeNull()`, etc.) — never `Assert.*` or FluentAssertions.
 
 **Dependencies**:
-- EF Core `DbContext` → use `Microsoft.EntityFrameworkCore.InMemory`; create a new in-memory database per test via `Guid.NewGuid().ToString()` as the DB name to keep tests isolated.
+- EF Core `DbContext` → use **Testcontainers PostgreSQL** (`Testcontainers.PostgreSql`). Declare a `PostgresContainerFixture : IAsyncLifetime` that starts the container and runs migrations once, shared across all tests via `IClassFixture<PostgresContainerFixture>`. Each test class also implements `IAsyncLifetime` — `InitializeAsync` opens a fresh `DbContext`, `DisposeAsync` deletes all rows and disposes the context so each test starts with an empty table.
 - Other dependencies → use NSubstitute (`Substitute.For<T>()`).
 
 Each test must be fully self-contained — no shared mutable state between tests.
