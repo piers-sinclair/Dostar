@@ -1,6 +1,6 @@
 namespace Dostar.SharedKernel.UnitTests;
 
-public sealed record TestRequest(string Name);
+internal sealed record TestRequest(string Name);
 
 public class ValidationFilterTests
 {

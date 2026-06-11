@@ -6,7 +6,7 @@ function Card({
     className,
     ref,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>): React.JSX.Element {
     return (
         <div
             ref={ref}
@@ -20,7 +20,7 @@ function CardHeader({
     className,
     ref,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>): React.JSX.Element {
     return <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />;
 }
 
@@ -28,7 +28,7 @@ function CardTitle({
     className,
     ref,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>): React.JSX.Element {
     return (
         <div
             ref={ref}
@@ -42,7 +42,7 @@ function CardDescription({
     className,
     ref,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>): React.JSX.Element {
     return <div ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />;
 }
 
@@ -50,7 +50,7 @@ function CardContent({
     className,
     ref,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>): React.JSX.Element {
     return <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />;
 }
 
@@ -58,7 +58,7 @@ function CardFooter({
     className,
     ref,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLDivElement> & React.RefAttributes<HTMLDivElement>): React.JSX.Element {
     return <div ref={ref} className={cn('flex items-center p-6 pt-0', className)} {...props} />;
 }
 

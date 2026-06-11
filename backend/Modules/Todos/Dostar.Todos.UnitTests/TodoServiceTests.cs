@@ -2,13 +2,9 @@ namespace Dostar.Todos.UnitTests;
 
 public class TodoServiceTests(PostgresContainerFixture fixture) : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
-    private TodosDbContext _db = null!;
+    private readonly TodosDbContext _db = fixture.CreateDbContext();
 
-    public Task InitializeAsync()
-    {
-        _db = fixture.CreateDbContext();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
     public async Task DisposeAsync()
     {
@@ -27,7 +23,7 @@ public class TodoServiceTests(PostgresContainerFixture fixture) : IClassFixture<
     }
 
     [Fact]
-    public async Task CreateAsync_ShouldReturnTodoDto_WithCorrectData()
+    public async Task CreateAsync_WhenCalled_ReturnsTodoDtoWithCorrectData()
     {
         var service = new TodoService(_db);
 
