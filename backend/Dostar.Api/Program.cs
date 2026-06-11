@@ -125,11 +125,11 @@ if (app.Environment.IsDevelopment())
 app.MapHealthChecks("/healthz/live", new HealthCheckOptions
 {
     Predicate = _ => false,
-    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+    ResponseWriter = HealthCheckResponseWriter.WriteResponseAsync
 });
 app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
 {
-    ResponseWriter = HealthCheckResponseWriter.WriteResponse
+    ResponseWriter = HealthCheckResponseWriter.WriteResponseAsync
 });
 
 var endpointModules = modules.OfType<IEndpointModule>().ToArray();

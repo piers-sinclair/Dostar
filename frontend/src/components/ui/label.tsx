@@ -14,7 +14,7 @@ function Label({
     ...props
 }: React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
     VariantProps<typeof labelVariants> &
-    React.RefAttributes<React.ElementRef<typeof LabelPrimitive.Root>>) {
+    React.RefAttributes<React.ElementRef<typeof LabelPrimitive.Root>>): React.JSX.Element {
     return <LabelPrimitive.Root ref={ref} className={cn(labelVariants(), className)} {...props} />;
 }
 
