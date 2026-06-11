@@ -236,7 +236,7 @@ Flag:
 - `any` type — suggest `unknown` and a type guard, or a proper named type
 - `!` non-null assertion, except on well-known always-present DOM nodes (e.g. `document.getElementById('root')!` in `main.tsx` is acceptable; add a comment if it is not obvious)
 - `as T` type assertion without an accompanying comment explaining why the cast is safe
-- Exported functions or React components missing an explicit return type annotation
+- Exported functions or React components missing an explicit return type annotation — for React components use `JSX.Element`; note that `JSX` is not a global in projects using the new React JSX transform, so add `import type { JSX } from 'react'` (or inline it: `import { useState, type JSX } from 'react'`) to any file that uses it
 
 #### 18. Access modifiers / Least Exposure (TypeScript)
 
