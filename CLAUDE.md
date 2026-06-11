@@ -17,7 +17,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | Package manager (frontend) | **pnpm** — never npm or yarn |
 | Database | PostgreSQL via EF Core (Azure Flexible Server in prod) |
 | IaC | Bicep |
-| Compute | Azure App Service (backend) + Azure Static Web Apps (frontend) |
+| Compute | Azure Container Apps (backend) + Azure Static Web Apps (frontend) |
 | CLI tool | `dostar` — .NET global tool in [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) |
 | AI dev tooling | Claude Code skills in `.claude/commands/` |
 | Auth | None in template |
