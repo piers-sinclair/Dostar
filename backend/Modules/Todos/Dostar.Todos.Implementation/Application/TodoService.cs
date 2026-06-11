@@ -41,11 +41,10 @@ public class TodoService(TodosDbContext db) : ITodoService
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var todo = await db.Todos.FindAsync([id], cancellationToken);
-        if (todo is null) return false;
-        db.Todos.Remove(todo);
-        await db.SaveChangesAsync(cancellationToken);
-        return true;
+        var deleted = await db.Todos
+            .Where(t => t.Id == id)
+            .ExecuteDeleteAsync(cancellationToken);
+        return deleted > 0;
     }
 
     private static TodoDto ToDto(Todo todo) =>

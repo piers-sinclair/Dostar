@@ -1,17 +1,25 @@
 namespace Dostar.Todos.UnitTests;
 
-public class TodoServiceTests
+public class TodoServiceTests(PostgresContainerFixture fixture) : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
-    private static TodosDbContext CreateDbContext() =>
-        new(new DbContextOptionsBuilder<TodosDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options);
+    private TodosDbContext _db = null!;
+
+    public Task InitializeAsync()
+    {
+        _db = fixture.CreateDbContext();
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _db.Todos.ExecuteDeleteAsync();
+        await _db.DisposeAsync();
+    }
 
     [Fact]
     public async Task GetAllAsync_WhenEmpty_ReturnsEmptyList()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
 
         var result = await service.GetAllAsync();
 
@@ -21,8 +29,7 @@ public class TodoServiceTests
     [Fact]
     public async Task CreateAsync_ShouldReturnTodoDto_WithCorrectData()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
 
         var result = await service.CreateAsync("Buy milk");
 
@@ -35,8 +42,7 @@ public class TodoServiceTests
     [Fact]
     public async Task GetAllAsync_AfterCreate_ReturnsTodo()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
         await service.CreateAsync("Buy milk");
 
         var result = await service.GetAllAsync();
@@ -48,8 +54,7 @@ public class TodoServiceTests
     [Fact]
     public async Task GetByIdAsync_WhenExists_ReturnsDto()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
         var created = await service.CreateAsync("Task A");
 
         var result = await service.GetByIdAsync(created.Id);
@@ -62,8 +67,7 @@ public class TodoServiceTests
     [Fact]
     public async Task GetByIdAsync_WhenNotFound_ReturnsNull()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
 
         var result = await service.GetByIdAsync(Guid.NewGuid());
 
@@ -73,8 +77,7 @@ public class TodoServiceTests
     [Fact]
     public async Task UpdateAsync_WhenExists_UpdatesAndReturnsDto()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
         var created = await service.CreateAsync("Original");
 
         var result = await service.UpdateAsync(created.Id, "Updated", isComplete: true);
@@ -87,8 +90,7 @@ public class TodoServiceTests
     [Fact]
     public async Task UpdateAsync_WhenNotFound_ReturnsNull()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
 
         var result = await service.UpdateAsync(Guid.NewGuid(), "Updated", isComplete: true);
 
@@ -98,8 +100,7 @@ public class TodoServiceTests
     [Fact]
     public async Task DeleteAsync_WhenExists_DeletesAndReturnsTrue()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
         var created = await service.CreateAsync("To delete");
 
         var deleted = await service.DeleteAsync(created.Id);
@@ -111,8 +112,7 @@ public class TodoServiceTests
     [Fact]
     public async Task DeleteAsync_WhenNotFound_ReturnsFalse()
     {
-        await using var db = CreateDbContext();
-        var service = new TodoService(db);
+        var service = new TodoService(_db);
 
         var deleted = await service.DeleteAsync(Guid.NewGuid());
 
