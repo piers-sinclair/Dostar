@@ -12,12 +12,22 @@
 # The Release PR only touches CHANGELOG.md and .release-please-manifest.json,
 # so it never matches the path filters on cd-backend.yml or cd-frontend.yml
 # and will not trigger a spurious dev redeploy.
+#
+# NOTE: release-please must use a PAT (RELEASE_PLEASE_TOKEN) rather than
+# GITHUB_TOKEN — GitHub does not forward workflow events for tag pushes made
+# by GITHUB_TOKEN, so this workflow would never fire otherwise.
 
 name: CD — release to prod
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy (e.g. v0.2.0)
+        required: true
+        type: string
 
 permissions:
   id-token: write

@@ -12,6 +12,12 @@
 # Semver rules:  fix: → patch   feat: → minor   feat!:/BREAKING CHANGE: → major
 # Config:        .release-please-config.json  (changelog sections)
 # Version state: .release-please-manifest.json (current version)
+#
+# IMPORTANT: This workflow uses RELEASE_PLEASE_TOKEN (a PAT) instead of the
+# default GITHUB_TOKEN. GitHub blocks workflow events triggered by GITHUB_TOKEN
+# from firing other workflows — meaning the tag push that release-please creates
+# would never trigger cd-release.yml. A PAT bypasses this restriction.
+# Required PAT scopes: repo, workflow.
 
 name: Release Please
 
@@ -31,3 +37,4 @@ jobs:
         with:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
