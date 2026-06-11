@@ -17,7 +17,7 @@ param instance string = '001'
 param location string
 
 @description('GitHub repository URL for automatic Static Web App deployments.')
-param repositoryUrl string = 'https://github.com/__GITHUB_ORG__/Dostar'
+param repositoryUrl string = 'https://github.com/piers-sinclair/Dostar'
 
 @description('Branch to auto-deploy from.')
 param branch string = 'main'

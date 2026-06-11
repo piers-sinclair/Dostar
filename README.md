@@ -1,7 +1,7 @@
 # Dostar
 
-[![CI](https://github.com/__GITHUB_ORG__/Dostar/actions/workflows/ci.yml/badge.svg)](https://github.com/__GITHUB_ORG__/Dostar/actions/workflows/ci.yml)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/__GITHUB_ORG__/Dostar)
+[![CI](https://github.com/piers-sinclair/Dostar/actions/workflows/ci.yml/badge.svg)](https://github.com/piers-sinclair/Dostar/actions/workflows/ci.yml)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/piers-sinclair/Dostar)
 
 A production-ready fullstack starter — .NET 10 modular monolith backend + React/Vite frontend. Skip weeks of boilerplate and ship a deployable scaffold from day one.
 
