@@ -22,11 +22,15 @@ param appInsightsId string
 @description('FQDN of the Container App (used for the availability ping test). Leave empty to skip.')
 param containerAppFqdn string = ''
 
-@description('Email address for P1 alert notifications. Leave empty to skip email notifications.')
+@description('Comma or semicolon-separated email addresses for P1 alert notifications. Leave empty to skip email notifications.')
 param alertEmailAddress string = ''
 
 var actionGroupName = 'ag-${workload}-${env}-${region}-${instance}'
 var availabilityTestName = 'webtest-healthz-${workload}-${env}-${region}-${instance}'
+
+var emailAddresses = !empty(alertEmailAddress)
+  ? filter(split(replace(alertEmailAddress, ';', ','), ','), e => !empty(e))
+  : []
 
 var errorRateThresholdPct = 10
 var latencyThresholdMs = 2000
@@ -40,15 +44,11 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   properties: {
     groupShortName: 'DostarOps'
     enabled: true
-    emailReceivers: !empty(alertEmailAddress)
-      ? [
-          {
-            name: 'On-call'
-            emailAddress: alertEmailAddress
-            useCommonAlertSchema: true
-          }
-        ]
-      : []
+    emailReceivers: map(emailAddresses, email => {
+      name: email
+      emailAddress: email
+      useCommonAlertSchema: true
+    })
   }
 }
 

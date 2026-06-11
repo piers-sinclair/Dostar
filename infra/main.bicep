@@ -57,7 +57,7 @@ param postgresStorageSizeGB int = 32
 @description('Enable SameZone High Availability for PostgreSQL. Only supported on General Purpose (Standard_D*) or Memory Optimized (Standard_E*) SKUs — not Burstable (Standard_B*). Disabled by default to keep startup costs low; enable when uptime SLAs require it.')
 param postgresEnableHa bool = false
 
-@description('Email address for P1 alert notifications (error rate, latency, health check failure). Leave empty to skip email notifications.')
+@description('Comma or semicolon-separated email addresses for P1 alert notifications (error rate, latency, health check failure). Leave empty to skip email notifications.')
 param alertEmailAddress string = ''
 
 var abbrev = {
