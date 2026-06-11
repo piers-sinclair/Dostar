@@ -25,15 +25,11 @@ param appInsightsId string
 @description('Resource ID of the Log Analytics Workspace backing Application Insights.')
 param logAnalyticsWorkspaceId string
 
-@description('FQDN of the Container App (used for the availability ping test). Leave empty to skip.')
-param containerAppFqdn string = ''
-
 @description('Comma or semicolon-separated email addresses for P1 alert notifications.')
 @minLength(1)
 param alertEmailAddress string
 
 var actionGroupName = 'ag-${workload}-${env}-${region}-${instance}'
-var availabilityTestName = 'webtest-healthz-${workload}-${env}-${region}-${instance}'
 
 var emailAddresses = filter(
   split(replace(alertEmailAddress, ';', ','), ','),
@@ -42,9 +38,6 @@ var emailAddresses = filter(
 
 var errorRateThresholdPct = 10
 var latencyThresholdMs = 2000
-var availabilityFailedLocations = 2
-var pingFrequencySeconds = 300
-var pingTimeoutSeconds = 30
 
 resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   name: actionGroupName
@@ -143,60 +136,3 @@ AppRequests
   }
 }
 
-resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if (!empty(containerAppFqdn)) {
-  name: availabilityTestName
-  location: location
-  kind: 'standard'
-  tags: {
-    'hidden-link:${appInsightsId}': 'Resource'
-  }
-  properties: {
-    Name: 'Healthz live'
-    Description: 'Pings /healthz/live from multiple regions.'
-    Enabled: true
-    Frequency: pingFrequencySeconds
-    Timeout: pingTimeoutSeconds
-    RetryEnabled: false
-    Locations: [
-      { Id: 'us-va-ash-azr' }
-      { Id: 'us-il-ch1-azr' }
-      { Id: 'emea-nl-ams-azr' }
-    ]
-    Request: {
-      RequestUrl: 'https://${containerAppFqdn}/healthz/live'
-      HttpVerb: 'GET'
-    }
-    ValidationRules: {
-      ExpectedHttpStatusCode: 200
-      SSLCheck: true
-    }
-    SyntheticMonitorId: availabilityTestName
-  }
-}
-
-resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!empty(containerAppFqdn)) {
-  name: 'alert-availability-${workload}-${env}'
-  location: 'global'
-  properties: {
-    description: 'Fires when 2+ regions fail health checks.'
-    severity: 0
-    enabled: true
-    scopes: [
-      appInsightsId
-      availabilityTest.id
-    ]
-    evaluationFrequency: 'PT1M'
-    windowSize: 'PT5M'
-    criteria: {
-      'odata.type': 'Microsoft.Azure.Monitor.WebtestLocationAvailabilityCriteria'
-      componentId: appInsightsId
-      failedLocationCount: availabilityFailedLocations
-      webTestId: availabilityTest.id
-    }
-    actions: [
-      {
-        actionGroupId: actionGroup.id
-      }
-    ]
-  }
-}

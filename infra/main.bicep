@@ -185,7 +185,6 @@ module alerting 'modules/alerting.bicep' = if (env == 'prod') {
     instance: instance
     appInsightsId: appinsights.outputs.appInsightsId
     logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
-    containerAppFqdn: containerapp.outputs.fqdn
     alertEmailAddress: alertEmailAddress
   }
 }
