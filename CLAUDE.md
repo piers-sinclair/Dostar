@@ -213,7 +213,7 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 | `ci.yml` | PR to `main` (all) | PR title check + security scans (Trivy, OpenGrep) |
 | `ci-backend.yml` | PR to `main` (`backend/**`, `tools/**`, `*.slnx`) | Backend build & test |
 | `ci-frontend.yml` | PR to `main` (`frontend/**`) | Frontend build & lint |
-| `testing-ui.yml` | PR to `main` (`backend/**`, `frontend/**`, `tests/**`, `Dockerfile`, `docker-compose.yml`) | Playwright UI tests |
+| `testing-ui.yml` | PR to `main` (`frontend/**`, `tests/Dostar.UITests/**`) | Playwright UI tests (frontend-only; API calls mocked via `page.route()`) |
 | `cd-backend.yml` | push to `main` (`backend/**`) | Deploy backend to **dev** |
 | `cd-frontend.yml` | push to `main` (`frontend/**`) | Deploy frontend to **dev** |
 | `infra-deploy.yml` | push to `main` (`infra/**`) | Deploy Bicep to **dev** |
