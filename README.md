@@ -72,6 +72,18 @@ dotnet build                 # verify everything still compiles
 
 See [docs/module-pattern.md](docs/module-pattern.md) for the full guide on building your own modules.
 
+### 4. Create your GitHub repository
+
+```bash
+gh repo create MyStartup --private --source=. --push
+```
+
+This creates a private GitHub repo, sets it as the `origin` remote, and pushes your initial commit. CI runs automatically on the first push — check the **Actions** tab to confirm it goes green.
+
+### 5. Deploy to production
+
+Follow [docs/deploy-setup.md](docs/deploy-setup.md) for the complete deployment setup.
+
 ## VS Code tasks
 
 Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the terminal (see the Terminal equivalent column). Each background task opens its own tab in the Terminal panel so you can watch its output.
