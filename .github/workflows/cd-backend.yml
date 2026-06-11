@@ -54,11 +54,15 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          AZURE_POSTGRES_ADMIN_USERNAME: ${{ secrets.AZURE_POSTGRES_ADMIN_USERNAME }}
         run: |
           MISSING=()
-          [ -z "$AZURE_CLIENT_ID" ]                  && MISSING+=("AZURE_CLIENT_ID")
-          [ -z "$AZURE_TENANT_ID" ]                  && MISSING+=("AZURE_TENANT_ID")
-          [ -z "$AZURE_SUBSCRIPTION_ID" ]            && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$AZURE_CLIENT_ID" ]                   && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]                   && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ]             && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ]     && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+          [ -z "$AZURE_POSTGRES_ADMIN_USERNAME" ]     && MISSING+=("AZURE_POSTGRES_ADMIN_USERNAME")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
@@ -83,13 +87,18 @@ jobs:
           docker push $ACR_NAME.azurecr.io/$MIGRATOR_IMAGE_NAME:${{ github.sha }}
 
       - name: Run migrations via Container Apps Job
+        env:
+          AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          AZURE_POSTGRES_ADMIN_USERNAME: ${{ secrets.AZURE_POSTGRES_ADMIN_USERNAME }}
         run: |
-          # Read the full connection string from Key Vault (stored there by the Bicep deployment)
-          KV_NAME="kv-dostar-${ENV}-aue-001"
-          CONNECTION_STRING=$(az keyvault secret show \
-            --vault-name "$KV_NAME" \
-            --name postgres-connection-string \
-            --query value -o tsv)
+          # Construct connection string from Bicep deployment outputs
+          FQDN=$(az deployment sub show \
+            --name dostar-$ENV \
+            --query 'properties.outputs.postgresServerFqdn.value' -o tsv)
+          DB_NAME=$(az deployment sub show \
+            --name dostar-$ENV \
+            --query 'properties.outputs.postgresDatabaseName.value' -o tsv)
+          CONNECTION_STRING="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=$AZURE_POSTGRES_ADMIN_USERNAME;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
 
           # Temporary ACR token (1h TTL) so the job can pull the migrator image
           ACR_TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
