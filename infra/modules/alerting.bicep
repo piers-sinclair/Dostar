@@ -7,7 +7,10 @@ param location string
 param workload string
 
 @description('Deployment environment.')
-@allowed(['dev', 'prod'])
+@allowed([
+  'dev'
+  'prod'
+])
 param env string
 
 @description('Short region code (e.g. aue for australiaeast).')
@@ -22,15 +25,17 @@ param appInsightsId string
 @description('FQDN of the Container App (used for the availability ping test). Leave empty to skip.')
 param containerAppFqdn string = ''
 
-@description('Comma or semicolon-separated email addresses for P1 alert notifications. Leave empty to skip email notifications.')
-param alertEmailAddress string = ''
+@description('Comma or semicolon-separated email addresses for P1 alert notifications.')
+@minLength(1)
+param alertEmailAddress string
 
 var actionGroupName = 'ag-${workload}-${env}-${region}-${instance}'
 var availabilityTestName = 'webtest-healthz-${workload}-${env}-${region}-${instance}'
 
-var emailAddresses = !empty(alertEmailAddress)
-  ? filter(split(replace(alertEmailAddress, ';', ','), ','), e => !empty(e))
-  : []
+var emailAddresses = filter(
+  split(replace(alertEmailAddress, ';', ','), ','),
+  e => !empty(e)
+)
 
 var errorRateThresholdPct = 10
 var latencyThresholdMs = 2000
@@ -44,11 +49,13 @@ resource actionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = {
   properties: {
     groupShortName: 'DostarOps'
     enabled: true
-    emailReceivers: map(emailAddresses, email => {
-      name: email
-      emailAddress: email
-      useCommonAlertSchema: true
-    })
+    emailReceivers: [
+      for email in emailAddresses: {
+        name: 'email-${uniqueString(email)}'
+        emailAddress: email
+        useCommonAlertSchema: true
+      }
+    ]
   }
 }
 
@@ -57,7 +64,7 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   location: location
   properties: {
     displayName: '[P1] High Error Rate'
-    description: 'Fires when the API error rate exceeds 10% over a 5-minute window. Skipped when fewer than 10 requests arrive in the window to suppress cold-start noise.'
+    description: 'Fires when API error rate exceeds 10% over 5 minutes.'
     severity: 0
     enabled: true
     scopes: [appInsightsId]
@@ -67,9 +74,9 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
       allOf: [
         {
           query: '''
-requests
-| where timestamp > ago(5m)
-| summarize Total = count(), Failed = countif(success == false)
+AppRequests
+| where TimeGenerated > ago(5m)
+| summarize Total = count(), Failed = countif(Success == false)
 | extend ErrorRatePct = iff(Total > 10, Failed * 100.0 / Total, 0.0)
 | project ErrorRatePct
 '''
@@ -85,7 +92,9 @@ requests
       ]
     }
     actions: {
-      actionGroups: [actionGroup.id]
+      actionGroups: [
+        actionGroup.id
+      ]
     }
     autoMitigate: true
   }
@@ -96,7 +105,7 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   location: location
   properties: {
     displayName: '[P1] High P99 Latency'
-    description: 'Fires when P99 request latency exceeds 2000 ms over a 5-minute window.'
+    description: 'Fires when P99 latency exceeds 2000ms over 5 minutes.'
     severity: 0
     enabled: true
     scopes: [appInsightsId]
@@ -106,9 +115,9 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
       allOf: [
         {
           query: '''
-requests
-| where timestamp > ago(5m)
-| summarize P99 = percentile(duration, 99)
+AppRequests
+| where TimeGenerated > ago(5m)
+| summarize P99 = percentile(DurationMs, 99)
 | project P99
 '''
           timeAggregation: 'Maximum'
@@ -123,7 +132,9 @@ requests
       ]
     }
     actions: {
-      actionGroups: [actionGroup.id]
+      actionGroups: [
+        actionGroup.id
+      ]
     }
     autoMitigate: true
   }
@@ -138,11 +149,10 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
   }
   properties: {
     Name: 'Healthz live'
-    Description: 'Pings /healthz/live from 3 Azure regions every 5 minutes.'
+    Description: 'Pings /healthz/live from multiple regions.'
     Enabled: true
     Frequency: pingFrequencySeconds
     Timeout: pingTimeoutSeconds
-    Kind: 'standard'
     RetryEnabled: false
     Locations: [
       { Id: 'us-va-ash-azr' }
@@ -152,7 +162,6 @@ resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(
     Request: {
       RequestUrl: 'https://${containerAppFqdn}/healthz/live'
       HttpVerb: 'GET'
-      ParseDependentRequests: false
     }
     ValidationRules: {
       ExpectedHttpStatusCode: 200
@@ -166,7 +175,7 @@ resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!e
   name: 'alert-availability-${workload}-${env}'
   location: 'global'
   properties: {
-    description: 'Fires when 2 or more probe locations fail to reach /healthz/live.'
+    description: 'Fires when 2+ regions fail health checks.'
     severity: 0
     enabled: true
     scopes: [
@@ -182,7 +191,9 @@ resource availabilityAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = if (!e
       webTestId: availabilityTest.id
     }
     actions: [
-      { actionGroupId: actionGroup.id }
+      {
+        actionGroupId: actionGroup.id
+      }
     ]
   }
 }
