@@ -150,7 +150,7 @@ cd tests && pnpm exec playwright test
 
 ## Observability
 
-Dostar ships a full OpenTelemetry stack wired to Azure Monitor in production. No configuration is needed locally — telemetry is silently dropped when `APPLICATIONINSIGHTS_CONNECTION_STRING` is not set.
+Dostar ships a full OpenTelemetry stack wired to Azure Monitor in production. No local setup is needed — the Azure Monitor exporter is only enabled in deployed environments where `APPLICATIONINSIGHTS_CONNECTION_STRING` is injected automatically by the Bicep deployment.
 
 ### What is collected
 
@@ -185,15 +185,7 @@ Three P1 alert rules are provisioned automatically:
 | High P99 Latency | P99 latency exceeds 2000 ms in a 5-minute window | Critical (0) |
 | Health Check Failure | 2+ probe locations fail `/healthz/live` | Critical (0) |
 
-Alert rules are visible in **Azure Monitor → Alerts**. To receive email notifications, pass `alertEmailAddress` when deploying:
-
-```bash
-az deployment sub create \
-  --location australiaeast \
-  --template-file infra/main.bicep \
-  --parameters infra/main.parameters.dev.bicepparam \
-  alertEmailAddress=oncall@example.com
-```
+Alert rules are visible in **Azure Monitor → Alerts**. To receive email notifications, set `ALERT_EMAIL_ADDRESS` as a secret in your CI environment — the Bicep deployment picks it up automatically from the parameter files.
 
 A new incident should be detectable within 5 minutes via the workbook or an alert firing.
 
