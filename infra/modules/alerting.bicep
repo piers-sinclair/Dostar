@@ -143,10 +143,10 @@ AppRequests
   }
 }
 
-resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if (!empty(containerAppFqdn)) {
+resource availabilityTest 'microsoft.insights/webtests@2022-06-15' = if (!empty(containerAppFqdn)) {
   name: availabilityTestName
   location: location
-  kind: 'ping'
+  kind: 'standard'
   tags: {
     'hidden-link:${appInsightsId}': 'Resource'
   }
@@ -156,14 +156,16 @@ resource availabilityTest 'microsoft.insights/webtests@2018-05-01-preview' = if 
     Enabled: true
     Frequency: pingFrequencySeconds
     Timeout: pingTimeoutSeconds
-    RetryEnabled: false
     Locations: [
       { Id: 'us-va-ash-azr' }
       { Id: 'us-il-ch1-azr' }
       { Id: 'emea-nl-ams-azr' }
     ]
-    Configuration: {
-      WebTest: '<WebTest Name="Healthz live" Enabled="True" Timeout="${pingTimeoutSeconds}" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><Items><Request Method="GET" Version="1.1" Url="https://${containerAppFqdn}/healthz/live" ThinkTime="0" Timeout="${pingTimeoutSeconds}" ParseDependentRequests="False" FollowRedirects="True" RecordResult="True" Cache="False" ResponseTimeGoal="0" Encoding="utf-8" ExpectedHttpStatusCode="200" IgnoreHttpStatusCode="False" /></Items></WebTest>'
+    Request: {
+      RequestUrl: 'https://${containerAppFqdn}/healthz/live'
+    }
+    ValidationRules: {
+      ExpectedHttpStatusCode: 200
     }
     SyntheticMonitorId: availabilityTestName
   }
