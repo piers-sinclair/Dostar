@@ -17,12 +17,6 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-@description('GitHub repository URL to connect for automatic deployments.')
-param repositoryUrl string
-
-@description('Branch to auto-deploy from.')
-param branch string
-
 var abbrev = 'stapp'
 var resourceNameValue = '${abbrev}-${workload}-${env}-${region}-${instance}'
 
@@ -33,15 +27,7 @@ resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
     name: env == 'prod' ? 'Standard' : 'Free'
     tier: env == 'prod' ? 'Standard' : 'Free'
   }
-  properties: {
-    repositoryUrl: repositoryUrl
-    branch: branch
-    buildProperties: {
-      appLocation: 'frontend'
-      outputLocation: 'dist'
-      apiLocation: ''
-    }
-  }
+  properties: {}
 }
 
 @description('Default hostname of the Static Web App.')

@@ -182,13 +182,16 @@ And use:
 
 ---
 
-### 2.10 Generate a Postgres password
+### 2.10 Generate Postgres credentials
 
-Generate a strong random password and add it as a GitHub secret. You will never need to type it manually.
+Generate a strong random password and a unique admin username, then add both as GitHub secrets.
 
 ```bash
 POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=')
 gh secret set AZURE_POSTGRES_ADMIN_PASSWORD --body "$POSTGRES_PASSWORD"
+
+# Choose a username unique to your deployment — avoid dictionary words
+gh secret set AZURE_POSTGRES_ADMIN_USERNAME --body "myadminuser"
 ```
 
 ---
@@ -209,6 +212,7 @@ Or via the GitHub UI (**Settings → Secrets and variables → Actions**):
 | `AZURE_TENANT_ID` | Tenant ID | All workflows |
 | `AZURE_SUBSCRIPTION_ID` | Subscription ID | All workflows |
 | `AZURE_POSTGRES_ADMIN_PASSWORD` | Generated in step 2.10 | Infra workflows |
+| `AZURE_POSTGRES_ADMIN_USERNAME` | Chosen in step 2.10 | Infra workflows |
 
 ---
 
@@ -307,3 +311,22 @@ Open the URL in a browser — it should show the React app. If it shows the Azur
 ## 6. Managing the dev environment lifecycle
 
 Once the environment is running, see [environment-lifecycle.md](environment-lifecycle.md) for how to pause, resume, or tear down the dev environment to manage running costs.
+
+---
+
+## 7. Security checklist before going to production
+
+Work through this list before exposing your deployment to users.
+
+| # | Check | Why |
+|---|-------|-----|
+| 1 | **Change the `workload` parameter** from `dostar` to your project name in both `.bicepparam` files | Prevents resource-name collisions if multiple teams use the template in the same subscription |
+| 2 | **Set `AZURE_POSTGRES_ADMIN_USERNAME`** to a value unique to your deployment (not a dictionary word) | Reduces credential-guessing risk if the VNet is ever misconfigured |
+| 3 | **Set `AZURE_POSTGRES_ADMIN_PASSWORD`** to a randomly generated value (step 2.10 above) | Required — no default exists |
+| 4 | **Add authentication** before exposing the API to end users | The template ships without auth by design; see [auth.md](auth.md) |
+| 5 | **Review CORS origins** — confirm `Cors__AllowedOrigins__0` is set to your actual frontend URL | Prevents cross-origin requests from untrusted domains |
+| 6 | **Scope OIDC federation** to your own repo, not the template repo | Steps 2.6–2.8 above create credentials scoped to `$REPO` — verify that variable points to your fork |
+| 7 | **Enable purge protection and High Availability** for PostgreSQL in prod | `postgresEnableHa = true` requires a General Purpose SKU; Key Vault purge protection is enabled automatically in prod |
+| 8 | **Run `dotnet list package --vulnerable`** and `pnpm audit --audit-level high` locally | Trivy runs in CI but a local check confirms nothing slipped through |
+| 9 | **Review Key Vault access** — only the Container App managed identity and CI SP should have `Key Vault Secrets User` | Bootstrap RBAC grants these; audit that no extra principals have been added |
+| 10 | **Delete the `scalar` API docs endpoint note** from README if you lock it to dev only | The Scalar UI is already gated to `IsDevelopment()` — just ensure prod `ASPNETCORE_ENVIRONMENT=Production` is set (the Bicep does this) |

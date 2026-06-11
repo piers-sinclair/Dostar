@@ -16,18 +16,13 @@ param instance string = '001'
 @description('Azure region used for all resources.')
 param location string
 
-@description('GitHub repository URL for automatic Static Web App deployments.')
-param repositoryUrl string = 'https://github.com/piers-sinclair/Dostar'
-
-@description('Branch to auto-deploy from.')
-param branch string = 'main'
-
 @description('Azure region for the Static Web App. Must be one of the regions that support Static Web Apps: eastus2, westus2, centralus, westeurope, eastasia.')
 @allowed(['eastus2', 'westus2', 'centralus', 'westeurope', 'eastasia'])
 param staticWebAppLocation string = 'eastus2'
 
-@description('Administrator username for the PostgreSQL Flexible Server.')
-param postgresAdminUsername string = 'dostaradmin'
+@description('Administrator username for the PostgreSQL Flexible Server. Must be changed from any default — use a value unique to your deployment.')
+@minLength(1)
+param postgresAdminUsername string
 
 @description('Admin password for the PostgreSQL Flexible Server. Must be supplied by the CI workflow (read from Key Vault, or generated on first deploy). Never hardcode this value.')
 @secure()
@@ -204,8 +199,6 @@ module staticWebApp 'modules/staticwebapp.bicep' = {
     env: env
     region: region
     instance: instance
-    repositoryUrl: repositoryUrl
-    branch: branch
   }
 }
 

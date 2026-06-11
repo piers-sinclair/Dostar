@@ -55,12 +55,14 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          AZURE_POSTGRES_ADMIN_USERNAME: ${{ secrets.AZURE_POSTGRES_ADMIN_USERNAME }}
         run: |
           MISSING=()
-          [ -z "$AZURE_CLIENT_ID" ]                  && MISSING+=("AZURE_CLIENT_ID")
-          [ -z "$AZURE_TENANT_ID" ]                  && MISSING+=("AZURE_TENANT_ID")
-          [ -z "$AZURE_SUBSCRIPTION_ID" ]            && MISSING+=("AZURE_SUBSCRIPTION_ID")
-          [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ]    && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+          [ -z "$AZURE_CLIENT_ID" ]                   && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]                   && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ]             && MISSING+=("AZURE_SUBSCRIPTION_ID")
+          [ -z "$AZURE_POSTGRES_ADMIN_PASSWORD" ]     && MISSING+=("AZURE_POSTGRES_ADMIN_PASSWORD")
+          [ -z "$AZURE_POSTGRES_ADMIN_USERNAME" ]     && MISSING+=("AZURE_POSTGRES_ADMIN_USERNAME")
 
           if [ ${#MISSING[@]} -gt 0 ]; then
             echo "::error::Missing required secrets: ${MISSING[*]}"
@@ -87,6 +89,7 @@ jobs:
       - name: Run migrations via Container Apps Job
         env:
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
+          AZURE_POSTGRES_ADMIN_USERNAME: ${{ secrets.AZURE_POSTGRES_ADMIN_USERNAME }}
         run: |
           # Construct connection string from Bicep deployment outputs
           FQDN=$(az deployment sub show \
@@ -95,7 +98,7 @@ jobs:
           DB_NAME=$(az deployment sub show \
             --name dostar-$ENV \
             --query 'properties.outputs.postgresDatabaseName.value' -o tsv)
-          CONNECTION_STRING="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=dostaradmin;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
+          CONNECTION_STRING="Host=$FQDN;Port=5432;Database=$DB_NAME;Username=$AZURE_POSTGRES_ADMIN_USERNAME;Password=$AZURE_POSTGRES_ADMIN_PASSWORD;Ssl Mode=Require;Trust Server Certificate=true"
 
           # Temporary ACR token (1h TTL) so the job can pull the migrator image
           ACR_TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
