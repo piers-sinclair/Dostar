@@ -2,13 +2,9 @@ namespace Dostar.Todos.UnitTests;
 
 public class TodoServiceTests(PostgresContainerFixture fixture) : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
-    private TodosDbContext _db = null!; // xUnit calls InitializeAsync before each [Fact] (IAsyncLifetime contract)
+    private readonly TodosDbContext _db = fixture.CreateDbContext();
 
-    public Task InitializeAsync()
-    {
-        _db = fixture.CreateDbContext();
-        return Task.CompletedTask;
-    }
+    public Task InitializeAsync() => Task.CompletedTask;
 
     public async Task DisposeAsync()
     {

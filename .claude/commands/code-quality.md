@@ -116,12 +116,18 @@ Flag:
 
 #### 9. Comments
 
-Flag any comment that explains **what** the code does — the code itself should do that through naming and structure.
+**Default: no comments.** Code should explain itself through naming, types, and structure. A comment is only warranted when none of those can express the information.
 
-**Allow only:**
+Before adding a comment, ask: can I restructure the code so the comment is unnecessary? If yes, restructure — do not add the comment.
+
+**Allow only** (and only when restructuring is not an option):
 - Workaround comments: "X is intentional because of [specific external constraint or bug]"
 - Non-obvious invariant explanations that cannot be expressed in types or names
 - External constraint references (spec section, RFC, third-party quirk)
+
+Flag:
+- Any comment that explains **what** the code does — the code itself should do that
+- Any comment that could be avoided by renaming, extracting a method, using a better type, or restructuring control flow
 
 Do not flag TODO/FIXME/HACK if they reference a known issue or ticket.
 
@@ -134,9 +140,11 @@ Apply these checks only to `.cs` files.
 #### 10. Strict nullability
 
 Flag:
-- `!` (null-forgiving operator) used without a comment explaining **why null is impossible** — the comment must state the non-obvious invariant or framework guarantee that prevents null, not just describe where the value is set. Apply the same standard as Category 9: explain the WHY, not the WHAT.
-  - Bad: `// set in InitializeAsync` (describes what the code does — already visible)
-  - Good: `// xUnit calls InitializeAsync before each [Fact] (IAsyncLifetime contract)` (explains the framework guarantee that makes null impossible)
+- `!` (null-forgiving operator) — first ask whether restructuring eliminates it entirely. Common alternatives:
+  - Use a field initializer with a primary constructor parameter instead of assigning in a lifecycle method (`_db = fixture.CreateDbContext()` rather than `_db = null!` + assignment in `InitializeAsync`)
+  - Use `required` on properties set by the caller
+  - Use `= string.Empty` or `= []` for collections/strings
+  - Only if none of those apply and `null!` is truly unavoidable: add a comment explaining the non-obvious invariant that makes null impossible (apply Category 9 standards — WHY, not WHAT)
 - Reference-type or `string` properties that are neither `required`, initialised (`= string.Empty`, `= []`, etc.), nor explicitly nullable (`?`) — these silently produce nullable warnings or require suppression
 - Nullable return type (`T?`) on a method where null is semantically impossible (prefer an exception or `Option` pattern)
 - Missing `?` on a return type or parameter that can legitimately be null
@@ -237,7 +245,7 @@ Apply these checks only to `.ts` and `.tsx` files.
 Flag:
 - `any` type — suggest `unknown` and a type guard, or a proper named type
 - `!` non-null assertion, except on well-known always-present DOM nodes (e.g. `document.getElementById('root')!` in `main.tsx` is acceptable; add a comment if it is not obvious)
-- `as T` type assertion without an accompanying comment explaining why the cast is safe
+- `as T` type assertion — first ask whether restructuring (overloads, narrower types, type guards) eliminates the cast. If the cast is genuinely unavoidable (e.g. a well-typed generic function where the caller's type parameter determines the shape), no comment is needed. Only add a comment if the cast is non-obvious AND restructuring is not an option (apply Category 9 standards)
 - Exported functions or React components missing an explicit return type annotation — for React components use `JSX.Element`; note that `JSX` is not a global in projects using the new React JSX transform, so add `import type { JSX } from 'react'` (or inline it: `import { useState, type JSX } from 'react'`) to any file that uses it
 
 #### 18. Access modifiers / Least Exposure (TypeScript)

@@ -18,8 +18,6 @@ export async function apiClient<T>(
 
     if (!res.ok) throw await res.json();
 
-    // 204 No Content — no body; T is void for these calls
     if (res.status === 204) return undefined as T;
-    // Safe cast: the API contract guarantees the response shape matches T
     return res.json() as Promise<T>;
 }
