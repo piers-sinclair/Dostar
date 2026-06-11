@@ -134,7 +134,9 @@ Apply these checks only to `.cs` files.
 #### 10. Strict nullability
 
 Flag:
-- `!` (null-forgiving operator) used without a comment explaining why null is impossible here
+- `!` (null-forgiving operator) used without a comment explaining **why null is impossible** — the comment must state the non-obvious invariant or framework guarantee that prevents null, not just describe where the value is set. Apply the same standard as Category 9: explain the WHY, not the WHAT.
+  - Bad: `// set in InitializeAsync` (describes what the code does — already visible)
+  - Good: `// xUnit calls InitializeAsync before each [Fact] (IAsyncLifetime contract)` (explains the framework guarantee that makes null impossible)
 - Reference-type or `string` properties that are neither `required`, initialised (`= string.Empty`, `= []`, etc.), nor explicitly nullable (`?`) — these silently produce nullable warnings or require suppression
 - Nullable return type (`T?`) on a method where null is semantically impossible (prefer an exception or `Option` pattern)
 - Missing `?` on a return type or parameter that can legitimately be null
