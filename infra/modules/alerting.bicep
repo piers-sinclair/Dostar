@@ -25,7 +25,7 @@ param appInsightsId string
 @description('FQDN of the Container App (used for the availability ping test). Leave empty to skip.')
 param containerAppFqdn string = ''
 
-@description('Comma or semicolon-separated email addresses for alert notifications. If empty, alerts are not created.')
+@description('Comma or semicolon-separated email addresses for alert notifications.')
 @minLength(1)
 param alertEmailAddress string
 
