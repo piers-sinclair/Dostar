@@ -65,7 +65,7 @@ jobs:
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
         run: |
           az deployment sub create \
-            --name dostar-dev \
+            --name dostar-${{ inputs.environment || 'dev' }} \
             --location australiaeast \
             --template-file infra/main.bicep \
             --parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam \
@@ -74,10 +74,10 @@ jobs:
       - name: Print environment URLs
         run: |
           BACKEND_FQDN=$(az deployment sub show \
-            --name dostar-dev \
+            --name dostar-${{ inputs.environment || 'dev' }} \
             --query 'properties.outputs.containerAppFqdn.value' -o tsv)
           FRONTEND_HOSTNAME=$(az deployment sub show \
-            --name dostar-dev \
+            --name dostar-${{ inputs.environment || 'dev' }} \
             --query 'properties.outputs.staticWebAppHostname.value' -o tsv)
           {
             echo "## Infrastructure deployed"
