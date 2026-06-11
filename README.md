@@ -30,12 +30,26 @@ graph LR
 
 ## Quick start
 
+### 1. Create your project
+
+Install the CLI once, then create a renamed copy of the template:
+
+```bash
+dotnet tool install -g Dostar.Cli   # install once
+dostar new-project MyStartup        # clone + rename every "Dostar" reference
+cd MyStartup
+```
+
+`dostar new-project` clones the repo and replaces every `Dostar`/`dostar` token (namespaces, project names, solution name, Bicep parameters, config files) with your project name in one step.
+
+### 2. Start the dev environment
+
 The fastest path is the devcontainer — it installs all tooling, starts the database, and has one-click launch built in.
 
-**First time (after clone):**
+**First time:**
 
-1. Open the repo in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically.
-2. Press **F5** → select **`Dostar (API + Frontend)`** → migrations run, then both services start.
+1. Open the project folder in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically.
+2. Press **F5** → select the **`(API + Frontend)`** launch configuration → migrations run, then both services start.
 
 **Every subsequent session:**
 
@@ -47,6 +61,17 @@ Just press **F5** — no other steps needed.
 | Backend health | http://localhost:5000/healthz/live |
 | API docs (Scalar) | http://localhost:5000/scalar/v1 |
 
+### 3. Explore then remove the Todos example
+
+The **Todos module** (`backend/Modules/Todos/`) is a complete, working example of the module pattern — it demonstrates how Contracts, Implementation, unit tests, and integration tests fit together. Read through it to understand the pattern, then remove it before you start building your own features:
+
+```bash
+dostar remove-module Todos   # removes all 4 projects, cleans up Program.cs and the solution
+dotnet build                 # verify everything still compiles
+```
+
+See [docs/module-pattern.md](docs/module-pattern.md) for the full guide on building your own modules.
+
 ## VS Code tasks
 
 Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the terminal (see the Terminal equivalent column). Each background task opens its own tab in the Terminal panel so you can watch its output.
@@ -54,11 +79,11 @@ Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the termina
 | Task | What it does | Terminal equivalent |
 |------|-------------|---------------------|
 | `run: migrate` | Runs `tools/run-migrations.sh`, which auto-discovers every module with a `Migrations/` directory and applies any pending EF Core migrations. Fast when nothing is pending. | `bash tools/run-migrations.sh` |
-| `run: backend` | Applies migrations (via `run: migrate`) then starts the .NET API on `http://localhost:5000` without a debugger. | `bash tools/run-migrations.sh && dotnet run --project backend/Dostar.Api --launch-profile http` |
+| `run: backend` | Applies migrations (via `run: migrate`) then starts the .NET API on `http://localhost:5000` without a debugger. | `bash tools/run-migrations.sh && dotnet run --project backend/<ProjectName>.Api --launch-profile http` |
 | `run: frontend` | Starts the Vite dev server on `http://localhost:5173` with hot-module replacement. | `cd frontend && pnpm dev` |
 | `run: dev` | Runs `run: backend` (which includes migrations) and `run: frontend` in parallel — full stack without a debugger. | Run `run: backend` and `run: frontend` terminal commands in two separate terminals. |
 | `build: solution` | Builds the entire .NET solution. This is the default build task (`Ctrl+Shift+B`). | `dotnet build` |
-| `build: Dostar.Api` | Builds only `Dostar.Api` — used internally as the pre-launch step for F5. | `dotnet build backend/Dostar.Api/Dostar.Api.csproj` |
+| `build: <ProjectName>.Api` | Builds only the API project — used internally as the pre-launch step for F5. | `dotnet build backend/<ProjectName>.Api/<ProjectName>.Api.csproj` |
 
 ## F5 launch configurations
 
@@ -66,28 +91,28 @@ Configurations are in `.vscode/launch.json` and selected from the **Run and Debu
 
 | Configuration | What it does |
 |---------------|-------------|
-| `Dostar.Api (http)` | Builds and launches the backend with the .NET debugger attached. Opens Scalar (`/scalar/v1`) in the browser once the API is ready. Use this when you only need to debug the backend. |
-| `Dostar (API + Frontend)` | Starts the Vite frontend first, then launches the backend with the debugger. **This is the recommended default for full-stack work.** Select it once in the Run panel; it becomes the target for every subsequent F5 press. |
+| `<ProjectName>.Api (http)` | Builds and launches the backend with the .NET debugger attached. Opens Scalar (`/scalar/v1`) in the browser once the API is ready. Use this when you only need to debug the backend. |
+| `<ProjectName> (API + Frontend)` | Starts the Vite frontend first, then launches the backend with the debugger. **This is the recommended default for full-stack work.** Select it once in the Run panel; it becomes the target for every subsequent F5 press. |
 
-To make `Dostar (API + Frontend)` your persistent F5 target: open the Run and Debug panel (`Ctrl+Shift+D`), click the dropdown at the top, and select **`Dostar (API + Frontend)`**.
+To make `<ProjectName> (API + Frontend)` your persistent F5 target: open the Run and Debug panel (`Ctrl+Shift+D`), click the dropdown at the top, and select it.
 
 ## Project structure
 
 ```
-backend/                ← .NET projects (not src/ — deployment boundary is explicit)
-  Dostar.Api/           ← host/entry-point only; no business logic
-  Dostar.SharedKernel/  ← IModule interfaces, shared types
+backend/                          ← .NET projects (not src/ — deployment boundary is explicit)
+  <ProjectName>.Api/              ← host/entry-point only; no business logic
+  <ProjectName>.SharedKernel/     ← IModule interfaces, shared types
   Modules/
-    Todos/              ← example feature module
-      Dostar.Todos.Contracts/
-      Dostar.Todos.Implementation/
-      Dostar.Todos.UnitTests/
-      Dostar.Todos.IntegrationTests/
-frontend/               ← React + Vite; standalone toolchain
-tests/                  ← cross-cutting UI tests (Playwright)
-infra/                  ← Bicep templates
-.claude/commands/       ← Claude Code skills (slash commands)
-docs/                   ← guides and ADRs
+    Todos/                        ← example feature module (remove after studying it)
+      <ProjectName>.Todos.Contracts/
+      <ProjectName>.Todos.Implementation/
+      <ProjectName>.Todos.UnitTests/
+      <ProjectName>.Todos.IntegrationTests/
+frontend/                         ← React + Vite; standalone toolchain
+tests/                            ← cross-cutting UI tests (Playwright)
+infra/                            ← Bicep templates
+.claude/commands/                 ← Claude Code skills (slash commands)
+docs/                             ← guides and ADRs
 ```
 
 ## Module pattern
@@ -114,10 +139,10 @@ See [docs/agents.md](docs/agents.md) for full documentation.
 
 ```bash
 # Unit tests (per module)
-dotnet test backend/Modules/<Module>/Dostar.<Module>.UnitTests
+dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.UnitTests
 
 # Integration tests (per module — requires Docker)
-dotnet test backend/Modules/<Module>/Dostar.<Module>.IntegrationTests
+dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.IntegrationTests
 
 # UI tests (Playwright)
 cd tests && pnpm exec playwright test
@@ -127,7 +152,7 @@ cd tests && pnpm exec playwright test
 
 See [docs/deploy-setup.md](docs/deploy-setup.md) for full deployment instructions.
 
-Dostar deploys to:
+The template deploys to:
 - **Backend** — Azure Container App (auto-scaled, VNet-integrated)
 - **Frontend** — Azure Static Web Apps (global CDN)
 - **Database** — Azure PostgreSQL Flexible Server (private VNet)
