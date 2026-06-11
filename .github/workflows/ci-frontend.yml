@@ -3,8 +3,6 @@ name: CI — Frontend
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "frontend/**"
 
 jobs:
   frontend-checks:
@@ -17,24 +15,37 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'frontend/**'
+
       - uses: pnpm/action-setup@v6
+        if: steps.changes.outputs.src == 'true'
         with:
           version: 10
 
       - uses: actions/setup-node@v6
+        if: steps.changes.outputs.src == 'true'
         with:
           node-version: '22'
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
+        if: steps.changes.outputs.src == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: ESLint
+        if: steps.changes.outputs.src == 'true'
         run: pnpm lint
 
       - name: Prettier
+        if: steps.changes.outputs.src == 'true'
         run: pnpm format:check
 
       - name: Build
+        if: steps.changes.outputs.src == 'true'
         run: pnpm build

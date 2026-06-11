@@ -3,11 +3,6 @@ name: CI — Backend
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "backend/**"
-      - "tools/**"
-      - "*.slnx"
-      - "*.sln"
 
 jobs:
   backend-checks:
@@ -17,11 +12,23 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - 'backend/**'
+              - 'tools/**'
+              - '*.slnx'
+              - '*.sln'
+
       - uses: actions/setup-dotnet@v5
+        if: steps.changes.outputs.src == 'true'
         with:
           dotnet-version: '10.x'
 
       - name: Cache NuGet packages
+        if: steps.changes.outputs.src == 'true'
         uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
@@ -30,27 +37,33 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore
+        if: steps.changes.outputs.src == 'true'
         run: dotnet restore
 
       - name: Build
+        if: steps.changes.outputs.src == 'true'
         run: dotnet build --no-restore -c Release
 
       - name: Verify formatting
+        if: steps.changes.outputs.src == 'true'
         run: dotnet format --verify-no-changes
 
       - name: Install coverlet
+        if: steps.changes.outputs.src == 'true'
         run: dotnet tool install coverlet.console --tool-path ./tools
 
       - name: Unit tests
+        if: steps.changes.outputs.src == 'true'
         timeout-minutes: 15
         run: bash tools/run-tests.sh unit
 
       - name: Integration tests
+        if: steps.changes.outputs.src == 'true'
         timeout-minutes: 30
         run: bash tools/run-tests.sh integration
 
       - name: Upload test results
-        if: failure()
+        if: failure() && steps.changes.outputs.src == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: test-results
