@@ -1,33 +1,28 @@
-# Triggered when release-please creates a v* tag after the Release PR is merged.
-#
-# This is the prod promotion gate — dev deploys happen automatically on every
-# main merge (path-filtered), but prod only deploys when a release is cut here.
+# Prod promotion gate — called by release-please.yml when it creates a release.
 #
 # Flow:
 #   1. Merge feat:/fix: commits to main  →  auto-deploys to dev
 #   2. release-please opens/updates a Release PR (chore(main): release X.Y.Z)
-#   3. Team merges the Release PR when ready to ship  →  creates tag vX.Y.Z
+#   3. Team merges the Release PR  →  release-please creates tag + GitHub Release
+#      and calls this workflow directly (workflow_call)
 #   4. This workflow fires  →  migrates + deploys backend to prod, then frontend
+#
+# Called via workflow_call (no extra secrets or tokens needed) rather than
+# push: tags, because GitHub blocks workflows triggered by GITHUB_TOKEN-authored
+# events from firing other workflows.
+#
+# workflow_dispatch is retained as a manual escape hatch (e.g. re-deploy a
+# specific release without re-tagging).
 #
 # The Release PR only touches CHANGELOG.md and .release-please-manifest.json,
 # so it never matches the path filters on cd-backend.yml or cd-frontend.yml
 # and will not trigger a spurious dev redeploy.
-#
-# NOTE: release-please must use a PAT (RELEASE_PLEASE_TOKEN) rather than
-# GITHUB_TOKEN — GitHub does not forward workflow events for tag pushes made
-# by GITHUB_TOKEN, so this workflow would never fire otherwise.
 
 name: CD — release to prod
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_call:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Release tag to deploy (e.g. v0.2.0)
-        required: true
-        type: string
 
 permissions:
   id-token: write
