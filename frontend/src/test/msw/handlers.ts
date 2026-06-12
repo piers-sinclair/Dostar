@@ -1,7 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import type { TodoDto } from '@/api/generated';
 
-// Must match the base URL configured in .env.test (VITE_API_BASE_URL=http://localhost)
 const BASE = 'http://localhost';
 export const TODOS_URL = `${BASE}/api/v1/todos`;
 export const TODO_BY_ID_URL = `${BASE}/api/v1/todos/:id`;
