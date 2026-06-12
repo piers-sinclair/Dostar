@@ -108,8 +108,9 @@ See `docs/module-pattern.md` for the full guide.
 
 ```
 frontend/src/
-  features/          ← one folder per domain feature (components, hooks, mocks)
-    todos/
+  features/                  ← one folder per domain feature (components, hooks, mocks)
+    todos/                   ← single-word: lowercase
+    user-management/         ← multi-word: kebab-case (never usermanagement/)
       components/    ← React components + their *.test.tsx files
       hooks/         ← TanStack Query hooks
       mocks/         ← MSW handlers for tests (handlers.ts)
