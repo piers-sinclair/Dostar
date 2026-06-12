@@ -11,5 +11,5 @@ sudo chown -R vscode:vscode /home/vscode/.claude || true
 ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json || true
 cd frontend && pnpm install
 cd ..
-ln -sf "$(pwd)/frontend/node_modules/.bin/lefthook" /usr/local/bin/lefthook || true
+sudo ln -sf "$(pwd)/frontend/node_modules/.bin/lefthook" /usr/local/bin/lefthook || true
 bash .devcontainer/shell-profile.sh
