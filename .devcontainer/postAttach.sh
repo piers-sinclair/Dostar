@@ -52,13 +52,10 @@ else
   printf "  %-14s ✗  →  docker compose up -d\n" "PostgreSQL"
 fi
 
-# String concatenation prevents the scaffolding CLI from substituting these external tool references
-_DOSTAR_BIN="d""ostar"
-_DOSTAR_PKG="D""ostar.Cli"
-check_tool "$_DOSTAR_BIN"  "dotnet tool install -g $_DOSTAR_PKG"  "$_DOSTAR_BIN"  --version
-check_tool "lefthook"      "lefthook install"                      lefthook        version
-check_tool ".NET SDK"      "(reinstall devcontainer)"              dotnet          --version
-check_tool "Node"          "(reinstall devcontainer)"              node            --version
+check_tool "dostar"   "dotnet tool install -g Dostar.Cli"  dostar   --version  # @no-substitute
+check_tool "lefthook" "lefthook install"                    lefthook version
+check_tool ".NET SDK" "(reinstall devcontainer)"            dotnet   --version
+check_tool "Node"     "(reinstall devcontainer)"            node     --version
 
 echo "$SEP"
 printf "  %-14s %s\n" "setup log:" "cat .devcontainer/postCreate.log"
