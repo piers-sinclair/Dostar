@@ -1,15 +1,39 @@
 #!/bin/bash
 set -e
+exec > >(tee .devcontainer/postCreate.log) 2>&1
 
-az bicep install || true
-dotnet tool install -g dotnet-ef || true
-dotnet tool install -g Dostar.Cli || true
-npm install -g @anthropic-ai/claude-code || true
+install_dotnet_tool() {
+  local tool=$1
+  if ! dotnet tool install -g "$tool" 2>/dev/null; then
+    if ! dotnet tool update -g "$tool" 2>/dev/null; then
+      echo "WARNING: could not install $tool — run: dotnet tool install -g $tool"
+    fi
+  fi
+}
+
+echo "[postCreate] Installing global tools..."
+az bicep install || echo "WARNING: az bicep install failed — run: az bicep install"
+install_dotnet_tool dotnet-ef
+install_dotnet_tool Dostar.Cli
+npm install -g @anthropic-ai/claude-code || echo "WARNING: claude-code install failed — run: npm install -g @anthropic-ai/claude-code"
+
+echo "[postCreate] Restoring backend packages..."
 dotnet restore
-sudo chown vscode:vscode frontend/node_modules || true
-sudo chown -R vscode:vscode /home/vscode/.claude || true
-ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json || true
+
+echo "[postCreate] Fixing permissions..."
+sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
+ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
+
+echo "[postCreate] Installing frontend dependencies..."
 cd frontend && pnpm install
 cd ..
-sudo ln -sf "$(node -e "const {getExePath}=require('$(pwd)/frontend/node_modules/lefthook/get-exe.js'); process.stdout.write(getExePath())")" /usr/local/bin/lefthook || true
+
+echo "[postCreate] Setting up git hooks..."
+sudo ln -sf "$(node -e "const {getExePath}=require('$(pwd)/frontend/node_modules/lefthook/get-exe.js'); process.stdout.write(getExePath())")" /usr/local/bin/lefthook || \
+  echo "WARNING: lefthook symlink failed — run: lefthook install"
+
+echo "[postCreate] Configuring shell..."
 bash .devcontainer/shell-profile.sh
+
+echo "[postCreate] Done. Full log: cat .devcontainer/postCreate.log"
