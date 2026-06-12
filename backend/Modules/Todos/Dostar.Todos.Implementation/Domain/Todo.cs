@@ -1,6 +1,6 @@
 namespace Dostar.Todos.Implementation.Domain;
 
-public class Todo
+internal sealed class Todo
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
