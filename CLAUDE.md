@@ -108,26 +108,37 @@ See `docs/module-pattern.md` for the full guide.
 
 ```
 frontend/src/
-  features/        ← one folder per domain feature (components, hooks, mocks)
+  features/          ← one folder per domain feature (components, hooks, mocks)
     todos/
-      components/  ← React components + their *.test.tsx files
-      hooks/       ← TanStack Query hooks
-      mocks/       ← MSW handlers for tests (handlers.ts)
-  shared/          ← cross-feature code (analogous to SharedKernel on the backend)
-    components/ui/ ← shadcn generic components (components.json aliases point here)
-    lib/           ← utilities: getApiError, mapProblemDetailsErrors, utils
-    api/           ← API client + orval-generated types (spans all modules)
-    types/         ← shared TypeScript types
-  test/            ← test infrastructure (MSW server, Vitest setup, render utils)
+      components/    ← React components + their *.test.tsx files
+      hooks/         ← TanStack Query hooks
+      mocks/         ← MSW handlers for tests (handlers.ts)
+  shared/            ← cross-feature code (analogous to SharedKernel on the backend)
+    components/
+      ui/            ← shadcn/ui primitives only — generated here by `npx shadcn add`
+      common/        ← custom shared components used by more than one feature
+    lib/             ← utilities: getApiError, mapProblemDetailsErrors, utils
+    api/             ← API client + orval-generated types (spans all modules)
+    types/           ← shared TypeScript types
+  test/              ← test infrastructure (MSW server, Vitest setup, render utils)
 ```
 
 Each backend module has a corresponding `frontend/src/features/<name>/` folder so the entire
 module (backend + frontend) can be removed as a unit.
 
+**Cross-feature import rule:** features must never import from each other. If two features need
+the same component or utility, move it to `shared/` first.
+
+**`shared/components/` split:**
+- `ui/` — shadcn/ui primitives only. `npx shadcn add` targets this folder via `components.json`. Never put custom components here.
+- `common/` — custom shared components (e.g. `UserAvatar`, `PageHeader`). If a component is used by two or more features, it belongs here.
+
 `frontend/src/shared/api/generated/index.ts` is **not** feature-scoped — orval generates a single
 file from the whole OpenAPI spec (which spans all modules).
-`frontend/src/test/msw/handlers.ts` re-exports all feature handlers so the MSW server gets them
-automatically without importing from each feature folder manually.
+
+**MSW handler auto-discovery:** `test/msw/server.ts` uses `import.meta.glob` to load every
+`features/**/mocks/handlers.ts` automatically. Adding or removing a feature requires no changes
+to test infrastructure — the glob picks up new handler files on the next test run.
 
 `components.json` aliases are set to `src/shared/...` so `npx shadcn add` generates components
 into `src/shared/components/ui/` automatically.
