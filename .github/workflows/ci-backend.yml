@@ -3,15 +3,32 @@ name: CI — Backend
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "backend/**"
-      - "tools/**"
-      - "*.slnx"
-      - "*.sln"
 
 jobs:
-  backend-checks:
-    name: Backend — build & test
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check backend paths
+        id: filter
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -qE '^(backend/|tools/|[^/]+\.(slnx|sln)$)'; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Backend — build & test (run)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -35,6 +52,9 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release
 
+      - name: Verify OpenAPI spec is up to date
+        run: git diff --exit-code backend/Dostar.Api.json
+
       - name: Verify formatting
         run: dotnet format --verify-no-changes
 
@@ -55,3 +75,23 @@ jobs:
         with:
           name: test-results
           path: TestResults/
+
+  backend-checks:
+    name: Backend — build & test
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" == "failure" || "$CHANGES_RESULT" == "cancelled" ]]; then
+            echo "::error::Path detection failed ($CHANGES_RESULT)"
+            exit 1
+          fi
+          if [[ "$BUILD_RESULT" == "failure" || "$BUILD_RESULT" == "cancelled" ]]; then
+            echo "::error::Build failed ($BUILD_RESULT)"
+            exit 1
+          fi

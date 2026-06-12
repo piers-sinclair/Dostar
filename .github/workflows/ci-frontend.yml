@@ -3,12 +3,32 @@ name: CI — Frontend
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "frontend/**"
 
 jobs:
-  frontend-checks:
-    name: Frontend — build & lint
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check frontend paths
+        id: filter
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -qE '^frontend/'; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    name: Frontend — build & lint (run)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,5 +56,28 @@ jobs:
       - name: Prettier
         run: pnpm format:check
 
+      - name: Verify generated API client is up to date
+        run: pnpm generate:api && git diff --exit-code src/api/generated/
+
       - name: Build
         run: pnpm build
+
+  frontend-checks:
+    name: Frontend — build & lint
+    needs: [changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" == "failure" || "$CHANGES_RESULT" == "cancelled" ]]; then
+            echo "::error::Path detection failed ($CHANGES_RESULT)"
+            exit 1
+          fi
+          if [[ "$BUILD_RESULT" == "failure" || "$BUILD_RESULT" == "cancelled" ]]; then
+            echo "::error::Build failed ($BUILD_RESULT)"
+            exit 1
+          fi

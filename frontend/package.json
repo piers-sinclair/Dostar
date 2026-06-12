@@ -14,7 +14,7 @@
     "prepare": "lefthook install",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "generate:api": "orval --config orval.config.ts"
+    "generate:api": "orval --config orval.config.ts && prettier --write src/api/generated/"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

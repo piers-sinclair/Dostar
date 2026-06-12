@@ -2,74 +2,83 @@ import {
     useMutation,
     useQuery,
     useQueryClient,
+    type QueryClient,
     type UseMutationResult,
     type UseQueryResult,
 } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
-import type { CreateTodoRequest, Todo } from '../types/api';
+import type { CreateTodoRequest, TodoDto } from '../api/generated';
 
-const BASE = '/api/v1/todos';
+const TODOS_API_PATH = '/api/v1/todos';
+const TODOS_QUERY_KEY = ['todos'] as const;
 
 type UpdateTodoVariables = { id: string; title: string; isCompleted: boolean };
-type OptimisticContext = { previous: Todo[] | undefined };
+type OptimisticContext = { previous: TodoDto[] | undefined };
 
-export function useTodos(): UseQueryResult<Todo[], Error> {
-    return useQuery<Todo[], Error>({
-        queryKey: ['todos'],
-        queryFn: () => apiClient<Todo[]>(BASE),
+function rollbackTodos(ctx: OptimisticContext | undefined, client: QueryClient) {
+    if (ctx?.previous) client.setQueryData(TODOS_QUERY_KEY, ctx.previous);
+}
+
+function invalidateTodos(client: QueryClient) {
+    return client.invalidateQueries({ queryKey: TODOS_QUERY_KEY });
+}
+
+export function useTodos(): UseQueryResult<TodoDto[], Error> {
+    return useQuery<TodoDto[], Error>({
+        queryKey: TODOS_QUERY_KEY,
+        queryFn: () => apiClient<TodoDto[]>(TODOS_API_PATH),
     });
 }
 
-export function useCreateTodo(): UseMutationResult<Todo, Error, CreateTodoRequest> {
+export function useCreateTodo(): UseMutationResult<TodoDto, Error, CreateTodoRequest> {
     const client = useQueryClient();
-    return useMutation<Todo, Error, CreateTodoRequest>({
-        mutationFn: (req) => apiClient<Todo>(BASE, { method: 'POST', data: req }),
-        onSuccess: () => client.invalidateQueries({ queryKey: ['todos'] }),
+    return useMutation<TodoDto, Error, CreateTodoRequest>({
+        mutationFn: (req) => apiClient<TodoDto>(TODOS_API_PATH, { method: 'POST', data: req }),
+        onSuccess: () => invalidateTodos(client),
     });
 }
 
 export function useDeleteTodo(): UseMutationResult<void, Error, string, OptimisticContext> {
     const client = useQueryClient();
     return useMutation<void, Error, string, OptimisticContext>({
-        mutationFn: (id) => apiClient<void>(`${BASE}/${id}`, { method: 'DELETE' }),
+        mutationFn: (id) => apiClient<void>(`${TODOS_API_PATH}/${id}`, { method: 'DELETE' }),
         onMutate: async (id) => {
-            await client.cancelQueries({ queryKey: ['todos'] });
-            const previous = client.getQueryData<Todo[]>(['todos']);
-            client.setQueryData<Todo[]>(['todos'], (old) => old?.filter((t) => t.id !== id) ?? []);
+            await client.cancelQueries({ queryKey: TODOS_QUERY_KEY });
+            const previous = client.getQueryData<TodoDto[]>(TODOS_QUERY_KEY);
+            client.setQueryData<TodoDto[]>(
+                TODOS_QUERY_KEY,
+                (old) => old?.filter((t) => t.id !== id) ?? []
+            );
             return { previous };
         },
-        onError: (_err, _id, ctx) => {
-            if (ctx?.previous) client.setQueryData(['todos'], ctx.previous);
-        },
-        onSettled: () => client.invalidateQueries({ queryKey: ['todos'] }),
+        onError: (_err, _id, ctx) => rollbackTodos(ctx, client),
+        onSettled: () => invalidateTodos(client),
     });
 }
 
 export function useUpdateTodo(): UseMutationResult<
-    Todo,
+    TodoDto,
     Error,
     UpdateTodoVariables,
     OptimisticContext
 > {
     const client = useQueryClient();
-    return useMutation<Todo, Error, UpdateTodoVariables, OptimisticContext>({
+    return useMutation<TodoDto, Error, UpdateTodoVariables, OptimisticContext>({
         mutationFn: ({ id, title, isCompleted }) =>
-            apiClient<Todo>(`${BASE}/${id}`, {
+            apiClient<TodoDto>(`${TODOS_API_PATH}/${id}`, {
                 method: 'PUT',
                 data: { title, isComplete: isCompleted },
             }),
         onMutate: async ({ id, title, isCompleted }) => {
-            await client.cancelQueries({ queryKey: ['todos'] });
-            const previous = client.getQueryData<Todo[]>(['todos']);
-            client.setQueryData<Todo[]>(
-                ['todos'],
+            await client.cancelQueries({ queryKey: TODOS_QUERY_KEY });
+            const previous = client.getQueryData<TodoDto[]>(TODOS_QUERY_KEY);
+            client.setQueryData<TodoDto[]>(
+                TODOS_QUERY_KEY,
                 (old) => old?.map((t) => (t.id === id ? { ...t, title, isCompleted } : t)) ?? []
             );
             return { previous };
         },
-        onError: (_err, _vars, ctx) => {
-            if (ctx?.previous) client.setQueryData(['todos'], ctx.previous);
-        },
-        onSettled: () => client.invalidateQueries({ queryKey: ['todos'] }),
+        onError: (_err, _vars, ctx) => rollbackTodos(ctx, client),
+        onSettled: () => invalidateTodos(client),
     });
 }
