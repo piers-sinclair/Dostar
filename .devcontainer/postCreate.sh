@@ -2,6 +2,19 @@
 set -e
 exec > >(tee .devcontainer/postCreate.log) 2>&1
 
+_finish() {
+  if [ $? -ne 0 ]; then
+    mv .devcontainer/.setup-in-progress .devcontainer/.setup-failed 2>/dev/null || true
+    echo "[postCreate] Setup FAILED — check: cat .devcontainer/postCreate.log"
+  else
+    rm -f .devcontainer/.setup-in-progress
+  fi
+}
+trap _finish EXIT
+
+touch .devcontainer/.setup-in-progress
+rm -f .devcontainer/.setup-failed
+
 install_dotnet_tool() {
   local tool=$1
   if ! dotnet tool install -g "$tool" 2>/dev/null; then
