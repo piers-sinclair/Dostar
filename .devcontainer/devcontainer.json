@@ -20,7 +20,8 @@
     "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar",
     "TESTCONTAINERS_RYUK_DISABLED": "true",
     "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
-    "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1"
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1",
+    "WORKSPACE_FOLDER": "/workspaces/Dostar"
   },
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",

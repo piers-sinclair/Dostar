@@ -1,33 +1,8 @@
 #!/bin/bash
 
-ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+ROOT=${WORKSPACE_FOLDER:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
 PROJECT=$(basename "$ROOT")
 SEP="────────────────────────────────────────────────────"
-PROJECT=$(basename "$(pwd)")
-
-if [ -f .devcontainer/.setup-in-progress ]; then
-  echo ""
-  echo "  ⏳ $PROJECT — setup still running"
-  echo "$SEP"
-  echo "  postCreate.sh has not finished yet."
-  echo ""
-  printf "  %-14s %s\n" "watch log:" "tail -f .devcontainer/postCreate.log"
-  printf "  %-14s %s\n" "re-check:"  "health"
-  echo ""
-  exit 0
-fi
-
-if [ -f .devcontainer/.setup-failed ]; then
-  echo ""
-  echo "  ❌ $PROJECT — setup failed"
-  echo "$SEP"
-  echo "  postCreate.sh exited with an error."
-  echo ""
-  printf "  %-14s %s\n" "see log:"   "cat .devcontainer/postCreate.log"
-  printf "  %-14s %s\n" "retry:"     "bash .devcontainer/postCreate.sh"
-  echo ""
-  exit 0
-fi
 
 if [ -f "$ROOT/.devcontainer/.setup-in-progress" ]; then
   echo ""
@@ -77,10 +52,10 @@ else
   printf "  %-14s ✗  →  docker compose up -d\n" "PostgreSQL"
 fi
 
-check_tool "dostar CLI"  "dotnet tool install -g Dostar.Cli"  dostar   --version
-check_tool "lefthook"    "lefthook install"                    lefthook version
-check_tool ".NET SDK"    "(reinstall devcontainer)"            dotnet   --version
-check_tool "Node"        "(reinstall devcontainer)"            node     --version
+check_tool "dostar"   "dotnet tool install -g Dostar.Cli"  dostar   --version  # @no-substitute
+check_tool "lefthook" "lefthook install"                    lefthook version
+check_tool ".NET SDK" "(reinstall devcontainer)"            dotnet   --version
+check_tool "Node"     "(reinstall devcontainer)"            node     --version
 
 echo "$SEP"
 printf "  %-14s %s\n" "setup log:" "cat .devcontainer/postCreate.log"
