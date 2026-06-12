@@ -199,14 +199,14 @@
       "UpdateTodoRequest": {
         "required": [
           "title",
-          "isComplete"
+          "isCompleted"
         ],
         "type": "object",
         "properties": {
           "title": {
             "type": "string"
           },
-          "isComplete": {
+          "isCompleted": {
             "type": "boolean"
           }
         }

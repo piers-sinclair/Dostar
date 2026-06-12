@@ -1,4 +1,6 @@
 import { useState, type JSX } from 'react';
+
+const Key = { Enter: 'Enter', Escape: 'Escape' } as const;
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,9 +78,9 @@ export function TodoList(): JSX.Element {
                                         disabled={isUpdating}
                                         onChange={(e) => setEditValue(e.target.value)}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter')
+                                            if (e.key === Key.Enter)
                                                 commitEdit(todo.id, todo.isCompleted, todo.title);
-                                            if (e.key === 'Escape') cancelEdit();
+                                            if (e.key === Key.Escape) cancelEdit();
                                         }}
                                     />
                                 ) : (
@@ -92,7 +94,7 @@ export function TodoList(): JSX.Element {
                                         )}
                                         onClick={() => startEdit(todo.id, todo.title)}
                                         onKeyDown={(e) =>
-                                            e.key === 'Enter' && startEdit(todo.id, todo.title)
+                                            e.key === Key.Enter && startEdit(todo.id, todo.title)
                                         }
                                     >
                                         {todo.title}

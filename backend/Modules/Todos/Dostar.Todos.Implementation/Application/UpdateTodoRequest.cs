@@ -1,3 +1,3 @@
 namespace Dostar.Todos.Implementation.Application;
 
-public record UpdateTodoRequest(string Title, bool IsComplete);
+public record UpdateTodoRequest(string Title, bool IsCompleted);

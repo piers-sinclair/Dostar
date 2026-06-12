@@ -36,11 +36,11 @@ export const handlers = [
     }),
 
     http.put(TODO_BY_ID_URL, async ({ params, request }) => {
-        const body = (await request.json()) as { title: string; isComplete: boolean };
+        const body = (await request.json()) as { title: string; isCompleted: boolean };
         const todo: TodoDto = {
             id: params.id as string,
             title: body.title,
-            isCompleted: body.isComplete,
+            isCompleted: body.isCompleted,
             createdAt: '2024-01-01T00:00:00Z',
         };
         return HttpResponse.json(todo);

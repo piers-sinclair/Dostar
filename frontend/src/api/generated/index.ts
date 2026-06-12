@@ -34,7 +34,7 @@ export interface TodoDto {
 
 export interface UpdateTodoRequest {
     title: string;
-    isComplete: boolean;
+    isCompleted: boolean;
 }
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];

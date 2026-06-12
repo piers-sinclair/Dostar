@@ -54,11 +54,11 @@ test.beforeEach(async ({ page }) => {
         } else if (method === HttpMethod.PUT) {
             const body = route.request().postDataJSON() as {
                 title: string;
-                isComplete: boolean;
+                isCompleted: boolean;
             };
             todos = todos.map((t) =>
                 t.id === id
-                    ? { ...t, title: body.title, isCompleted: body.isComplete }
+                    ? { ...t, title: body.title, isCompleted: body.isCompleted }
                     : t,
             );
             const updated = todos.find((t) => t.id === id)!;

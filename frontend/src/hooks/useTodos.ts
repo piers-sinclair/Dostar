@@ -67,7 +67,7 @@ export function useUpdateTodo(): UseMutationResult<
         mutationFn: ({ id, title, isCompleted }) =>
             apiClient<TodoDto>(`${TODOS_API_PATH}/${id}`, {
                 method: 'PUT',
-                data: { title, isComplete: isCompleted },
+                data: { title, isCompleted },
             }),
         onMutate: async ({ id, title, isCompleted }) => {
             await client.cancelQueries({ queryKey: TODOS_QUERY_KEY });
