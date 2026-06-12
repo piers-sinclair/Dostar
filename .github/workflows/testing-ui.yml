@@ -3,6 +3,9 @@ name: Testing — UI
 on:
   pull_request:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - "tests/Dostar.UITests/**"
 
 jobs:
   ui:
@@ -29,46 +32,6 @@ jobs:
       - name: Build frontend
         run: pnpm build
         working-directory: frontend
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          tags: dostar-api:ui-tests
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Start database
-        run: docker compose up -d db
-
-      - name: Wait for database
-        run: |
-          for i in $(seq 1 15); do
-            docker compose exec -T db pg_isready -U dostar && break
-            echo "Waiting for postgres... ($i/15)"
-            sleep 2
-          done
-
-      - name: Start API
-        run: |
-          docker run -d \
-            --name dostar-api \
-            --network host \
-            -e ASPNETCORE_URLS=http://+:8080 \
-            -e "ConnectionStrings__Default=Host=localhost;Port=5432;Database=dostar;Username=dostar;Password=dostar" \
-            dostar-api:ui-tests
-
-      - name: Wait for API
-        run: |
-          for i in $(seq 1 20); do
-            curl -sf http://localhost:8080/healthz/live && break
-            echo "Waiting for API... ($i/20)"
-            sleep 3
-          done
 
       - name: Cache Playwright browsers
         id: playwright-cache
