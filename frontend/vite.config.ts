@@ -17,10 +17,12 @@ export default defineConfig({
         },
     },
     test: {
+        environment: 'happy-dom',
+        setupFiles: ['./src/test/setup.ts'],
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html', 'cobertura'],
-            exclude: [...coverageConfigDefaults.exclude, 'src/main.tsx'],
+            exclude: [...coverageConfigDefaults.exclude, 'src/main.tsx', 'src/test/**', 'src/api/generated/**'],
         },
     },
 });

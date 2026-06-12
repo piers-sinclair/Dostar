@@ -4,9 +4,9 @@
   "description": "Playwright UI tests for Dostar",
   "private": true,
   "scripts": {
-    "test:ui": "playwright test",
-    "test:ui:ui": "playwright test --ui",
-    "test:ui:report": "playwright show-report"
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +14,6 @@
   "packageManager": "pnpm@10.29.3",
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   }
 }
