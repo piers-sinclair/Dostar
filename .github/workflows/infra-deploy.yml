@@ -68,17 +68,30 @@ jobs:
         run: |
           az provider register --namespace Microsoft.AlertsManagement --wait
 
+      - name: Get current container image
+        id: current-image
+        run: |
+          ENV="${{ inputs.environment || 'dev' }}"
+          IMAGE=$(az containerapp show \
+            --name "ca-dostar-${ENV}-aue-001" \
+            --resource-group "rg-dostar-${ENV}-aue-001" \
+            --query "properties.template.containers[0].image" -o tsv 2>/dev/null || echo "")
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+
       - name: Deploy infrastructure
         env:
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
           AZURE_POSTGRES_ADMIN_USERNAME: ${{ secrets.AZURE_POSTGRES_ADMIN_USERNAME }}
           ALERT_EMAIL_ADDRESS: ${{ secrets.ALERT_EMAIL_ADDRESS }}
         run: |
+          PARAMS=(--parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam)
+          IMAGE="${{ steps.current-image.outputs.image }}"
+          [ -n "$IMAGE" ] && PARAMS+=(--parameters "containerImage=$IMAGE")
           az deployment sub create \
             --name dostar-${{ inputs.environment || 'dev' }} \
             --location australiaeast \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam \
+            "${PARAMS[@]}" \
             --only-show-errors
 
       - name: Get environment URLs
