@@ -8,10 +8,12 @@ using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
 using Dostar.Todos.Implementation;
 using Dostar.Todos.Implementation.Infrastructure;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.OpenApi;
 using Npgsql;
 using OpenTelemetry;
 using Scalar.AspNetCore;
@@ -22,6 +24,8 @@ const string VersionedRoutePrefix = "/api/v{version:apiVersion}";
 const string TestEnvironmentName = "Test";
 const string RateLimitRejectionMessage = "Too many requests. Please try again later.";
 const string AppInsightsConnectionStringKey = "APPLICATIONINSIGHTS_CONNECTION_STRING";
+const string VersionPlaceholder = "{version}";
+const string ApiVersion = "1";
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +36,8 @@ var otelBuilder = builder.Services.AddOpenTelemetry()
 if (!string.IsNullOrEmpty(builder.Configuration[AppInsightsConnectionStringKey]))
     otelBuilder.UseAzureMonitor();
 
-builder.Services.AddOpenApi(V1DocumentName);
+builder.Services.AddOpenApi(V1DocumentName, options =>
+    options.AddDocumentTransformer(ReplaceVersionPlaceholderInPaths));
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddApiVersioning(options =>
@@ -145,5 +150,19 @@ foreach (var module in endpointModules)
     module.MapEndpoints(versionedGroup);
 
 app.Run();
+
+static Task ReplaceVersionPlaceholderInPaths(OpenApiDocument document, OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+{
+    var pathsToFix = document.Paths.Keys
+        .Where(k => k.Contains(VersionPlaceholder))
+        .ToList();
+    foreach (var path in pathsToFix)
+    {
+        var item = document.Paths[path];
+        document.Paths.Remove(path);
+        document.Paths.Add(path.Replace(VersionPlaceholder, ApiVersion), item);
+    }
+    return Task.CompletedTask;
+}
 
 public partial class Program { }

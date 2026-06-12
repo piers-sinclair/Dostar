@@ -16,6 +16,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
   trivy-scan:
     name: Security — Trivy vulnerability scan
     runs-on: ubuntu-latest
