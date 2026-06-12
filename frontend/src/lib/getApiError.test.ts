@@ -19,7 +19,6 @@ describe('getApiError', () => {
     });
 
     it('returns default message when object is a ProblemDetails but has no detail or title', () => {
-        // has 'errors' key so isProblemDetails = true, but neither detail nor title is set
         expect(getApiError({ errors: { Title: ['Required'] } })).toBe(
             'An unexpected error occurred.'
         );
