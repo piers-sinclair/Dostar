@@ -3,6 +3,7 @@ set -e
 
 az bicep install || true
 dotnet tool install -g dotnet-ef || true
+dotnet tool install -g Dostar.Cli || true
 npm install -g @anthropic-ai/claude-code || true
 dotnet restore
 sudo chown vscode:vscode frontend/node_modules || true
