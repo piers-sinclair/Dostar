@@ -29,11 +29,9 @@ param appInsightsConnectionString string = ''
 @description('Frontend origin allowed by the production CORS policy (e.g. https://stapp-dostar-dev-aue-001.azurestaticapps.net). Leave empty to disable cross-origin access.')
 param frontendOrigin string = ''
 
-@description('Unversioned Key Vault secret URI for the PostgreSQL connection string (e.g. https://<vault>.vault.azure.net/secrets/postgres-connection-string). Container App reads the latest version at runtime via managed identity.')
-param postgresConnectionStringSecretUri string
-
-@description('Name of the Key Vault that holds the PostgreSQL connection string secret. Used to grant the Container App managed identity Key Vault Secrets User access.')
-param keyVaultName string
+@description('PostgreSQL connection string. Passed as a secure param so ARM encrypts it in transit and in deployment history.')
+@secure()
+param postgresConnectionString string
 
 @description('Container image to deploy. Defaults to a public placeholder on first deploy before CI pushes a real image to ACR. CI should pass the real ACR image tag on every deploy.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
@@ -51,13 +49,6 @@ param minReplicas int = 0
 @description('Maximum number of replicas.')
 @minValue(1)
 param maxReplicas int = 3
-
-// Key Vault Secrets User — built-in role that allows reading secret values
-var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
-
-resource keyVaultRef 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: keyVaultName
-}
 
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
@@ -110,15 +101,17 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
-      // Use Key Vault URI reference instead of inline value — secret values are write-only in
-      // Container Apps ARM (masked on GET), so an inline value would cause ARM to detect a diff
-      // and re-PUT the app on every deploy. A keyVaultUrl reference stores a stable URI string
-      // that ARM can read back, making the secret config fully idempotent.
+      // secrets.value is write-only in the Container Apps ARM API (masked on GET), so ARM always
+      // detects a diff and re-PUTs the Container App on every deploy. This is an accepted
+      // trade-off: the re-PUT is fast (~30 s, creates a new revision) and causes no downtime,
+      // unlike the CAE VNet reprovisioning fixed in the diagnostic-settings change above.
+      // The alternative (Key Vault URI reference + managed-identity RBAC) would be fully
+      // idempotent but introduces an RBAC propagation race on first deploy that breaks the
+      // template's "just works" promise for new users.
       secrets: [
         {
           name: 'connectionstrings--default'
-          keyVaultUrl: postgresConnectionStringSecretUri
-          identity: 'system'
+          value: postgresConnectionString
         }
       ]
       // ACR registry config is conditional: on first deploy the placeholder MCR image is used
@@ -223,18 +216,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         maxReplicas: maxReplicas
       }
     }
-  }
-}
-
-// Grant the Container App managed identity permission to read Key Vault secrets at runtime.
-// Role assignment name is a stable GUID derived from the three inputs — idempotent across deploys.
-resource kvSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVaultRef.id, containerApp.id, keyVaultSecretsUserRoleId)
-  scope: keyVaultRef
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: containerApp.identity.principalId
-    principalType: 'ServicePrincipal'
   }
 }
 
