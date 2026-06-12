@@ -67,13 +67,22 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
       internal: false
     }
     zoneRedundant: false
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: reference(logAnalyticsWorkspaceId, '2023-09-01').customerId
-        sharedKey: listKeys(logAnalyticsWorkspaceId, '2023-09-01').primarySharedKey
-      }
-    }
+  }
+}
+
+// Diagnostic settings route CAE logs to Log Analytics without listKeys().
+// listKeys() returns a write-only value that ARM can never read back, so inline
+// appLogsConfiguration triggers a CAE update on every deploy — slow with VNet integration.
+resource caeDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'cae-to-log-analytics'
+  scope: cae
+  properties: {
+    workspaceId: logAnalyticsWorkspaceId
+    logs: [
+      { category: 'ContainerAppConsoleLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+      { category: 'ContainerAppSystemLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
+    ]
+    metrics: []
   }
 }
 
