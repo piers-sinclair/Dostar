@@ -3,7 +3,13 @@
 [![CI](https://github.com/piers-sinclair/Dostar/actions/workflows/ci.yml/badge.svg)](https://github.com/piers-sinclair/Dostar/actions/workflows/ci.yml)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/piers-sinclair/Dostar)
 
-A production-ready fullstack starter — .NET 10 modular monolith backend + React/Vite frontend. Skip weeks of boilerplate and ship a deployable scaffold from day one.
+Skip weeks of boilerplate. Dostar gives you a production-ready fullstack app — .NET 10 modular monolith + React/Vite — with exceptional developer experience, complete DevSecOps, and automated CI/CD that deploys to production in under 30 minutes.
+
+## Goals
+
+- **Exceptional developer experience** — devcontainer, one-click F5 full-stack launch, hot reload, pre-commit hooks, generated API client (orval), and Claude Code skills for scaffolding, migrations, and testing.
+- **Complete DevSecOps** — passwordless OIDC auth to Azure, Key Vault secrets management, Trivy + OpenGrep scanning in every PR, OpenTelemetry wired to Application Insights, and P1 production alerts deployed automatically.
+- **Production in under 30 minutes** — GitHub Actions pipelines build, test, scan, and auto-deploy to dev on every merge; a Release PR promotes to prod with one click.
 
 ## Architecture
 
