@@ -22,7 +22,12 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'html', 'cobertura'],
-            exclude: [...coverageConfigDefaults.exclude, 'src/main.tsx', 'src/test/**', 'src/api/generated/**'],
+            exclude: [
+                ...coverageConfigDefaults.exclude,
+                'src/main.tsx',
+                'src/test/**',
+                'src/api/generated/**',
+            ],
         },
     },
 });

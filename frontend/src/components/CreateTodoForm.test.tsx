@@ -40,8 +40,8 @@ describe('CreateTodoForm', () => {
         const user = userEvent.setup();
         server.use(
             http.post(TODOS_URL, () =>
-                HttpResponse.json({ errors: { Title: ['Title is too long'] } }, { status: 400 }),
-            ),
+                HttpResponse.json({ errors: { Title: ['Title is too long'] } }, { status: 400 })
+            )
         );
         renderWithProviders(<CreateTodoForm />);
 
@@ -55,8 +55,8 @@ describe('CreateTodoForm', () => {
         const user = userEvent.setup();
         server.use(
             http.post(TODOS_URL, () =>
-                HttpResponse.json({ detail: 'Service unavailable' }, { status: 503 }),
-            ),
+                HttpResponse.json({ detail: 'Service unavailable' }, { status: 503 })
+            )
         );
         renderWithProviders(<CreateTodoForm />);
 

@@ -39,7 +39,7 @@ describe('mapProblemDetailsErrors', () => {
 
         mapProblemDetailsErrors(
             { errors: { Title: ['Too short', 'Required'], IsComplete: ['Must be boolean'] } },
-            setError,
+            setError
         );
 
         expect(setError).toHaveBeenCalledWith('title', { message: 'Too short' });

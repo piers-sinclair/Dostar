@@ -32,8 +32,8 @@ describe('TodoList', () => {
     it('shows error message when the API fails', async () => {
         server.use(
             http.get(TODOS_URL, () =>
-                HttpResponse.json({ detail: 'Database unavailable' }, { status: 503 }),
-            ),
+                HttpResponse.json({ detail: 'Database unavailable' }, { status: 503 })
+            )
         );
         renderWithProviders(<TodoList />);
 
@@ -47,12 +47,12 @@ describe('TodoList', () => {
         // so the post-delete refetch doesn't restore the item.
         server.use(
             http.get(TODOS_URL, () =>
-                HttpResponse.json(deleted ? [defaultTodos[1]] : defaultTodos),
+                HttpResponse.json(deleted ? [defaultTodos[1]] : defaultTodos)
             ),
             http.delete(TODO_BY_ID_URL, () => {
                 deleted = true;
                 return new HttpResponse(null, { status: 204 });
-            }),
+            })
         );
         renderWithProviders(<TodoList />);
 
@@ -68,8 +68,8 @@ describe('TodoList', () => {
         const user = userEvent.setup();
         server.use(
             http.delete(TODO_BY_ID_URL, () =>
-                HttpResponse.json({ detail: 'Failed' }, { status: 500 }),
-            ),
+                HttpResponse.json({ detail: 'Failed' }, { status: 500 })
+            )
         );
         renderWithProviders(<TodoList />);
 
