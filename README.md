@@ -99,15 +99,14 @@ Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the termina
 
 ## Regenerating API types
 
-The frontend API client (`frontend/src/api/generated/index.ts`) and the OpenAPI spec (`backend/Dostar.Api.json`) are committed to the repo. Run the convenience script after any backend API change — new endpoint, renamed field, changed request or response shape — to keep them in sync before pushing:
+The OpenAPI spec (`backend/Dostar.Api.json`) and the frontend API client (`frontend/src/api/generated/index.ts`) are committed to the repo. After any backend API change — new endpoint, renamed field, changed request or response shape — regenerate both before pushing:
 
 ```bash
-bash tools/generate-api.sh
+dotnet build backend/Dostar.Api/Dostar.Api.csproj -c Release   # regenerates backend/Dostar.Api.json
+cd frontend && pnpm generate:api                                # regenerates frontend/src/api/generated/index.ts
 ```
 
-The script builds the backend (which regenerates `backend/Dostar.Api.json` as a side effect), then runs `pnpm generate:api` in the frontend to regenerate the TypeScript client from the updated spec. Commit both files together with your backend change.
-
-CI validates that the committed artefacts match the source — skipping this step will cause a CI failure.
+Commit both files together with your backend change. CI validates that the committed artefacts match the source and will fail if they are out of sync.
 
 ## F5 launch configurations
 
