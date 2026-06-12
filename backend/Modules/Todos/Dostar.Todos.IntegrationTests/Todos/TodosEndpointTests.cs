@@ -126,6 +126,6 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
         var response = await _client.PostAsJsonAsync(TodosUrl, new { title });
         response.EnsureSuccessStatusCode();
         var todo = await response.Content.ReadFromJsonAsync<TodoDto>(JsonOptions);
-        return todo!;
+        return todo ?? throw new InvalidOperationException("CreateTodoAsync: API returned null");
     }
 }
