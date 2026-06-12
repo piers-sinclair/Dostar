@@ -1,6 +1,31 @@
 #!/bin/bash
 
 SEP="────────────────────────────────────────────────────"
+PROJECT=$(basename "$(pwd)")
+
+if [ -f .devcontainer/.setup-in-progress ]; then
+  echo ""
+  echo "  ⏳ $PROJECT — setup still running"
+  echo "$SEP"
+  echo "  postCreate.sh has not finished yet."
+  echo ""
+  printf "  %-14s %s\n" "watch log:" "tail -f .devcontainer/postCreate.log"
+  printf "  %-14s %s\n" "re-check:"  "health"
+  echo ""
+  exit 0
+fi
+
+if [ -f .devcontainer/.setup-failed ]; then
+  echo ""
+  echo "  ❌ $PROJECT — setup failed"
+  echo "$SEP"
+  echo "  postCreate.sh exited with an error."
+  echo ""
+  printf "  %-14s %s\n" "see log:"   "cat .devcontainer/postCreate.log"
+  printf "  %-14s %s\n" "retry:"     "bash .devcontainer/postCreate.sh"
+  echo ""
+  exit 0
+fi
 
 check_tool() {
   local label=$1
@@ -17,7 +42,7 @@ check_tool() {
 }
 
 echo ""
-echo "  $(basename "$(pwd)") environment"
+echo "  $PROJECT environment"
 echo "$SEP"
 
 if pg_isready -h db -U dostar -q 2>/dev/null; then
