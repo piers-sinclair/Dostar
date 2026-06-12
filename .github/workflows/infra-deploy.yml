@@ -107,6 +107,10 @@ jobs:
           echo "frontend_hostname=$FRONTEND_HOSTNAME" >> "$GITHUB_OUTPUT"
 
       - name: Smoke test
+        # Skip when called from infra-spinup: the real backend image has not been deployed yet
+        # at this point in the chain, so the Container App is still on the placeholder image which
+        # has no /healthz endpoints. cd-backend.yml runs its own smoke test after the real image is live.
+        if: github.event_name != 'workflow_call'
         run: |
           FQDN="${{ steps.get-urls.outputs.backend_fqdn }}"
           for i in {1..20}; do
