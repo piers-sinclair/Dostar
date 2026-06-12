@@ -35,9 +35,8 @@ graph LR
 Install the CLI once, then create a renamed copy of the template:
 
 ```bash
-dotnet tool install -g Dostar.Cli   # install once
-dostar new-project MyStartup        # clone + rename every "Dostar" reference
-cd MyStartup
+dotnet tool install -g Dostar.Cli  
+dostar new-project MyStartup --owner xxx-yyy --author "xxx yyy"
 ```
 
 `dostar new-project` clones the repo and replaces every `Dostar`/`dostar` token (namespaces, project names, solution name, Bicep parameters, config files) with your project name in one step.
