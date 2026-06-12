@@ -68,17 +68,30 @@ jobs:
         run: |
           az provider register --namespace Microsoft.AlertsManagement --wait
 
+      - name: Get current container image
+        id: current-image
+        run: |
+          ENV="${{ inputs.environment || 'dev' }}"
+          IMAGE=$(az containerapp show \
+            --name "ca-dostar-${ENV}-aue-001" \
+            --resource-group "rg-dostar-${ENV}-aue-001" \
+            --query "properties.template.containers[0].image" -o tsv 2>/dev/null || echo "")
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+
       - name: Deploy infrastructure
         env:
           AZURE_POSTGRES_ADMIN_PASSWORD: ${{ secrets.AZURE_POSTGRES_ADMIN_PASSWORD }}
           AZURE_POSTGRES_ADMIN_USERNAME: ${{ secrets.AZURE_POSTGRES_ADMIN_USERNAME }}
           ALERT_EMAIL_ADDRESS: ${{ secrets.ALERT_EMAIL_ADDRESS }}
         run: |
+          PARAMS=(--parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam)
+          IMAGE="${{ steps.current-image.outputs.image }}"
+          [ -n "$IMAGE" ] && PARAMS+=(--parameters "containerImage=$IMAGE")
           az deployment sub create \
             --name dostar-${{ inputs.environment || 'dev' }} \
             --location australiaeast \
             --template-file infra/main.bicep \
-            --parameters infra/main.parameters.${{ inputs.environment || 'dev' }}.bicepparam \
+            "${PARAMS[@]}" \
             --only-show-errors
 
       - name: Get environment URLs
@@ -96,17 +109,17 @@ jobs:
       - name: Smoke test
         run: |
           FQDN="${{ steps.get-urls.outputs.backend_fqdn }}"
-          for i in {1..10}; do
-            LIVE=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
-            READY=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/ready")
+          for i in {1..20}; do
+            LIVE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/live")
+            READY=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/ready")
             if [ "$LIVE" = "200" ] && [ "$READY" = "200" ]; then
               echo "Smoke tests passed (/healthz/live=$LIVE, /healthz/ready=$READY)"
               exit 0
             fi
-            echo "Attempt $i: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
+            echo "Attempt $i/20: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
             sleep 15
           done
-          echo "::error::Smoke test failed after 10 attempts"
+          echo "::error::Smoke test failed after 20 attempts"
           exit 1
 
       - name: Print environment URLs

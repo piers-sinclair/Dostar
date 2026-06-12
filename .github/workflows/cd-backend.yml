@@ -252,17 +252,17 @@ jobs:
         id: smoke_test
         run: |
           FQDN="${{ steps.get-url.outputs.fqdn }}"
-          for i in {1..10}; do
-            LIVE=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
-            READY=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/ready")
+          for i in {1..20}; do
+            LIVE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/live")
+            READY=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/ready")
             if [ "$LIVE" = "200" ] && [ "$READY" = "200" ]; then
               echo "Smoke tests passed (/healthz/live=$LIVE, /healthz/ready=$READY)"
               exit 0
             fi
-            echo "Attempt $i: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
+            echo "Attempt $i/20: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
             sleep 15
           done
-          echo "::error::Smoke test failed after 10 attempts"
+          echo "::error::Smoke test failed after 20 attempts"
           exit 1
 
       - name: Print environment URLs

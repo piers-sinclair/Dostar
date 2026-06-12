@@ -55,6 +55,9 @@ param postgresEnableHa bool = false
 @description('Comma or semicolon-separated email addresses for P1 alert notifications (error rate, latency, health check failure). Leave empty to skip email notifications.')
 param alertEmailAddress string = ''
 
+@description('Container image to deploy. Defaults to a public placeholder on first deploy. Subsequent infra-only deploys should pass the currently-running image so the backend is not reset to the placeholder.')
+param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+
 var abbrev = {
   resourceGroup: 'rg'
   appServicePlan: 'asp'
@@ -150,6 +153,7 @@ module containerapp 'modules/containerapp.bicep' = {
     frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
     containerCpu: containerCpu
     containerMemory: containerMemory
+    containerImage: containerImage
     minReplicas: containerMinReplicas
     maxReplicas: containerMaxReplicas
   }
