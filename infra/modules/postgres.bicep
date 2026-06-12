@@ -81,6 +81,9 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' =
   properties: {
     version: '16'
     administratorLogin: adminUsername
+    // administratorLoginPassword is write-only (masked on GET), so ARM always detects a diff
+    // and re-PUTs the server on every deploy. Setting the same password is a no-op in Azure
+    // and completes in seconds — accepted trade-off over a more complex conditional approach.
     administratorLoginPassword: adminPassword
     network: {
       delegatedSubnetResourceId: postgresSubnetId
