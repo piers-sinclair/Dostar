@@ -155,6 +155,44 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 ]
               : []
           )
+          probes: [
+            {
+              type: 'Startup'
+              httpGet: {
+                path: '/healthz/live'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 0
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 18
+            }
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/healthz/live'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 0
+              periodSeconds: 30
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/healthz/ready'
+                port: 8080
+                scheme: 'HTTP'
+              }
+              initialDelaySeconds: 0
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 3
+            }
+          ]
         }
       ]
       scale: {

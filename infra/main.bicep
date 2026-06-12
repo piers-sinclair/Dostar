@@ -183,7 +183,6 @@ module alerting 'modules/alerting.bicep' = if (env == 'prod') {
     env: env
     region: region
     instance: instance
-    appInsightsId: appinsights.outputs.appInsightsId
     logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
     alertEmailAddress: alertEmailAddress
   }
