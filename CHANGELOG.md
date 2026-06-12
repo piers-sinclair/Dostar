@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.4.0](https://github.com/piers-sinclair/Dostar/compare/v0.3.0...v0.4.0) (2026-06-12)
+
+
+### Features
+
+* add dev-workflow script to regenerate OpenAPI spec and orval client in one step ([#320](https://github.com/piers-sinclair/Dostar/issues/320)) ([c623aa5](https://github.com/piers-sinclair/Dostar/commit/c623aa57e1311a7e74e9ef46974764b5e82b51c1))
+* **ci:** add lefthook pre-commit hooks for format and lint checks ([#324](https://github.com/piers-sinclair/Dostar/issues/324)) ([a0b716f](https://github.com/piers-sinclair/Dostar/commit/a0b716f4413fe52ae980f1bcddf87aa3d066bd1c))
+* **ci:** add post-deploy smoke tests to all CD pipelines ([#315](https://github.com/piers-sinclair/Dostar/issues/315)) ([288fd79](https://github.com/piers-sinclair/Dostar/commit/288fd797ebc4ec967dfcc312f4aede4b4dca838f)), closes [#312](https://github.com/piers-sinclair/Dostar/issues/312)
+* **infra:** observability audit — expand alerting and add health probes ([#323](https://github.com/piers-sinclair/Dostar/issues/323)) ([c3dbe45](https://github.com/piers-sinclair/Dostar/commit/c3dbe450f71c587a4abf0c5fc66eeefe40c27064)), closes [#321](https://github.com/piers-sinclair/Dostar/issues/321)
+* **tests:** establish test pyramid ([#330](https://github.com/piers-sinclair/Dostar/issues/330)) ([fe45d6b](https://github.com/piers-sinclair/Dostar/commit/fe45d6b55c25c21ed8737e86a8ba5f99bfbe5f9a))
+* wire orval to committed OpenAPI spec for type safety ([#317](https://github.com/piers-sinclair/Dostar/issues/317)) ([5db8d79](https://github.com/piers-sinclair/Dostar/commit/5db8d797edee1b23c3a14cc232e6b2f381eebe9c))
+
+
+### Bug Fixes
+
+* Add minimum length constraint to alertEmailAddress param ([#289](https://github.com/piers-sinclair/Dostar/issues/289)) ([cefd19e](https://github.com/piers-sinclair/Dostar/commit/cefd19e74f7daf120d648338d398e7b28fa82e19))
+* **ci:** allow esbuild build scripts in pnpm-workspace.yaml ([#326](https://github.com/piers-sinclair/Dostar/issues/326)) ([e6ae0a9](https://github.com/piers-sinclair/Dostar/commit/e6ae0a9b7d57e1272b1fd8c851cb159f4332edb7))
+* **ci:** make path-filtered CI checks always report to satisfy required checks ([#322](https://github.com/piers-sinclair/Dostar/issues/322)) ([efba01c](https://github.com/piers-sinclair/Dostar/commit/efba01cda56a110585d9e7d487b57f19c4482788))
+* **ci:** trigger frontend checks when OpenAPI spec changes ([#325](https://github.com/piers-sinclair/Dostar/issues/325)) ([94040b8](https://github.com/piers-sinclair/Dostar/commit/94040b8d7e04ad4d89cd3f2c829ba73396dce2f8))
+* **devcontainer:** make non-critical postCreate steps fault-tolerant ([#331](https://github.com/piers-sinclair/Dostar/issues/331)) ([583a808](https://github.com/piers-sinclair/Dostar/commit/583a80846e094b95b09b61ec1b745f8903eddca5))
+* **frontend:** revert eslint-react and @types/node to pass supply-chain age policy ([#302](https://github.com/piers-sinclair/Dostar/issues/302)) ([e210214](https://github.com/piers-sinclair/Dostar/commit/e21021452a3f9fdad48470a68d0fb8bb14da4589))
+* **infra:** fix availability web test null reference error ([#295](https://github.com/piers-sinclair/Dostar/issues/295)) ([a0b401a](https://github.com/piers-sinclair/Dostar/commit/a0b401ac35c721f93a43eea2732ae6d8db3e7809))
+* **infra:** register Microsoft.AlertsManagement provider before deployment ([#308](https://github.com/piers-sinclair/Dostar/issues/308)) ([23f8760](https://github.com/piers-sinclair/Dostar/commit/23f87603b521aa1d71ed4c1eb320ff0d377ddac6))
+* **infra:** remove availability test — unreliable across Azure regions ([#316](https://github.com/piers-sinclair/Dostar/issues/316)) ([faa3636](https://github.com/piers-sinclair/Dostar/commit/faa3636bd67f771e26c41265b375e8d38c08e1a2))
+* **infra:** scope scheduled query alert rules to Log Analytics workspace ([#292](https://github.com/piers-sinclair/Dostar/issues/292)) ([486aa30](https://github.com/piers-sinclair/Dostar/commit/486aa30e199908f2c6a6673ab89b2e04aedf9da0))
+* **infra:** use 2018-05-01-preview API version for webtests resource ([#314](https://github.com/piers-sinclair/Dostar/issues/314)) ([4b00de2](https://github.com/piers-sinclair/Dostar/commit/4b00de25170da83a086006241ad2ec990b3ba6ec))
+
+
+### Documentation
+
+* add GitHub repo setup + deploy steps to README quick start ([#296](https://github.com/piers-sinclair/Dostar/issues/296)) ([f4df3d3](https://github.com/piers-sinclair/Dostar/commit/f4df3d3578b48107bc4b9f23a9e67ff2cd38ba00)), closes [#293](https://github.com/piers-sinclair/Dostar/issues/293)
+* fix F5/run:dev experience and add migration pre-launch step ([#310](https://github.com/piers-sinclair/Dostar/issues/310)) ([073d9e7](https://github.com/piers-sinclair/Dostar/commit/073d9e76d79cfa7848144a738d5dddd55e391009))
+* review and streamline all markdown for a grad engineer audience ([#328](https://github.com/piers-sinclair/Dostar/issues/328)) ([dcdfe21](https://github.com/piers-sinclair/Dostar/commit/dcdfe21cd0db5af17270f7d42b9611078b4269ac))
+
 ## [0.3.0](https://github.com/piers-sinclair/Dostar/compare/v0.2.1...v0.3.0) (2026-06-11)
 
 
