@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-az bicep install
+az bicep install || true
 dotnet tool install -g dotnet-ef || true
-npm install -g @anthropic-ai/claude-code
+npm install -g @anthropic-ai/claude-code || true
 dotnet restore
-sudo chown vscode:vscode frontend/node_modules
-sudo chown -R vscode:vscode /home/vscode/.claude
-ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json
+sudo chown vscode:vscode frontend/node_modules || true
+sudo chown -R vscode:vscode /home/vscode/.claude || true
+ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json || true
 cd frontend && pnpm install
 cd ..
-ln -sf "$(pwd)/frontend/node_modules/.bin/lefthook" /usr/local/bin/lefthook
+ln -sf "$(pwd)/frontend/node_modules/.bin/lefthook" /usr/local/bin/lefthook || true
 bash .devcontainer/shell-profile.sh
