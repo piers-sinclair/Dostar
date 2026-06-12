@@ -3,13 +3,32 @@ name: Testing — UI
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "frontend/**"
-      - "tests/Dostar.UITests/**"
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check UI paths
+        id: filter
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -qE '^(frontend/|tests/Dostar\.UITests/)'; then
+            echo "ui=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ui=false" >> "$GITHUB_OUTPUT"
+          fi
+
   ui:
-    name: Playwright
+    name: Playwright (run)
+    needs: changes
+    if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -80,3 +99,23 @@ jobs:
           name: playwright-report
           path: tests/Dostar.UITests/playwright-report/
           retention-days: 7
+
+  ui-checks:
+    name: Playwright
+    needs: [changes, ui]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          UI_RESULT: ${{ needs.ui.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" == "failure" || "$CHANGES_RESULT" == "cancelled" ]]; then
+            echo "::error::Path detection failed ($CHANGES_RESULT)"
+            exit 1
+          fi
+          if [[ "$UI_RESULT" == "failure" || "$UI_RESULT" == "cancelled" ]]; then
+            echo "::error::Playwright tests failed ($UI_RESULT)"
+            exit 1
+          fi

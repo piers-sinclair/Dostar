@@ -8,6 +8,8 @@
     <AnalysisLevel>latest-Recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <UserSecretsId>efc39319-3c9a-434e-bf6c-cf3ddee1962a</UserSecretsId>
+    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildProjectDirectory)/..</OpenApiDocumentsDirectory>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +19,10 @@
 
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Http" Version="8.1.1" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
