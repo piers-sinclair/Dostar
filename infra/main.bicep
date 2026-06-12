@@ -149,7 +149,10 @@ module containerapp 'modules/containerapp.bicep' = {
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
     logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
     appInsightsConnectionString: appinsights.outputs.connectionString
-    postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
+    // Unversioned URI — stable across deploys even when new secret versions are created in Key Vault.
+    // The Container App reads the latest version at runtime via its managed identity.
+    postgresConnectionStringSecretUri: '${keyvault.outputs.keyVaultUri}secrets/postgres-connection-string'
+    keyVaultName: keyvault.outputs.keyVaultName
     frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
     containerCpu: containerCpu
     containerMemory: containerMemory
