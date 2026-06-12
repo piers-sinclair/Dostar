@@ -19,7 +19,7 @@ jobs:
         id: filter
         run: |
           if git diff --name-only origin/${{ github.base_ref }}...HEAD \
-              | grep -qE '^frontend/'; then
+              | grep -qE '^frontend/|^backend/Dostar\.Api\.json'; then
             echo "frontend=true" >> "$GITHUB_OUTPUT"
           else
             echo "frontend=false" >> "$GITHUB_OUTPUT"
