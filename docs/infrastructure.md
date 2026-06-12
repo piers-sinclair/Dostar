@@ -293,6 +293,93 @@ highAvailability: {
 
 ---
 
+## Observability
+
+### Application Insights and Log Analytics
+
+Application Insights and a Log Analytics Workspace are provisioned by `infra/modules/appinsights.bicep` in every environment. The backend receives the connection string via the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable; when the variable is absent (local dev), all telemetry is silently no-op.
+
+The workbook dashboard at **Application Insights → Workbooks → API Observability** charts request rate, error rate, P95/P99 latency, and database query duration.
+
+Smart Detection (anomaly-based failure detection) is enabled automatically by Application Insights at no extra cost and requires no configuration.
+
+---
+
+### Health check endpoints
+
+The API exposes two health endpoints, both handled by ASP.NET Core's built-in health check middleware:
+
+| Endpoint | Purpose | What runs |
+| -------- | ------- | --------- |
+| `GET /healthz/live` | Liveness — is the process up? | No checks (always 200 if the app is running) |
+| `GET /healthz/ready` | Readiness — is the app ready for traffic? | All registered `IHealthCheck` implementations |
+
+Azure Container Apps is configured with startup, liveness, and readiness probes pointing at these endpoints (`infra/modules/containerapp.bicep`):
+
+| Probe | Path | Period | Failure threshold | Effect on breach |
+| ----- | ---- | ------ | ----------------- | ---------------- |
+| Startup | `/healthz/live` | 10s | 18 (= 180s max) | Prevents liveness/readiness probes from running during startup |
+| Liveness | `/healthz/live` | 30s | 3 (= 90s) | Container is restarted |
+| Readiness | `/healthz/ready` | 10s | 3 (= 30s) | Replica removed from load balancer until healthy |
+
+A liveness probe failure (container restart) triggers the **[P1] Container Restart** alert within 5 minutes.
+
+---
+
+### Alerts
+
+All alerts are scoped to **prod only** — dev uses scale-to-zero and is not customer-facing, so alert noise outweighs the signal. Alerts are provisioned by `infra/modules/alerting.bicep`.
+
+| Alert | Mechanism | Condition | Severity | Action |
+| ----- | --------- | --------- | -------- | ------ |
+| [P1] High Error Rate | Scheduled query rule (KQL) | Error rate > 10% over 5 min | Critical (0) | Email action group |
+| [P1] High P99 Latency | Scheduled query rule (KQL) | P99 > 2000ms over 5 min | Critical (0) | Email action group |
+| [P1] Database Connectivity Failure | Scheduled query rule (KQL) | Any failed PostgreSQL dependency in 5 min | Critical (0) | Email action group |
+| [P1] Container Restart | Metric alert (native ACA metric) | RestartCount > 0 over 5 min | Critical (0) | Email action group |
+
+Metric alerts (container restart) use `Microsoft.Insights/metricAlerts` — they are lower-latency and simpler than KQL-based `scheduledQueryRules`. KQL rules are used only where no equivalent native metric exists (error rate ratio, P99 percentile, DB dependency filter).
+
+To enable alerting, set the `ALERT_EMAIL_ADDRESS` environment variable in your CI workflow (comma or semicolon-separated for multiple addresses). Leaving it empty skips all alert resources.
+
+#### CPU and memory alerts
+
+CPU and memory metric thresholds depend on the container allocation (`containerCpu` / `containerMemory`) and vary between deployments. Recommended approach: after your first prod deployment, create metric alerts in the Azure Portal targeting `CpuUsageNanoCores` and `MemoryWorkingSetBytes` on the Container App, set to 80% of your allocated values. These are straightforward to add in `infra/modules/alerting.bicep` once you have settled on a fixed resource allocation.
+
+---
+
+### Uptime monitoring
+
+External availability testing (pinging the API from outside Azure) is not provisioned by Bicep. The previous Application Insights multi-region webtest was removed because it generated false positives from distant Azure test nodes.
+
+For external uptime monitoring, [UptimeRobot](https://uptimerobot.com/) (free tier) is a reliable alternative — configure an HTTP monitor against `https://<your-container-app-fqdn>/healthz/live` with a 5-minute check interval.
+
+---
+
+### Alert runbook
+
+**[P1] High Error Rate**
+1. Check `AppRequests | where Success == false` in Log Analytics — identify which endpoints are failing and at what rate.
+2. Check recent deployments — roll back if a new image was pushed recently.
+3. Check `AppExceptions` for stack traces.
+
+**[P1] High P99 Latency**
+1. Check `AppRequests | summarize percentile(DurationMs, 99) by Name` — identify slow endpoints.
+2. Check `AppDependencies | where Type =~ "postgresql"` for slow queries.
+3. Check PostgreSQL metrics in Azure Portal for CPU or I/O saturation.
+
+**[P1] Database Connectivity Failure**
+1. Open the PostgreSQL Flexible Server in Azure Portal — check server status and recent metrics.
+2. Verify the connection string secret in Key Vault (`prod--postgres--connection-string`) is correct and the Key Vault firewall allows the Container App's managed identity.
+3. Check `AppDependencies | where Success == false` for exception details.
+
+**[P1] Container Restart**
+1. Open the Container App in Azure Portal → **Revision management** → click the active revision → **Console logs**.
+2. Look for OOM kills (`exit code 137`) or application panics.
+3. Check recent image pushes — a bad deploy that crashes on startup will produce restart loops.
+4. If restarts are ongoing, scale to zero and back (`az containerapp update --min-replicas 0`, then restore).
+
+---
+
 ## Validating the template
 
 Use `what-if` to confirm what a deployment would create or change, without actually deploying anything. This is the recommended way to validate Bicep changes before merging a PR.
