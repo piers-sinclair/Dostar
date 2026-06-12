@@ -97,6 +97,18 @@ Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the termina
 | `build: solution` | Builds the entire .NET solution. This is the default build task (`Ctrl+Shift+B`). | `dotnet build` |
 | `build: <ProjectName>.Api` | Builds only the API project. Used internally by `launch: prepare`. | `dotnet build backend/<ProjectName>.Api/<ProjectName>.Api.csproj` |
 
+## Regenerating API types
+
+The frontend API client (`frontend/src/api/generated/index.ts`) and the OpenAPI spec (`backend/Dostar.Api.json`) are committed to the repo. Run the convenience script after any backend API change — new endpoint, renamed field, changed request or response shape — to keep them in sync before pushing:
+
+```bash
+bash tools/generate-api.sh
+```
+
+The script builds the backend (which regenerates `backend/Dostar.Api.json` as a side effect), then runs `pnpm generate:api` in the frontend to regenerate the TypeScript client from the updated spec. Commit both files together with your backend change.
+
+CI validates that the committed artefacts match the source — skipping this step will cause a CI failure.
+
 ## F5 launch configurations
 
 Configurations are in `.vscode/launch.json` and selected from the **Run and Debug** panel (`Ctrl+Shift+D`). Both run migrations before starting — no separate migration step needed.
