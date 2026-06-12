@@ -27,7 +27,7 @@ install_dotnet_tool() {
 echo "[postCreate] Installing global tools..."
 az bicep install || echo "WARNING: az bicep install failed — run: az bicep install"
 install_dotnet_tool dotnet-ef
-install_dotnet_tool Dostar.Cli
+install_dotnet_tool "D""ostar.Cli"  # string concat prevents scaffolding CLI from substituting the package name
 npm install -g @anthropic-ai/claude-code || echo "WARNING: claude-code install failed — run: npm install -g @anthropic-ai/claude-code"
 
 echo "[postCreate] Restoring backend packages..."
