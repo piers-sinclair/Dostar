@@ -87,8 +87,7 @@ jobs:
             --name dostar-${{ inputs.environment || 'dev' }} \
             --location australiaeast \
             --template-file infra/main.bicep \
-            "${PARAMS[@]}" \
-            --only-show-errors
+            "${PARAMS[@]}"
 
       - name: Get environment URLs
         id: get-urls
