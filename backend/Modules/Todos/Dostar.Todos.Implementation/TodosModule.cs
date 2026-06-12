@@ -6,7 +6,6 @@ public class TodosModule : IEndpointModule
     private const string ConnectionStringName = "Default";
     private const string HealthCheckName = "todos-db";
     private const string RoutePrefix = "/todos";
-    private const string ResourceRoute = "/api/v1/todos";
     private const string RootRoute = "/";
     private const string IdRoute = "/{id:guid}";
     private const string GetTodosOperationId = "GetTodos";
@@ -45,10 +44,11 @@ public class TodosModule : IEndpointModule
           .Produces(StatusCodes.Status404NotFound)
           .WithName(GetTodoOperationId);
 
-        group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service, CancellationToken ct) =>
+        group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service, LinkGenerator links, HttpContext ctx, CancellationToken ct) =>
         {
             var todo = await service.CreateAsync(request.Title, ct);
-            return Results.Created($"{ResourceRoute}/{todo.Id}", todo);
+            var uri = links.GetUriByName(ctx, GetTodoOperationId, new { id = todo.Id });
+            return Results.Created(uri, todo);
         }).Produces<TodoDto>(StatusCodes.Status201Created)
           .AddEndpointFilter<ValidationFilter<CreateTodoRequest>>()
           .RequireRateLimiting(RateLimitPolicy.Strict)
@@ -56,7 +56,7 @@ public class TodosModule : IEndpointModule
 
         group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service, CancellationToken ct) =>
         {
-            var todo = await service.UpdateAsync(id, request.Title, request.IsComplete, ct);
+            var todo = await service.UpdateAsync(id, request.Title, request.IsCompleted, ct);
             return todo is null ? Results.NotFound() : Results.Ok(todo);
         }).Produces<TodoDto>()
           .Produces(StatusCodes.Status404NotFound)

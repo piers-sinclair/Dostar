@@ -7,7 +7,6 @@ using Dostar.Api.HealthChecks;
 using Dostar.Api.Middleware;
 using Dostar.SharedKernel;
 using Dostar.Todos.Implementation;
-using Dostar.Todos.Implementation.Infrastructure;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;

@@ -1,6 +1,5 @@
 namespace Dostar.Todos.Implementation.Application;
 
-[ExcludeFromCodeCoverage]
 public class CreateTodoRequestValidator : AbstractValidator<CreateTodoRequest>
 {
     public CreateTodoRequestValidator()

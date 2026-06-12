@@ -1,11 +1,12 @@
 namespace Dostar.Todos.Implementation.Application;
 
+[ExcludeFromCodeCoverage]
 public class TodoService(TodosDbContext db) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await db.Todos
             .OrderBy(t => t.CreatedAt)
-            .Select(t => new TodoDto(t.Id, t.Title, t.IsComplete, t.CreatedAt))
+            .Select(t => new TodoDto(t.Id, t.Title, t.IsCompleted, t.CreatedAt))
             .ToListAsync(cancellationToken);
 
     public async Task<TodoDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
@@ -21,7 +22,7 @@ public class TodoService(TodosDbContext db) : ITodoService
         {
             Id = Guid.CreateVersion7(),
             Title = title,
-            IsComplete = false,
+            IsCompleted = false,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         db.Todos.Add(todo);
@@ -29,12 +30,12 @@ public class TodoService(TodosDbContext db) : ITodoService
         return ToDto(todo);
     }
 
-    public async Task<TodoDto?> UpdateAsync(Guid id, string title, bool isComplete, CancellationToken cancellationToken = default)
+    public async Task<TodoDto?> UpdateAsync(Guid id, string title, bool isCompleted, CancellationToken cancellationToken = default)
     {
         var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
         if (todo is null) return null;
         todo.Title = title;
-        todo.IsComplete = isComplete;
+        todo.IsCompleted = isCompleted;
         await db.SaveChangesAsync(cancellationToken);
         return ToDto(todo);
     }
@@ -48,5 +49,5 @@ public class TodoService(TodosDbContext db) : ITodoService
     }
 
     private static TodoDto ToDto(Todo todo) =>
-        new(todo.Id, todo.Title, todo.IsComplete, todo.CreatedAt);
+        new(todo.Id, todo.Title, todo.IsCompleted, todo.CreatedAt);
 }

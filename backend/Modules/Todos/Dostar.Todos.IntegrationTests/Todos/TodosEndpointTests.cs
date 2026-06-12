@@ -70,7 +70,7 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
 
         var response = await _client.PutAsJsonAsync(
             $"{TodosUrl}/{created.Id}",
-            new { title = "Updated title", isComplete = true });
+            new { title = "Updated title", isCompleted = true });
 
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var todo = await response.Content.ReadFromJsonAsync<TodoDto>(JsonOptions);
@@ -84,7 +84,7 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
     {
         var response = await _client.PutAsJsonAsync(
             $"{TodosUrl}/{Guid.NewGuid()}",
-            new { title = "Some title", isComplete = false });
+            new { title = "Some title", isCompleted = false });
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }

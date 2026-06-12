@@ -7,7 +7,10 @@ public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContex
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Todo>()
-            .ToTable(t => t.HasCheckConstraint("CK_Todos_Title_NotEmpty", "\"Title\" <> ''"));
+        modelBuilder.Entity<Todo>(entity =>
+        {
+            entity.ToTable(t => t.HasCheckConstraint("CK_Todos_Title_NotEmpty", "\"Title\" <> ''"));
+            entity.Property(t => t.IsCompleted).HasColumnName("IsComplete");
+        });
     }
 }
