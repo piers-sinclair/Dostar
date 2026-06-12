@@ -64,6 +64,26 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Cancel any active deployment
+        run: |
+          STATUS=$(az deployment sub show \
+            --name dostar-${{ inputs.environment || 'dev' }} \
+            --query 'properties.provisioningState' -o tsv 2>/dev/null || echo "NotFound")
+          if [ "$STATUS" = "Running" ] || [ "$STATUS" = "Accepted" ]; then
+            echo "Canceling active deployment (state: $STATUS)..."
+            az deployment sub cancel --name dostar-${{ inputs.environment || 'dev' }}
+            for i in $(seq 1 12); do
+              STATUS=$(az deployment sub show \
+                --name dostar-${{ inputs.environment || 'dev' }} \
+                --query 'properties.provisioningState' -o tsv 2>/dev/null)
+              echo "[$i/12] $STATUS"
+              [ "$STATUS" = "Canceled" ] || [ "$STATUS" = "Failed" ] && break
+              sleep 10
+            done
+          else
+            echo "No active deployment (state: $STATUS) — proceeding"
+          fi
+
       - name: Get current container image
         id: current-image
         run: |
