@@ -111,7 +111,6 @@ jobs:
           action: upload
           app_location: frontend/dist
           skip_app_build: true
-          skip_api_build: true
 
       - name: Get Static Web App URL
         id: get-url
