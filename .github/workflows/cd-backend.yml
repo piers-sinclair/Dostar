@@ -253,8 +253,8 @@ jobs:
         run: |
           FQDN="${{ steps.get-url.outputs.fqdn }}"
           for i in {1..20}; do
-            LIVE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/live")
-            READY=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/ready")
+            LIVE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/live" || echo "000")
+            READY=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/ready" || echo "000")
             if [ "$LIVE" = "200" ] && [ "$READY" = "200" ]; then
               echo "Smoke tests passed (/healthz/live=$LIVE, /healthz/ready=$READY)"
               exit 0
