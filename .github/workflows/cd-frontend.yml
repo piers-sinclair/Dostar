@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment || 'dev' }}
-      url: ${{ steps.print-urls.outputs.url }}
+      url: ${{ steps.get-url.outputs.url }}
 
     steps:
       - name: Checkout
@@ -113,14 +113,35 @@ jobs:
           skip_app_build: true
           skip_api_build: true
 
-      - name: Print environment URLs
-        id: print-urls
+      - name: Get Static Web App URL
+        id: get-url
         run: |
           HOSTNAME=$(az staticwebapp show \
             --name "stapp-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
             --resource-group "rg-dostar-${{ inputs.environment || 'dev' }}-aue-001" \
             --query defaultHostname -o tsv)
+          echo "hostname=$HOSTNAME" >> "$GITHUB_OUTPUT"
           echo "url=https://$HOSTNAME" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test
+        run: |
+          URL="${{ steps.get-url.outputs.url }}"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "Smoke test passed (status $STATUS)"
+              exit 0
+            fi
+            echo "Attempt $i: status $STATUS — retrying in 15s"
+            sleep 15
+          done
+          echo "::error::Smoke test failed after 10 attempts"
+          exit 1
+
+      - name: Print environment URLs
+        if: success()
+        run: |
+          HOSTNAME="${{ steps.get-url.outputs.hostname }}"
           {
             echo "## Frontend deployed"
             echo ""
