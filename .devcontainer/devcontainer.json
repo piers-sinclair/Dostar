@@ -24,7 +24,8 @@
   },
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
-  "postStartCommand": "docker compose up -d; NETWORK=$(basename \"$(pwd)\" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')_default; for i in 1 2 3 4 5; do docker network connect \"$NETWORK\" $(cat /etc/hostname) 2>/dev/null && break; sleep 2; done; true",
+  "postStartCommand": "bash .devcontainer/postStart.sh",
+  "postAttachCommand": "bash .devcontainer/postAttach.sh",
   "forwardPorts": [
     5000,
     5173,

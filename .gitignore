@@ -78,6 +78,9 @@ infra/**/*.json
 .claude/worktrees/
 .claude/settings.local.json
 
+# Devcontainer setup log (runtime artifact)
+.devcontainer/postCreate.log
+
 # Editor / OS
 .idea/
 .DS_Store
