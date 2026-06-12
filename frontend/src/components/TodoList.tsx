@@ -1,6 +1,5 @@
 import { useState, type JSX } from 'react';
 
-const Key = { Enter: 'Enter', Escape: 'Escape' } as const;
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,8 @@ import { getApiError } from '@/lib/getApiError';
 import { useDeleteTodo, useTodos, useUpdateTodo } from '@/hooks/useTodos';
 import { cn } from '@/lib/utils';
 import { CreateTodoForm } from './CreateTodoForm';
+
+const Key = { Enter: 'Enter', Escape: 'Escape' } as const;
 
 export function TodoList(): JSX.Element {
     const [editingId, setEditingId] = useState<string | null>(null);

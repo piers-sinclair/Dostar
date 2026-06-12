@@ -73,7 +73,8 @@ test.beforeEach(async ({ page }) => {
 
 test("displays the page heading and todo list card", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Dostar" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Todos" })).toBeVisible();
+    // CardTitle renders as a <div>, not a heading element
+    await expect(page.getByText("Todos")).toBeVisible();
 });
 
 test("renders existing todos from the API", async ({ page }) => {
@@ -127,7 +128,8 @@ test("toggles todo completion via checkbox", async ({ page }) => {
 test("edits a todo title inline", async ({ page }) => {
     await page.getByRole("button", { name: 'Edit "Buy milk"' }).click();
 
-    const input = page.getByDisplayValue("Buy milk");
+    // The inline edit input has no placeholder; the create-form input has "What needs doing?"
+    const input = page.locator('input:not([placeholder])');
     await input.clear();
     await input.fill("Buy oat milk");
     await input.press("Enter");
@@ -140,7 +142,7 @@ test("edits a todo title inline", async ({ page }) => {
 test("cancels edit on Escape without saving", async ({ page }) => {
     await page.getByRole("button", { name: 'Edit "Buy milk"' }).click();
 
-    const input = page.getByDisplayValue("Buy milk");
+    const input = page.locator('input:not([placeholder])');
     await input.fill("something else");
     await input.press("Escape");
 

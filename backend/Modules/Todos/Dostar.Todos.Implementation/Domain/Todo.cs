@@ -1,5 +1,6 @@
 namespace Dostar.Todos.Implementation.Domain;
 
+[ExcludeFromCodeCoverage]
 internal sealed class Todo
 {
     public Guid Id { get; set; }

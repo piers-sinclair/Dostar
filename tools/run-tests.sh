@@ -46,10 +46,16 @@ exit_code=0
 for dll in "${dlls[@]}"; do
   dll_name=$(basename "$dll" .dll)
   project_dir="${dll%%/bin/Release/*}"
-  # e.g. Dostar.Todos.UnitTests -> Dostar.Todos  -> [Dostar.Todos*]*
+  # e.g. Dostar.Todos.UnitTests -> Dostar.Todos  -> [Dostar.Todos.Implementation]*
   # e.g. Dostar.SharedKernel.UnitTests -> Dostar.SharedKernel -> [Dostar.SharedKernel*]*
   module_prefix="${dll_name%.${suffix}}"
-  include="[${module_prefix}*]*"
+  # Unit tests scope to Implementation only — Contracts (interfaces/DTOs) have no testable logic.
+  # Integration tests scope broadly to measure the full stack.
+  if [[ "$type" == "unit" ]]; then
+    include="[${module_prefix}.Implementation]*"
+  else
+    include="[${module_prefix}*]*"
+  fi
   output="${results_dir}/${dll_name}/coverage.cobertura.xml"
 
   echo ""
