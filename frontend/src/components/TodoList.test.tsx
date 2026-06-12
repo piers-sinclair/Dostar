@@ -43,8 +43,7 @@ describe('TodoList', () => {
     it('removes a todo from the list after a successful delete', async () => {
         const user = userEvent.setup();
         let deleted = false;
-        // Stateful handler: GET returns reduced list once DELETE has been called,
-        // so the post-delete refetch doesn't restore the item.
+        
         server.use(
             http.get(TODOS_URL, () =>
                 HttpResponse.json(deleted ? [defaultTodos[1]] : defaultTodos)
