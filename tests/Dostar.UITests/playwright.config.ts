@@ -27,6 +27,6 @@ export default defineConfig({
         command: 'pnpm dev --port 5173',
         url: baseURL,
         cwd: '../../frontend',
-        reuseExistingServer: !isCI,
+        reuseExistingServer: true,
     },
 });

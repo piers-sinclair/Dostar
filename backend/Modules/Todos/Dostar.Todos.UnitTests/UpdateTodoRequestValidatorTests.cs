@@ -18,7 +18,7 @@ public class UpdateTodoRequestValidatorTests
     [Fact]
     public async Task Validate_WhenTitleIsEmpty_ReturnsInvalid()
     {
-        var request = new UpdateTodoRequest(string.Empty, false);
+        var request = _fixture.Build<UpdateTodoRequest>().With(x => x.Title, string.Empty).Create();
 
         var result = await _sut.ValidateAsync(request);
 
@@ -29,7 +29,7 @@ public class UpdateTodoRequestValidatorTests
     [Fact]
     public async Task Validate_WhenTitleExceedsMaxLength_ReturnsInvalid()
     {
-        var request = new UpdateTodoRequest(new string('a', 201), false);
+        var request = _fixture.Build<UpdateTodoRequest>().With(x => x.Title, new string('a', 201)).Create();
 
         var result = await _sut.ValidateAsync(request);
 
@@ -40,7 +40,7 @@ public class UpdateTodoRequestValidatorTests
     [Fact]
     public async Task Validate_WhenTitleIsExactlyMaxLength_ReturnsValid()
     {
-        var request = new UpdateTodoRequest(new string('a', 200), true);
+        var request = _fixture.Build<UpdateTodoRequest>().With(x => x.Title, new string('a', 200)).Create();
 
         var result = await _sut.ValidateAsync(request);
 

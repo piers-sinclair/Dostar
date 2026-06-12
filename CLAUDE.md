@@ -23,6 +23,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | AI dev tooling | Claude Code skills in `.claude/commands/` |
 | Auth | None in template |
 | Test assertions | **Shouldly** — never FluentAssertions |
+| Test data (unit) | **AutoFixture** — `_fixture.Create<T>()` for valid objects, `Build<T>().With(...)` for boundary cases |
 | Validation | **FluentValidation** via `ValidationFilter<T>` in SharedKernel |
 | Observability | **Azure.Monitor.OpenTelemetry.AspNetCore** + **Npgsql.OpenTelemetry** — no-op locally when `APPLICATIONINSIGHTS_CONNECTION_STRING` is unset |
 
@@ -104,22 +105,39 @@ See `docs/module-pattern.md` for the full guide.
 
 See [README.md](README.md) for how to run tests.
 
-Libraries: **xUnit** + **Shouldly** + **NSubstitute** (unit), **Testcontainers** (integration),
+Libraries: **xUnit** + **Shouldly** + **AutoFixture** + **NSubstitute** (unit), **Testcontainers** (integration),
 **Playwright TypeScript** (UI tests).
+
+### Test pyramid
+
+| Layer | Scope | Libraries | Coverage gate |
+|-------|-------|-----------|---------------|
+| Unit | Pure logic — validators, domain rules — no I/O | xUnit + AutoFixture + NSubstitute + Shouldly | None (logic is narrow) |
+| Integration | Full HTTP stack + real PostgreSQL via Testcontainers | xUnit + WebApplicationFactory + Testcontainers + Shouldly | 80% line coverage |
+| UI | Browser behaviour against mocked API (`page.route()`) | Playwright TypeScript | None |
 
 ### Unit test conventions
 
 **Project location**: `backend/Modules/<Module>/Dostar.<Module>.UnitTests/` — colocated with the module, referencing `.Implementation` directly. All four module projects travel together to support microservice extraction.
 
 **Method naming**: `Method_Scenario_ExpectedBehaviour`
-- `GetAllAsync_WhenEmpty_ReturnsEmptyList`
-- `DeleteAsync_WhenNotFound_ReturnsFalse`
+- `Validate_WhenTitleIsEmpty_ReturnsInvalid`
+- `Validate_WhenTitleIsExactlyMaxLength_ReturnsValid`
 
 **Assertions**: always use **Shouldly** (`result.ShouldBe(...)`, `result.ShouldBeNull()`, etc.) — never `Assert.*` or FluentAssertions.
 
-**Dependencies**:
-- EF Core `DbContext` → use **Testcontainers PostgreSQL** (`Testcontainers.PostgreSql`). Declare a `PostgresContainerFixture : IAsyncLifetime` that starts the container and runs migrations once, shared across all tests via `IClassFixture<PostgresContainerFixture>`. Each test class also implements `IAsyncLifetime` — `InitializeAsync` opens a fresh `DbContext`, `DisposeAsync` deletes all rows and disposes the context so each test starts with an empty table.
-- Other dependencies → use NSubstitute (`Substitute.For<T>()`).
+**Test data**: use **AutoFixture** (`Fixture`) for generating valid objects; use `Build<T>().With(x => x.Prop, value).Create()` to pin specific properties for boundary/invalid cases:
+```csharp
+private readonly Fixture _fixture = new();
+
+// Valid random object
+var request = _fixture.Create<CreateTodoRequest>();
+
+// Pin a boundary value; AutoFixture fills the rest
+var request = _fixture.Build<CreateTodoRequest>().With(x => x.Title, new string('a', 200)).Create();
+```
+
+**Dependencies**: use NSubstitute (`Substitute.For<T>()`) for interfaces. Unit tests must not touch the database or any I/O — move those tests to integration tests.
 
 Each test must be fully self-contained — no shared mutable state between tests.
 

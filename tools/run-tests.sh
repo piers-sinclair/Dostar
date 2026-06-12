@@ -6,6 +6,8 @@
 #   - Runs coverlet wrapping dotnet test
 #   - Scopes coverage to the module's assemblies only
 #   - Enforces 80% line coverage threshold
+#   - Service layer and infrastructure classes carry [ExcludeFromCodeCoverage] so unit tests
+#     only measure pure logic (validators, domain rules); integration tests measure full stack
 #
 # Exits non-zero if any project fails its tests or threshold.
 

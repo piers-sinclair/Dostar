@@ -1,5 +1,6 @@
 namespace Dostar.Todos.Implementation.Application;
 
+[ExcludeFromCodeCoverage]
 public class TodoService(TodosDbContext db) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
