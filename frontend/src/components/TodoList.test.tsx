@@ -43,7 +43,7 @@ describe('TodoList', () => {
     it('removes a todo from the list after a successful delete', async () => {
         const user = userEvent.setup();
         let deleted = false;
-        
+
         server.use(
             http.get(TODOS_URL, () =>
                 HttpResponse.json(deleted ? [defaultTodos[1]] : defaultTodos)
