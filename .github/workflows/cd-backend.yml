@@ -253,12 +253,13 @@ jobs:
         run: |
           FQDN="${{ steps.get-url.outputs.fqdn }}"
           for i in {1..10}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
-            if [ "$STATUS" = "200" ]; then
-              echo "Smoke test passed"
+            LIVE=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/live")
+            READY=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/healthz/ready")
+            if [ "$LIVE" = "200" ] && [ "$READY" = "200" ]; then
+              echo "Smoke tests passed (/healthz/live=$LIVE, /healthz/ready=$READY)"
               exit 0
             fi
-            echo "Attempt $i: status $STATUS — retrying in 15s"
+            echo "Attempt $i: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
             sleep 15
           done
           echo "::error::Smoke test failed after 10 attempts"
