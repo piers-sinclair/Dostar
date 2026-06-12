@@ -102,26 +102,6 @@ jobs:
           echo "backend_fqdn=$BACKEND_FQDN" >> "$GITHUB_OUTPUT"
           echo "frontend_hostname=$FRONTEND_HOSTNAME" >> "$GITHUB_OUTPUT"
 
-      - name: Smoke test
-        # Skip when called from infra-spinup: the real backend image has not been deployed yet
-        # at this point in the chain, so the Container App is still on the placeholder image which
-        # has no /healthz endpoints. cd-backend.yml runs its own smoke test after the real image is live.
-        if: github.event_name != 'workflow_call'
-        run: |
-          FQDN="${{ steps.get-urls.outputs.backend_fqdn }}"
-          for i in {1..20}; do
-            LIVE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/live" || echo "000")
-            READY=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 --connect-timeout 5 "https://$FQDN/healthz/ready" || echo "000")
-            if [ "$LIVE" = "200" ] && [ "$READY" = "200" ]; then
-              echo "Smoke tests passed (/healthz/live=$LIVE, /healthz/ready=$READY)"
-              exit 0
-            fi
-            echo "Attempt $i/20: /healthz/live=$LIVE, /healthz/ready=$READY — retrying in 15s"
-            sleep 15
-          done
-          echo "::error::Smoke test failed after 20 attempts"
-          exit 1
-
       - name: Print environment URLs
         if: success()
         run: |
