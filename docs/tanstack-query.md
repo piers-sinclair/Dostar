@@ -46,7 +46,7 @@ const message = useApiError(error); // string | null
 
 ## Types
 
-Shared API types live in `src/types/api.ts` — `Todo`, `CreateTodoRequest`, `ProblemDetails`.
+Shared API types live in `src/shared/types/api.ts` — `Todo`, `CreateTodoRequest`, `ProblemDetails`.
 
 ## Cache invalidation
 

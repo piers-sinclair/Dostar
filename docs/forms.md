@@ -26,7 +26,7 @@ The backend returns RFC 9457 `ProblemDetails` with field errors under `errors`:
 { "errors": { "Title": ["Title is required."] } }
 ```
 
-`src/lib/mapProblemDetailsErrors.ts` maps these to React Hook Form's `setError`:
+`src/shared/lib/mapProblemDetailsErrors.ts` maps these to React Hook Form's `setError`:
 
 ```ts
 try {

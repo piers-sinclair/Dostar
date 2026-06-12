@@ -6,11 +6,11 @@ export default defineConfig({
             target: '../backend/Dostar.Api.json',
         },
         output: {
-            target: 'src/api/generated/index.ts',
+            target: 'src/shared/api/generated/index.ts',
             client: 'react-query',
             override: {
                 mutator: {
-                    path: 'src/api/client.ts',
+                    path: 'src/shared/api/client.ts',
                     name: 'apiClient',
                 },
             },

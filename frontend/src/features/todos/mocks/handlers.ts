@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import type { TodoDto } from '@/api/generated';
+import type { TodoDto } from '@/shared/api/generated';
 
 const BASE = 'http://localhost';
 export const TODOS_URL = `${BASE}/api/v1/todos`;

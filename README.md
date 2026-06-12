@@ -147,11 +147,11 @@ Tasks run via `Ctrl+Shift+P` → **Tasks: Run Task**, or directly in the termina
 
 ## Regenerating API types
 
-The OpenAPI spec (`backend/Dostar.Api.json`) and the frontend API client (`frontend/src/api/generated/index.ts`) are committed to the repo. After any backend API change — new endpoint, renamed field, changed request or response shape — regenerate both before pushing:
+The OpenAPI spec (`backend/Dostar.Api.json`) and the frontend API client (`frontend/src/shared/api/generated/index.ts`) are committed to the repo. After any backend API change — new endpoint, renamed field, changed request or response shape — regenerate both before pushing:
 
 ```bash
 dotnet build backend/Dostar.Api/Dostar.Api.csproj -c Release   # regenerates backend/Dostar.Api.json
-cd frontend && pnpm generate:api                                # regenerates frontend/src/api/generated/index.ts
+cd frontend && pnpm generate:api                                # regenerates frontend/src/shared/api/generated/index.ts
 ```
 
 Commit both files together with your backend change. CI validates that the committed artefacts match the source and will fail if they are out of sync.
@@ -180,6 +180,15 @@ backend/                          ← .NET projects (not src/ — deployment bou
       <ProjectName>.Todos.UnitTests/
       <ProjectName>.Todos.IntegrationTests/
 frontend/                         ← React + Vite; standalone toolchain
+  src/
+    features/                     ← one folder per domain feature (components, hooks, mocks)
+      todos/
+    shared/                       ← cross-feature code (analogous to SharedKernel on the backend)
+      components/ui/              ← shadcn generic components (components.json points here)
+      lib/                        ← utilities: getApiError, mapProblemDetailsErrors, utils
+      api/                        ← API client + orval-generated types (spans all modules)
+      types/                      ← shared TypeScript types
+    test/                         ← test infrastructure (MSW server, Vitest setup, render utils)
 tests/                            ← cross-cutting UI tests (Playwright)
 infra/                            ← Bicep templates
 .claude/commands/                 ← Claude Code skills (slash commands)

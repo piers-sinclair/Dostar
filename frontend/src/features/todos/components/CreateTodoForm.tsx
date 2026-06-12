@@ -2,10 +2,10 @@ import type { JSX } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
 import { useCreateTodo } from '@/features/todos/hooks/useTodos';
-import { mapProblemDetailsErrors } from '@/lib/mapProblemDetailsErrors';
+import { mapProblemDetailsErrors } from '@/shared/lib/mapProblemDetailsErrors';
 
 const schema = z.object({
     title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or fewer'),
