@@ -32,7 +32,22 @@ var otelBuilder = builder.Services.AddOpenTelemetry()
 if (!string.IsNullOrEmpty(builder.Configuration[AppInsightsConnectionStringKey]))
     otelBuilder.UseAzureMonitor();
 
-builder.Services.AddOpenApi(V1DocumentName);
+builder.Services.AddOpenApi(V1DocumentName, options =>
+{
+    options.AddDocumentTransformer((document, _, _) =>
+    {
+        var pathsToFix = document.Paths.Keys
+            .Where(k => k.Contains("{version}"))
+            .ToList();
+        foreach (var path in pathsToFix)
+        {
+            var item = document.Paths[path];
+            document.Paths.Remove(path);
+            document.Paths.Add(path.Replace("{version}", "1"), item);
+        }
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddApiVersioning(options =>

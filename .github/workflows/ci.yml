@@ -41,6 +41,9 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -c Release
 
+      - name: Verify OpenAPI spec is up to date
+        run: git diff --exit-code backend/Dostar.Api.json
+
       - name: Verify formatting
         run: dotnet format --verify-no-changes
 
@@ -90,6 +93,9 @@ jobs:
 
       - name: Prettier
         run: pnpm format:check
+
+      - name: Verify generated API client is up to date
+        run: pnpm generate:api && git diff --exit-code src/api/generated/
 
       - name: Build
         run: pnpm build
