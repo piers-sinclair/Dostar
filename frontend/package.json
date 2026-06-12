@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
-    "prepare": "lefthook install",
+    "prepare": "lefthook install || true",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "generate:api": "orval --config orval.config.ts && prettier --write src/api/generated/"
