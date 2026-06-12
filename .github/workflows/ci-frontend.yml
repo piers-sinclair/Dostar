@@ -57,7 +57,7 @@ jobs:
         run: pnpm format:check
 
       - name: Verify generated API client is up to date
-        run: pnpm generate:api && git diff --exit-code src/api/generated/
+        run: pnpm generate:api && git diff --exit-code src/shared/api/generated/
 
       - name: Build
         run: pnpm build

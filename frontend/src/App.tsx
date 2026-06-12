@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { TodoList } from './components/TodoList';
+import { TodoList } from './features/todos/components/TodoList';
 
 function App(): JSX.Element {
     return (

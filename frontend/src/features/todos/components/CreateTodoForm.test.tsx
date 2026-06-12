@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { server } from '@/test/msw/server';
-import { TODOS_URL } from '@/test/msw/handlers';
+import { TODOS_URL } from '@/features/todos/mocks/handlers';
 import { renderWithProviders } from '@/test/utils';
 import { CreateTodoForm } from './CreateTodoForm';
 

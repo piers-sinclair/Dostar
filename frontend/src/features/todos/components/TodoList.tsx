@@ -1,13 +1,13 @@
 import { useState, type JSX } from 'react';
 
 import { Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { getApiError } from '@/lib/getApiError';
-import { useDeleteTodo, useTodos, useUpdateTodo } from '@/hooks/useTodos';
-import { cn } from '@/lib/utils';
+import { Button } from '@/shared/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Checkbox } from '@/shared/components/ui/checkbox';
+import { Input } from '@/shared/components/ui/input';
+import { getApiError } from '@/shared/lib/getApiError';
+import { useDeleteTodo, useTodos, useUpdateTodo } from '@/features/todos/hooks/useTodos';
+import { cn } from '@/shared/lib/utils';
 import { CreateTodoForm } from './CreateTodoForm';
 
 const Key = { Enter: 'Enter', Escape: 'Escape' } as const;

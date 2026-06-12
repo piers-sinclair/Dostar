@@ -41,6 +41,10 @@ backend/                ← all .NET projects (not src/ — decoupling is explic
       Dostar.Todos.UnitTests/           ← unit tests (Testcontainers + NSubstitute)
       Dostar.Todos.IntegrationTests/    ← integration tests (WebApplicationFactory + Testcontainers)
 frontend/               ← React + Vite; standalone, separate toolchain
+  src/
+    features/         ← one folder per domain feature
+    shared/           ← cross-feature code: components/ui, lib, api, types
+    test/             ← test infrastructure (MSW, Vitest setup)
 tests/                  ← cross-cutting tests only (UI tests, multi-module); currently empty
 infra/                  ← Bicep templates
 .claude/
@@ -97,6 +101,36 @@ Each module owns its own `DbContext` and EF Core migrations. Modules communicate
 Contracts interfaces — no HTTP between modules.
 
 See `docs/module-pattern.md` for the full guide.
+
+### Frontend structure
+
+`frontend/src/` is organised into three top-level folders:
+
+```
+frontend/src/
+  features/        ← one folder per domain feature (components, hooks, mocks)
+    todos/
+      components/  ← React components + their *.test.tsx files
+      hooks/       ← TanStack Query hooks
+      mocks/       ← MSW handlers for tests (handlers.ts)
+  shared/          ← cross-feature code (analogous to SharedKernel on the backend)
+    components/ui/ ← shadcn generic components (components.json aliases point here)
+    lib/           ← utilities: getApiError, mapProblemDetailsErrors, utils
+    api/           ← API client + orval-generated types (spans all modules)
+    types/         ← shared TypeScript types
+  test/            ← test infrastructure (MSW server, Vitest setup, render utils)
+```
+
+Each backend module has a corresponding `frontend/src/features/<name>/` folder so the entire
+module (backend + frontend) can be removed as a unit.
+
+`frontend/src/shared/api/generated/index.ts` is **not** feature-scoped — orval generates a single
+file from the whole OpenAPI spec (which spans all modules).
+`frontend/src/test/msw/handlers.ts` re-exports all feature handlers so the MSW server gets them
+automatically without importing from each feature folder manually.
+
+`components.json` aliases are set to `src/shared/...` so `npx shadcn add` generates components
+into `src/shared/components/ui/` automatically.
 
 ---
 

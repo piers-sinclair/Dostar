@@ -26,7 +26,7 @@ export default defineConfig({
                 ...coverageConfigDefaults.exclude,
                 'src/main.tsx',
                 'src/test/**',
-                'src/api/generated/**',
+                'src/shared/api/generated/**',
             ],
         },
     },
