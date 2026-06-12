@@ -38,7 +38,7 @@ backend/                ← all .NET projects (not src/ — decoupling is explic
     Todos/
       Dostar.Todos.Contracts/           ← public API: interfaces + models (no implementation)
       Dostar.Todos.Implementation/      ← implementation: DbContext, handlers, IModule impl
-      Dostar.Todos.UnitTests/           ← unit tests (in-memory EF Core, NSubstitute)
+      Dostar.Todos.UnitTests/           ← unit tests (Testcontainers + NSubstitute)
       Dostar.Todos.IntegrationTests/    ← integration tests (WebApplicationFactory + Testcontainers)
 frontend/               ← React + Vite; standalone, separate toolchain
 tests/                  ← cross-cutting tests only (UI tests, multi-module); currently empty

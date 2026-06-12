@@ -84,7 +84,50 @@ This creates a private GitHub repo, sets it as the `origin` remote, and pushes y
 
 ### 5. Deploy to production
 
-Follow [docs/deploy-setup.md](docs/deploy-setup.md) for the complete deployment setup.
+The template deploys to Azure Container Apps (backend), Azure Static Web Apps (frontend), and Azure PostgreSQL (database). CI/CD is fully automated via GitHub Actions.
+
+**Prerequisites:** Azure CLI and GitHub CLI installed, with Azure Subscription Owner and GitHub repo admin access.
+
+1. **Export variables** (run once per terminal session):
+   ```bash
+   export SUBSCRIPTION_ID="<your-azure-subscription-id>"
+   export REPO="your-org/your-repo"
+   export APP_NAME="your-app-name"
+   ```
+
+2. **Create an Azure identity** for GitHub Actions:
+   ```bash
+   APP_ID=$(az ad app create --display-name "$APP_NAME" --query appId -o tsv)
+   az ad sp create --id "$APP_ID"
+   az role assignment create --assignee "$APP_ID" --role Contributor --scope "/subscriptions/$SUBSCRIPTION_ID"
+   az role assignment create --assignee "$APP_ID" --role "User Access Administrator" --scope "/subscriptions/$SUBSCRIPTION_ID"
+   ```
+
+3. **Create OIDC federation** (passwordless auth from GitHub Actions to Azure):
+   ```bash
+   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-main\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:ref:refs/heads/main\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-pr\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:pull_request\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-environment-dev\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:environment:dev\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-environment-prod\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:environment:prod\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+   ```
+
+4. **Add GitHub secrets**:
+   ```bash
+   gh secret set AZURE_CLIENT_ID       --body "$APP_ID"
+   gh secret set AZURE_TENANT_ID       --body "$(az account show --query tenantId -o tsv)"
+   gh secret set AZURE_SUBSCRIPTION_ID --body "$(az account show --query id -o tsv)"
+   gh secret set AZURE_POSTGRES_ADMIN_PASSWORD --body "$(openssl rand -base64 32 | tr -d '/+=')"
+   gh secret set AZURE_POSTGRES_ADMIN_USERNAME --body "myadminuser"
+   gh secret set ALERT_EMAIL_ADDRESS   --body "you@example.com"
+   ```
+
+5. **Allow GitHub Actions to create PRs**: GitHub repo → **Settings → Actions → General** → check **"Allow GitHub Actions to create and approve pull requests"**.
+
+6. **Run infra deploy**: GitHub Actions → **Infra — deploy** → **Run workflow**. Wait ~10 minutes.
+
+7. **Run Bootstrap RBAC**: GitHub Actions → **Bootstrap RBAC (dev)** → **Run workflow**.
+
+After this one-time setup, pushing to `main` auto-deploys to dev. Merging a Release PR deploys to prod. See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environment lifecycle management, and the security checklist.
 
 ## VS Code tasks
 
@@ -158,7 +201,6 @@ See [docs/module-pattern.md](docs/module-pattern.md) for the full guide.
 | `/integration-tests` | Add integration tests for a module endpoint |
 | `/playwright` | Write a Playwright UI test for a user journey |
 
-See [docs/agents.md](docs/agents.md) for full documentation.
 
 ## Testing
 
@@ -175,55 +217,16 @@ cd tests && pnpm exec playwright test
 
 ## Observability
 
-Dostar ships a full OpenTelemetry stack wired to Azure Monitor in production. No local setup is needed — the Azure Monitor exporter is only enabled in deployed environments where `APPLICATIONINSIGHTS_CONNECTION_STRING` is injected automatically by the Bicep deployment.
+Dostar ships OpenTelemetry wired to Azure Monitor. No local setup needed — the exporter is only active in deployed environments where `APPLICATIONINSIGHTS_CONNECTION_STRING` is injected automatically by Bicep.
 
-### What is collected
+In production, structured logs, distributed traces (ASP.NET Core + Npgsql), and request metrics flow to Application Insights. View them in the Azure Portal under your Application Insights resource (`appi-<workload>-<env>-<region>-<instance>`):
 
-| Signal | Source | Destination |
-|--------|--------|-------------|
-| Structured logs (JSON) | `ILogger` → OTEL pipeline | Application Insights / Log Analytics |
-| Distributed traces | ASP.NET Core + Npgsql (auto-instrumented) | Application Insights |
-| Metrics | ASP.NET Core request metrics (rate, error rate, latency) | Application Insights |
-| DB query duration | Npgsql OTEL instrumentation | Application Insights (dependencies) |
+- **Live Metrics** — real-time request rate and failure rate
+- **Logs** — query `requests`, `traces`, `dependencies`, and `exceptions` tables
+- **Transaction search** — end-to-end distributed traces including SQL spans
+- **Workbooks → API Observability** — request rate, error rate, and P95/P99 latency dashboard
 
-### Viewing logs and traces in production
-
-1. Open the **Azure Portal** and navigate to your Application Insights resource (`appi-<workload>-<env>-<region>-<instance>`).
-2. **Live stream** — _Live Metrics_ shows real-time request rate, failure rate, and server health.
-3. **Logs** — _Logs_ → query the `requests`, `traces`, `dependencies`, and `exceptions` tables with KQL. Example:
-   ```kql
-   requests
-   | where timestamp > ago(1h) and success == false
-   | project timestamp, name, resultCode, duration, operation_Id
-   | order by timestamp desc
-   ```
-4. **End-to-end traces** — copy an `operation_Id` from above and search in _Transaction search_ to see the full distributed trace, including SQL query spans.
-5. **Dashboard** — open _Workbooks_ inside the Application Insights resource and select **API Observability**. It shows request rate, error rate, P95/P99 latency, and DB query duration for the last hour.
-
-### Alerting
-
-Three P1 alert rules are provisioned automatically:
-
-| Alert | Condition | Severity |
-|-------|-----------|----------|
-| High Error Rate | >10% of requests fail in a 5-minute window | Critical (0) |
-| High P99 Latency | P99 latency exceeds 2000 ms in a 5-minute window | Critical (0) |
-| Health Check Failure | 2+ probe locations fail `/healthz/live` | Critical (0) |
-
-Alert rules are visible in **Azure Monitor → Alerts**. To receive email notifications, set `ALERT_EMAIL_ADDRESS` as a secret in your CI environment — the Bicep deployment picks it up automatically from the parameter files. Multiple addresses are supported as a comma or semicolon-separated list.
-
-A new incident should be detectable within 5 minutes via the workbook or an alert firing.
-
-## Deploy
-
-See [docs/deploy-setup.md](docs/deploy-setup.md) for full deployment instructions.
-
-The template deploys to:
-- **Backend** — Azure Container App (auto-scaled, VNet-integrated)
-- **Frontend** — Azure Static Web Apps (global CDN)
-- **Database** — Azure PostgreSQL Flexible Server (private VNet)
-
-CI/CD is managed by GitHub Actions workflows in `.github/workflows/`.
+Three P1 alerts fire automatically (>10% error rate, P99 > 2 s, health check failure). Email notifications go to `ALERT_EMAIL_ADDRESS` — set it as a GitHub secret before deploying.
 
 ## CLI tool
 

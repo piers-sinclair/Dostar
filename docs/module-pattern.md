@@ -46,13 +46,17 @@ Order matters: infrastructure modules that register shared services should appea
 
 ## Project structure per module
 
-Each module lives under `backend/Modules/<Name>/` and consists of two projects:
+Each module lives under `backend/Modules/<Name>/` and consists of four projects:
 
 ```
 backend/Modules/Todos/
   Dostar.Todos.Contracts/        ← public API: interfaces + shared models only
   Dostar.Todos.Implementation/   ← implementation: DbContext, handlers, IModule impl
+  Dostar.Todos.UnitTests/        ← unit tests (Testcontainers + NSubstitute)
+  Dostar.Todos.IntegrationTests/ ← integration tests (WebApplicationFactory + Testcontainers)
 ```
+
+All four projects travel together so the module can be extracted into a microservice as a unit.
 
 **References:**
 - `Dostar.Todos.Implementation` → `Dostar.Todos.Contracts` (owns its public API)
@@ -134,16 +138,20 @@ group.MapPost("/", handler)
 
 No additional package references are needed — `FluentValidation` flows through `Dostar.SharedKernel`.
 
-## Unit tests
+## Tests
 
-Unit tests for a module live under `tests/Dostar.<Name>.Tests/` — not alongside the module in `backend/`. All test types (unit, integration, UI tests) are co-located in the root `tests/` folder so that `backend/` remains pure production code and CI can run the full suite with a single `dotnet test tests/` invocation.
+Unit and integration tests are colocated with their module under `backend/Modules/<Name>/`:
 
+```bash
+# Unit tests
+dotnet test backend/Modules/<Name>/Dostar.<Name>.UnitTests
+
+# Integration tests (requires Docker)
+dotnet test backend/Modules/<Name>/Dostar.<Name>.IntegrationTests
 ```
-tests/
-  Dostar.Todos.Tests/          ← unit tests for the Todos module
-  Dostar.IntegrationTests/     ← cross-module integration tests (Testcontainers)
-```
 
-Test projects are grouped under the `/tests/` solution folder in `Dostar.slnx`.
+**Stack:** xUnit + Shouldly + NSubstitute. Use Testcontainers PostgreSQL for DbContext isolation — never `InMemory`. Use NSubstitute for all other dependencies. All assertions must use Shouldly — never `Assert.*` or FluentAssertions.
 
-**Stack:** xUnit + Shouldly + NSubstitute. Use `Microsoft.EntityFrameworkCore.InMemory` for DbContext isolation in unit tests.
+**Test method naming:** `Method_Scenario_ExpectedBehaviour` — e.g. `GetAllAsync_WhenEmpty_ReturnsEmptyList`.
+
+The root `tests/` folder is for cross-cutting UI tests (Playwright) only.

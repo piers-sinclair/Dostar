@@ -76,42 +76,12 @@ az deployment sub what-if \
   --parameters infra/main.parameters.dev.bicepparam
 ```
 
-## Testing
-
-```bash
-# Unit tests (per module)
-dotnet test backend/Modules/<Module>/Dostar.<Module>.UnitTests
-
-# Integration tests (per module — requires Docker)
-dotnet test backend/Modules/<Module>/Dostar.<Module>.IntegrationTests
-
-# UI tests (Playwright)
-cd tests && pnpm exec playwright test
-```
-
-Use **Shouldly** for all assertions — never `Assert.*` or FluentAssertions.
-
 ## Adding dependencies
 
 Use the `/add-package` Claude Code skill — it validates the licence before installing.
 
 **Acceptable licences:** MIT, Apache 2.0, BSD-2, BSD-3, ISC  
 **Avoid:** GPL, LGPL, AGPL, SSPL, BSL, or any licence restricting commercial or proprietary use.
-
-## Claude Code skills
-
-Skills in `.claude/commands/` are slash commands for common scaffolding tasks:
-
-| Skill | Purpose |
-|-------|---------|
-| `/scaffold-module` | Create a full feature module (4 projects) |
-| `/add-migration` | Add an EF Core migration for a module |
-| `/add-package` | Add a NuGet or npm package (with licence check) |
-| `/code-quality` | Audit code quality |
-| `/audit-azure-costs` | Audit Azure infrastructure costs |
-| `/integration-tests` | Add integration tests for a module endpoint |
-| `/playwright` | Write a Playwright UI test |
-
 
 ## Dependabot
 
