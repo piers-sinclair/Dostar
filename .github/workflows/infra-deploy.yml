@@ -64,10 +64,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Register required resource providers
-        run: |
-          az provider register --namespace Microsoft.AlertsManagement --wait
-
       - name: Get current container image
         id: current-image
         run: |
