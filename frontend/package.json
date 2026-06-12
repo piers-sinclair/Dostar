@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "preview": "vite preview",
+    "prepare": "lefthook install",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "generate:api": "orval --config orval.config.ts && prettier --write src/api/generated/"
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "lefthook": "^1.11.14",
     "@tailwindcss/vite": "^4.3.0",
     "@types/node": "^25.9.2",
     "@types/react": "^19.2.17",

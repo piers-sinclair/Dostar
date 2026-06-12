@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    backend-format:
+      glob: "backend/**/*.cs"
+      run: dotnet format --verify-no-changes
+    frontend-lint:
+      glob: "frontend/**/*.{ts,tsx,js,jsx}"
+      run: pnpm --dir frontend lint
+    frontend-format:
+      glob: "frontend/**/*.{ts,tsx,js,jsx,css,json,md,html,yaml,yml}"
+      run: pnpm --dir frontend format:check
+    frontend-typecheck:
+      glob: "frontend/**/*.{ts,tsx}"
+      run: pnpm --dir frontend exec tsc -b --noEmit

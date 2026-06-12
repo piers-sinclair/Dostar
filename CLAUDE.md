@@ -15,6 +15,7 @@ Goal: a deployable, production-ready scaffold so new teams skip weeks of boilerp
 | Backend | .NET 10 Minimal APIs, modular monolith |
 | Frontend | React + Vite + TypeScript + **Tailwind v4** + **shadcn/ui** + **TanStack Query** + **orval** (generated API client) + **React Hook Form + Zod** |
 | Package manager (frontend) | **pnpm** — never npm or yarn |
+| Pre-commit hooks | **lefthook** — config in `lefthook.yml` at repo root; installed via `pnpm install` in `frontend/` |
 | Database | PostgreSQL via EF Core (Azure Flexible Server in prod) |
 | IaC | Bicep |
 | Compute | Azure Container Apps (backend) + Azure Static Web Apps (frontend) |
