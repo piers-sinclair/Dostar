@@ -105,8 +105,9 @@ The template deploys to Azure Container Apps (backend), Azure Static Web Apps (f
 
 3. **Create OIDC federation** (passwordless auth from GitHub Actions to Azure):
    ```bash
-   for subject in "ref:refs/heads/main" "pull_request" "environment:dev" "environment:prod"; do
-     name="github-${subject##*:}"
+   for entry in "github-main:ref:refs/heads/main" "github-pr:pull_request" "github-environment-dev:environment:dev" "github-environment-prod:environment:prod"; do
+     name="${entry%%:*}"
+     subject="${entry#*:}"
      az ad app federated-credential create --id "$APP_ID" \
        --parameters "{\"name\":\"$name\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:$subject\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
    done
