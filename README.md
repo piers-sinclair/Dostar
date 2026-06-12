@@ -48,8 +48,10 @@ The fastest path is the devcontainer — it installs all tooling, starts the dat
 
 **First time:**
 
-1. Open the project folder in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically.
+1. Open the project folder in VS Code and choose **Reopen in Container** when prompted (or `Ctrl+Shift+P` → `Dev Containers: Reopen in Container`). The devcontainer starts PostgreSQL automatically and installs pre-commit hooks.
 2. Open the **Run and Debug** panel (`Ctrl+Shift+D`), select **`Dostar (API + Frontend)`** from the configuration dropdown at the top, then press **F5**. Migrations run automatically, then both services start.
+
+**Without the devcontainer:** run `cd frontend && pnpm install` and `npm install -g lefthook` once to install pre-commit hooks, then start the database with `docker compose up -d` and launch with F5.
 
 **Every subsequent session:**
 

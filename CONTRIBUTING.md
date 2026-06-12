@@ -35,6 +35,29 @@ docs: update README with architecture diagram
 ci: add release-please workflow
 ```
 
+## Pre-commit hooks
+
+Dostar uses [lefthook](https://github.com/evilmartians/lefthook) to run format and lint checks before every commit, catching CI failures before they reach the server.
+
+Hooks are installed automatically when the devcontainer is created (`postCreate.sh` runs `pnpm install` and symlinks lefthook to `/usr/local/bin`). If you're working outside the devcontainer, install once:
+
+```bash
+cd frontend && pnpm install      # installs hooks
+npm install -g lefthook          # makes lefthook findable by git hooks
+```
+
+| Hook | Command | Runs when |
+|------|---------|-----------|
+| Backend format | `dotnet format --verify-no-changes` | Any `backend/**/*.cs` file is staged |
+| Frontend lint | `pnpm --dir frontend lint` | Any `frontend/**/*.{ts,tsx,js,jsx}` file is staged |
+| Frontend format | `pnpm --dir frontend format:check` | Any `frontend/**` file is staged |
+
+To skip hooks in an emergency (e.g. a WIP commit):
+
+```bash
+git commit --no-verify -m "wip: ..."
+```
+
 ## Running checks locally
 
 CI enforces these on every PR, but running them locally before pushing saves a round-trip:
