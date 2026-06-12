@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCreateTodo } from '@/hooks/useTodos';
+import { useCreateTodo } from '@/features/todos/hooks/useTodos';
 import { mapProblemDetailsErrors } from '@/lib/mapProblemDetailsErrors';
 
 const schema = z.object({

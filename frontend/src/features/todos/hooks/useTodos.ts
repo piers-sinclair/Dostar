@@ -6,8 +6,8 @@ import {
     type UseMutationResult,
     type UseQueryResult,
 } from '@tanstack/react-query';
-import { apiClient } from '../api/client';
-import type { CreateTodoRequest, TodoDto } from '../api/generated';
+import { apiClient } from '../../../api/client';
+import type { CreateTodoRequest, TodoDto } from '../../../api/generated';
 
 const TODOS_API_PATH = '/api/v1/todos';
 const TODOS_QUERY_KEY = ['todos'] as const;

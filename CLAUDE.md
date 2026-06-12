@@ -98,6 +98,25 @@ Contracts interfaces — no HTTP between modules.
 
 See `docs/module-pattern.md` for the full guide.
 
+### Frontend feature folders
+
+Each backend module has a corresponding `frontend/src/features/<name>/` folder that contains all UI
+code for that module. This keeps frontend and backend concerns co-located by domain so the entire
+module (backend + frontend) can be removed as a unit.
+
+```
+frontend/src/features/
+  todos/
+    components/   ← React components + their *.test.tsx files
+    hooks/        ← TanStack Query hooks
+    mocks/        ← MSW handlers for tests (handlers.ts)
+```
+
+`frontend/src/api/generated/index.ts` is **not** feature-scoped — orval generates a single file
+from the whole OpenAPI spec (which spans all modules), so it stays in `src/api/generated/`.
+`frontend/src/test/msw/handlers.ts` re-exports all feature handlers so the MSW server gets them
+automatically without importing from each feature folder manually.
+
 ---
 
 ## Testing

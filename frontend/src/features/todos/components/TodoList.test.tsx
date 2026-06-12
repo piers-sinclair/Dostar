@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { server } from '@/test/msw/server';
-import { defaultTodos, TODO_BY_ID_URL, TODOS_URL } from '@/test/msw/handlers';
+import { defaultTodos, TODO_BY_ID_URL, TODOS_URL } from '@/features/todos/mocks/handlers';
 import { renderWithProviders } from '@/test/utils';
 import { TodoList } from './TodoList';
 
