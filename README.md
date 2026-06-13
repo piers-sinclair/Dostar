@@ -5,6 +5,8 @@
 
 Skip weeks of boilerplate. Dostar gives you a production-ready fullstack app — .NET 10 modular monolith + React/Vite — with exceptional developer experience, complete DevSecOps, and automated CI/CD that deploys to production in under 30 minutes.
 
+> **Disclaimer:** Dostar is provided as-is under the [MIT license](LICENSE). It is a starting point, not a fully hardened production system — you are responsible for security review and hardening before deploying to production.
+
 ## Goals
 
 - **Exceptional developer experience** — devcontainer, one-click F5 full-stack launch, hot reload, pre-commit hooks, generated API client (orval), and Claude Code skills for scaffolding, migrations, and testing.
