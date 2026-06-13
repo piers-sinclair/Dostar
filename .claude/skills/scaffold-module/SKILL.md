@@ -61,11 +61,11 @@ namespace Dostar.<Name>.Contracts;
 
 public interface I<Name>Service
 {
-    Task<IEnumerable<<Name>Dto>> GetAllAsync();
-    Task<<Name>Dto?> GetByIdAsync(Guid id);
-    Task<<Name>Dto> CreateAsync(/* typed params inferred from description */);
-    Task<<Name>Dto?> UpdateAsync(Guid id, /* typed params inferred from description */);
-    Task<bool> DeleteAsync(Guid id);
+    Task<IEnumerable<<Name>Dto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<<Name>Dto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<<Name>Dto> CreateAsync(/* typed params inferred from description */, CancellationToken cancellationToken = default);
+    Task<<Name>Dto> UpdateAsync(Guid id, /* typed params inferred from description */, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 ```
 
@@ -127,7 +127,9 @@ canonical pattern from `Dostar.Todos.Implementation.csproj`:
 
 Create `backend/Modules/<Name>/Dostar.<Name>.Implementation/GlobalUsings.cs`:
 ```csharp
+global using System.Diagnostics.CodeAnalysis;
 global using Dostar.SharedKernel;
+global using Dostar.SharedKernel.Exceptions;
 global using Dostar.<Name>.Contracts;
 global using FluentValidation;
 global using Dostar.<Name>.Implementation.Application;
@@ -139,6 +141,7 @@ global using Microsoft.AspNetCore.Routing;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Configuration;
 global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
 ```
 
 Never add `using` directives inside individual files in this project — all go here.
@@ -181,54 +184,64 @@ Create `backend/Modules/<Name>/Dostar.<Name>.Implementation/Application/<Name>Se
 ```csharp
 namespace Dostar.<Name>.Implementation.Application;
 
-public class <Name>Service(<Name>DbContext db) : I<Name>Service
+[ExcludeFromCodeCoverage]
+public partial class <Name>Service(<Name>DbContext db, ILogger<<Name>Service> logger) : I<Name>Service
 {
-    public async Task<IEnumerable<<Name>Dto>> GetAllAsync() =>
+    public async Task<IEnumerable<<Name>Dto>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await db.<PluralName>
             .Select(x => ToDto(x))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
-    public async Task<<Name>Dto?> GetByIdAsync(Guid id)
+    public async Task<<Name>Dto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await db.<PluralName>.FindAsync(id);
-        return entity is null ? null : ToDto(entity);
+        var entity = await db.<PluralName>.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null)
+        {
+            Log<Name>NotFound(logger, id);
+            throw new NotFoundException($"<Name> {id} not found.");
+        }
+        return ToDto(entity);
     }
 
-    public async Task<<Name>Dto> CreateAsync(/* typed params matching I<Name>Service */)
+    public async Task<<Name>Dto> CreateAsync(/* typed params matching I<Name>Service */, CancellationToken cancellationToken = default)
     {
         var entity = new <Name>
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             // assign params to fields
             CreatedAt = DateTimeOffset.UtcNow,
         };
         db.<PluralName>.Add(entity);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
+        Log<Name>Created(logger, entity.Id);
         return ToDto(entity);
     }
 
-    public async Task<<Name>Dto?> UpdateAsync(Guid id, /* typed params */)
+    public async Task<<Name>Dto> UpdateAsync(Guid id, /* typed params */, CancellationToken cancellationToken = default)
     {
-        var entity = await db.<PluralName>.FindAsync(id);
-        if (entity is null)
-            return null;
+        var entity = await db.<PluralName>.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (entity is null) throw new NotFoundException($"<Name> {id} not found.");
         // assign updated fields
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         return ToDto(entity);
     }
 
-    public async Task<bool> DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var entity = await db.<PluralName>.FindAsync(id);
-        if (entity is null)
-            return false;
-        db.<PluralName>.Remove(entity);
-        await db.SaveChangesAsync();
-        return true;
+        var deleted = await db.<PluralName>
+            .Where(x => x.Id == id)
+            .ExecuteDeleteAsync(cancellationToken);
+        if (deleted == 0) throw new NotFoundException($"<Name> {id} not found.");
     }
 
     private static <Name>Dto ToDto(<Name> x) =>
         new(x.Id, /* all fields in Dto order */, x.CreatedAt);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "<Name> created with id {<Name>Id}")]
+    private static partial void Log<Name>Created(ILogger logger, Guid <name>Id);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "<Name> not found with id {<Name>Id}")]
+    private static partial void Log<Name>NotFound(ILogger logger, Guid <name>Id);
 }
 ```
 
@@ -280,31 +293,26 @@ public class <Name>Module : IEndpointModule
     {
         var group = app.MapGroup(RoutePrefix);
 
-        group.MapGet(RootRoute, async (I<Name>Service service) =>
-            Results.Ok(await service.GetAllAsync()));
+        group.MapGet(RootRoute, async (I<Name>Service service, CancellationToken ct) =>
+            Results.Ok(await service.GetAllAsync(ct)));
 
-        group.MapGet(IdRoute, async (Guid id, I<Name>Service service) =>
-        {
-            var item = await service.GetByIdAsync(id);
-            return item is null ? Results.NotFound() : Results.Ok(item);
-        });
+        group.MapGet(IdRoute, async (Guid id, I<Name>Service service, CancellationToken ct) =>
+            Results.Ok(await service.GetByIdAsync(id, ct)));
 
-        group.MapPost(RootRoute, async (Create<Name>Request request, I<Name>Service service) =>
+        group.MapPost(RootRoute, async (Create<Name>Request request, I<Name>Service service, CancellationToken ct) =>
         {
-            var item = await service.CreateAsync(/* request fields */);
+            var item = await service.CreateAsync(/* request fields */, ct);
             return Results.Created($"{RoutePrefix}/{item.Id}", item);
         }).AddEndpointFilter<ValidationFilter<Create<Name>Request>>();
 
-        group.MapPut(IdRoute, async (Guid id, Update<Name>Request request, I<Name>Service service) =>
-        {
-            var item = await service.UpdateAsync(id, /* request fields */);
-            return item is null ? Results.NotFound() : Results.Ok(item);
-        }).AddEndpointFilter<ValidationFilter<Update<Name>Request>>();
+        group.MapPut(IdRoute, async (Guid id, Update<Name>Request request, I<Name>Service service, CancellationToken ct) =>
+            Results.Ok(await service.UpdateAsync(id, /* request fields */, ct)))
+            .AddEndpointFilter<ValidationFilter<Update<Name>Request>>();
 
-        group.MapDelete(IdRoute, async (Guid id, I<Name>Service service) =>
+        group.MapDelete(IdRoute, async (Guid id, I<Name>Service service, CancellationToken ct) =>
         {
-            var deleted = await service.DeleteAsync(id);
-            return deleted ? Results.NoContent() : Results.NotFound();
+            await service.DeleteAsync(id, ct);
+            return Results.NoContent();
         });
     }
 }
@@ -356,21 +364,22 @@ Edit `Dostar.<Name>.UnitTests.csproj` to match the canonical pattern from
 
 Delete the generated `UnitTest1.cs`.
 
-Create `backend/Modules/<Name>/Dostar.<Name>.UnitTests/<Name>ServiceTests.cs`, following the exact pattern in
-`backend/Modules/Todos/Dostar.Todos.UnitTests/TodoServiceTests.cs`:
+Create `backend/Modules/<Name>/Dostar.<Name>.UnitTests/<Name>ServiceTests.cs`:
 - Explicit `using` directives at the top of the file (no GlobalUsings in test projects)
 - Static `CreateDbContext()` helper using `UseInMemoryDatabase(Guid.NewGuid().ToString())`
-- `await using var db = CreateDbContext();` in every test
+- Static `CreateService(<Name>DbContext db)` helper: `new <Name>Service(db, Substitute.For<ILogger<<Name>Service>>())`
+- `await using var db = CreateDbContext();` in every test; call `CreateService(db)` to get the SUT
 - One `[Fact]` per scenario, covering:
   - `GetAllAsync` when empty → empty list
   - `CreateAsync` → returns DTO with correct field values
   - `GetAllAsync` after create → returns the item
   - `GetByIdAsync` when exists → returns DTO
-  - `GetByIdAsync` when not found → returns null
+  - `GetByIdAsync` when not found → `Should.ThrowAsync<NotFoundException>(...)`
+  - `GetByIdAsync` when not found → logs a warning (create an explicit `ILogger` substitute via `Substitute.For<ILogger<<Name>Service>>()`, pass it to `new <Name>Service(db, logger)`, assert `logger.Received(1).Log(LogLevel.Warning, ...)`)
   - `UpdateAsync` when exists → updates fields and returns DTO
-  - `UpdateAsync` when not found → returns null
-  - `DeleteAsync` when exists → returns true, item no longer retrievable
-  - `DeleteAsync` when not found → returns false
+  - `UpdateAsync` when not found → `Should.ThrowAsync<NotFoundException>(...)`
+  - `DeleteAsync` when exists → completes without throwing; item no longer retrievable via `GetAllAsync`
+  - `DeleteAsync` when not found → `Should.ThrowAsync<NotFoundException>(...)`
 - **Shouldly** assertions only — never FluentAssertions
 
 ---
