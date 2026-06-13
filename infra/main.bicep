@@ -70,7 +70,7 @@ module rg 'modules/resource-group.bicep' = {
 
 module keyvault 'modules/keyvault.bicep' = {
   name: 'keyvault'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -87,7 +87,7 @@ module keyvault 'modules/keyvault.bicep' = {
 
 module vnet 'modules/vnet.bicep' = {
   name: 'vnet'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -99,7 +99,7 @@ module vnet 'modules/vnet.bicep' = {
 
 module acr 'modules/acr.bicep' = {
   name: 'acr'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -111,7 +111,7 @@ module acr 'modules/acr.bicep' = {
 
 module appinsights 'modules/appinsights.bicep' = {
   name: 'appinsights'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -123,7 +123,7 @@ module appinsights 'modules/appinsights.bicep' = {
 
 module containerEnvironment 'modules/container-environment.bicep' = {
   name: 'container-environment'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -137,7 +137,7 @@ module containerEnvironment 'modules/container-environment.bicep' = {
 
 module containerapp 'modules/containerapp.bicep' = {
   name: 'containerapp'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -158,7 +158,7 @@ module containerapp 'modules/containerapp.bicep' = {
 
 module postgres 'modules/postgres.bicep' = {
   name: 'postgres'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -177,7 +177,7 @@ module postgres 'modules/postgres.bicep' = {
 
 module alerting 'modules/alerting.bicep' = if (env == 'prod') {
   name: 'alerting'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: location
     workload: workload
@@ -192,7 +192,7 @@ module alerting 'modules/alerting.bicep' = if (env == 'prod') {
 
 module staticWebApp 'modules/staticwebapp.bicep' = {
   name: 'staticwebapp'
-  scope: resourceGroup(rg.outputs.name)
+  scope: resourceGroup(rgName)
   params: {
     location: staticWebAppLocation
     workload: workload
