@@ -78,6 +78,21 @@ describe('TodoList', () => {
         expect(await screen.findByText('Buy milk')).toBeInTheDocument();
     });
 
+    it('shows a toast error when the delete API call fails', async () => {
+        const user = userEvent.setup();
+        server.use(
+            http.delete(TODO_BY_ID_URL, () =>
+                HttpResponse.json({ detail: 'Delete failed' }, { status: 500 })
+            )
+        );
+        renderWithProviders(<TodoList />);
+
+        await screen.findByText('Buy milk');
+        await user.click(screen.getByRole('button', { name: `Delete "${defaultTodos[0].title}"` }));
+
+        expect(await screen.findByText('Delete failed')).toBeInTheDocument();
+    });
+
     it('enters edit mode when a todo title is clicked', async () => {
         const user = userEvent.setup();
         renderWithProviders(<TodoList />);

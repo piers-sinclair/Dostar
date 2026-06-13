@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+import { Toaster } from '@/shared/components/ui/sonner';
 
 export const Route = createRootRoute({
     component: RootLayout,
@@ -15,6 +16,7 @@ function RootLayout(): JSX.Element {
             <main className="min-h-screen bg-background p-8">
                 <Outlet />
             </main>
+            <Toaster />
             {import.meta.env.DEV && <TanStackRouterDevtools />}
         </>
     );
