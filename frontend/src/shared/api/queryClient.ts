@@ -1,4 +1,9 @@
-import { MutationCache, QueryCache, QueryClient, type QueryClientConfig } from '@tanstack/react-query';
+import {
+    MutationCache,
+    QueryCache,
+    QueryClient,
+    type QueryClientConfig,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { ApiError } from './client';
 
