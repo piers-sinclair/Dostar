@@ -108,10 +108,57 @@ The template deploys to Azure Container Apps (backend), Azure Static Web Apps (f
 
 3. **Create OIDC federation** (passwordless auth from GitHub Actions to Azure):
    ```bash
-   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-main\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:ref:refs/heads/main\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
-   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-pr\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:pull_request\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
-   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-environment-dev\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:environment:dev\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
-   az ad app federated-credential create --id "$APP_ID" --parameters "{\"name\":\"github-environment-prod\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:$REPO:environment:prod\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+    cat > fc-main.json <<EOF
+    {
+      "name": "github-main",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:${REPO}:ref:refs/heads/main",
+      "audiences": ["api://AzureADTokenExchange"]
+    }
+    EOF
+    
+    az ad app federated-credential create --id "$APP_ID" --parameters @fc-main.json
+    
+    rm -f fc-main.json
+    
+    cat > fc-pr.json <<EOF
+    {
+      "name": "github-pr",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:${REPO}:pull_request",
+      "audiences": ["api://AzureADTokenExchange"]
+    }
+    EOF
+    
+    az ad app federated-credential create --id "$APP_ID" --parameters @fc-pr.json
+    
+    rm -f fc-pr.json
+    
+    cat > fc-dev.json <<EOF
+    {
+      "name": "github-environment-dev",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:${REPO}:environment:dev",
+      "audiences": ["api://AzureADTokenExchange"]
+    }
+    EOF
+    
+    az ad app federated-credential create --id "$APP_ID" --parameters @fc-dev.json
+    
+    rm -f fc-dev.json
+    
+    cat > fc-prod.json <<EOF
+    {
+      "name": "github-environment-prod",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "subject": "repo:${REPO}:environment:prod",
+      "audiences": ["api://AzureADTokenExchange"]
+    }
+    EOF
+    
+    az ad app federated-credential create --id "$APP_ID" --parameters @fc-prod.json
+    
+    rm -f fc-prod.json
    ```
 
 4. **Add GitHub secrets**:
