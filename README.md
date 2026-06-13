@@ -178,7 +178,7 @@ The template deploys to Azure Container Apps (backend), Azure Static Web Apps (f
 
 5. **Allow GitHub Actions to create PRs**: GitHub repo → **Settings → Actions → General** → check **"Allow GitHub Actions to create and approve pull requests"**.
 
-6. **Spin up**: GitHub Actions → **Infra — spin up** → **Run workflow** (select `dev`). This single workflow provisions all Azure resources, bootstraps RBAC, and deploys the backend and frontend in sequence (~15 min). URLs are printed in the workflow summary when complete.
+6. **Spin up**: GitHub Actions → [**Infra — spin up**](.github/workflows/infra-spinup.yml) → **Run workflow** (select `dev`). This single workflow provisions all Azure resources, bootstraps RBAC, and deploys the backend and frontend in sequence (~15 min). URLs are printed in the workflow summary when complete.
 
 ---
 
@@ -190,7 +190,7 @@ See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environ
 
 ### Tearing down
 
-To remove an environment (e.g. to pause billing or decommission the app): GitHub Actions → **Infra — tear down** → **Run workflow**, select the environment, and type `teardown` to confirm. The workflow deletes the resource group, which cascades to all resources inside it (Container App, PostgreSQL, Key Vault, Application Insights).
+To remove an environment (e.g. to pause billing or decommission the app): GitHub Actions → [**Infra — tear down**](.github/workflows/infra-teardown.yml) → **Run workflow**, select the environment, and type `teardown` to confirm. The workflow deletes the resource group, which cascades to all resources inside it (Container App, PostgreSQL, Key Vault, Application Insights).
 
 GitHub secrets and the repo are unaffected. Re-running **Infra — spin up** recreates everything from scratch.
 
