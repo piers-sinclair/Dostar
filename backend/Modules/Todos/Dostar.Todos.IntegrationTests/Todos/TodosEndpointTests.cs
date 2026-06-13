@@ -121,6 +121,34 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
         todos[0].Title.ShouldBe("Visible todo");
     }
 
+    [Fact]
+    public async Task CreateAsync_WithEmptyTitle_Returns422WithTitleError()
+    {
+        var response = await _client.PostAsJsonAsync(TodosUrl, new { title = "" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblem>(JsonOptions);
+        problem.ShouldNotBeNull();
+        problem.Errors.ShouldNotBeNull();
+        problem.Errors.ShouldContainKey("Title");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithTitleExceedingMaxLength_Returns422WithTitleError()
+    {
+        var created = await CreateTodoAsync("Original title");
+
+        var response = await _client.PutAsJsonAsync(
+            $"{TodosUrl}/{created.Id}",
+            new { title = new string('a', 201), isCompleted = false });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.UnprocessableEntity);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblem>(JsonOptions);
+        problem.ShouldNotBeNull();
+        problem.Errors.ShouldNotBeNull();
+        problem.Errors.ShouldContainKey("Title");
+    }
+
     private async Task<TodoDto> CreateTodoAsync(string title)
     {
         var response = await _client.PostAsJsonAsync(TodosUrl, new { title });
@@ -128,4 +156,6 @@ public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>,
         var todo = await response.Content.ReadFromJsonAsync<TodoDto>(JsonOptions);
         return todo ?? throw new InvalidOperationException("CreateTodoAsync: API returned null");
     }
+
+    private sealed record ValidationProblem(Dictionary<string, string[]>? Errors);
 }
