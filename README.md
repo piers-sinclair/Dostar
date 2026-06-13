@@ -89,12 +89,17 @@ This creates a private GitHub repo, sets it as the `origin` remote, and pushes y
 
 The template deploys to Azure Container Apps (backend), Azure Static Web Apps (frontend), and Azure PostgreSQL (database). CI/CD is fully automated via GitHub Actions.
 
-**Prerequisites:** Azure CLI and GitHub CLI installed, with Azure Subscription Owner and GitHub repo admin access.
+**Prerequisites:** Azure CLI and GitHub CLI installed and authenticated (`az login` / `gh auth login`), with Azure Subscription Owner and GitHub repo admin access.
 
 1. **Export variables** (run once per terminal session):
+
    ```bash
    export SUBSCRIPTION_ID="<your-azure-subscription-id>"
+   ```
+   ```bash
    export REPO="your-org/your-repo"
+   ```
+   ```bash
    export APP_NAME="your-app-name"
    ```
 
@@ -173,11 +178,21 @@ The template deploys to Azure Container Apps (backend), Azure Static Web Apps (f
 
 5. **Allow GitHub Actions to create PRs**: GitHub repo → **Settings → Actions → General** → check **"Allow GitHub Actions to create and approve pull requests"**.
 
-6. **Run infra deploy**: GitHub Actions → **Infra — deploy** → **Run workflow**. Wait ~10 minutes.
+6. **Spin up**: GitHub Actions → [**Infra — spin up**](.github/workflows/infra-spinup.yml) → **Run workflow** (select `dev`). This single workflow provisions all Azure resources, bootstraps RBAC, and deploys the backend and frontend in sequence (~15 min). URLs are printed in the workflow summary when complete.
 
-7. **Run Bootstrap RBAC**: GitHub Actions → **Bootstrap RBAC (dev)** → **Run workflow**.
+---
 
-After this one-time setup, pushing to `main` auto-deploys to dev. Merging a Release PR deploys to prod. See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environment lifecycle management, and the security checklist.
+**Dev deploys continuously** — every merge to `main` triggers build, test, and deploy to the dev environment automatically.
+
+**Prod deploys on demand** — the release pipeline opens a Release PR when ready; merging it promotes to prod with one click. To deploy to prod manually: Actions → **CD — release to prod** → **Run workflow**.
+
+See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environment lifecycle management, and the security checklist.
+
+### Tearing down
+
+To remove an environment (e.g. to pause billing or decommission the app): GitHub Actions → [**Infra — tear down**](.github/workflows/infra-teardown.yml) → **Run workflow**, select the environment, and type `teardown` to confirm. The workflow deletes the resource group, which cascades to all resources inside it (Container App, PostgreSQL, Key Vault, Application Insights).
+
+GitHub secrets and the repo are unaffected. Re-running **Infra — spin up** recreates everything from scratch.
 
 ## VS Code tasks
 
