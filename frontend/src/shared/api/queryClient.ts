@@ -4,10 +4,7 @@ import { ApiError } from './client';
 
 function handleGlobalError(error: unknown) {
     if (!(error instanceof ApiError)) return;
-    if (error.status === 401) {
-        // TODO: redirect to login on 401
-        return;
-    }
+    // Add a login redirect above this line when you add authentication (status 401).
     if (error.status >= 500) {
         toast.error(error.message);
     }
