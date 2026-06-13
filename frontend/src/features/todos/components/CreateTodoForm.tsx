@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -27,6 +28,7 @@ export function CreateTodoForm(): JSX.Element {
         try {
             await createTodo.mutateAsync({ title: values.title });
             reset();
+            toast.success('Todo created');
         } catch (err) {
             mapProblemDetailsErrors(err, setError);
         }
