@@ -10,7 +10,7 @@ function RootLayout(): JSX.Element {
     return (
         <>
             <nav className="border-b bg-background px-8 py-4">
-                <span className="font-semibold text-foreground">Dostar</span>
+                <h1 className="text-lg font-semibold text-foreground">Dostar</h1>
             </nav>
             <main className="min-h-screen bg-background p-8">
                 <Outlet />
