@@ -1,3 +1,9 @@
+---
+description: Add a NuGet or npm package after verifying its licence is permissive enough for commercial closed-source use.
+argument-hint: <package-name> [--project <path>] [--npm] [--dev]
+allowed-tools: Bash(dotnet *) Bash(pnpm *) Read WebFetch
+---
+
 # add-package
 
 Add a NuGet or npm package to the project after verifying its licence is permissive enough for commercial closed-source use.

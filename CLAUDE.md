@@ -70,6 +70,18 @@ CLAUDE.md               ← this file
 | `/create-issue` | `.claude/commands/create-issue.md` | Create a GitHub issue with labels and milestone |
 | `/bicep-quality` | `.claude/commands/bicep-quality.md` | Audit Bicep files for naming, structure, and Azure best practices |
 
+**No installation required** — Claude Code automatically loads every `.md` file in `.claude/commands/` as a slash command. Open Claude Code in this repository and type `/` to see the full list. See the [Claude Code custom commands documentation](https://docs.anthropic.com/en/docs/claude-code/slash-commands) for the full skill format reference.
+
+**External CLI prerequisites** — some skills invoke tools that must be on your `PATH`:
+
+| Skill | Requires |
+|-------|----------|
+| `/add-migration` | `dotnet ef` — `dotnet tool install --global dotnet-ef` |
+| `/audit-azure-costs` | `az` — [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) |
+| `/bicep-quality` | `az bicep` — auto-installed on first `az bicep build` call |
+| `/create-issue` | `gh` — [GitHub CLI](https://cli.github.com/) |
+| `/playwright` | `@playwright/test` — `pnpm install` inside `tests/` |
+
 > Future (build after M9): `/scaffold-page`
 
 ---

@@ -1,3 +1,9 @@
+---
+description: Write or run a Playwright UI test for the specified user journey. Requires the Vite dev server to be running.
+argument-hint: <user journey description>
+allowed-tools: Bash(pnpm *) Read Write Edit Glob
+---
+
 # playwright
 
 Write or run a Playwright UI test for the specified user journey.

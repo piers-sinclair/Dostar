@@ -1,3 +1,9 @@
+---
+description: Audit Bicep files for naming, structure, and Azure best practices, then report all findings before making any changes.
+argument-hint: [path]
+allowed-tools: Bash(az bicep *) Bash(git *) Read Glob Grep
+---
+
 # bicep-quality
 
 Audit Bicep files for quality issues across naming, structure, and Azure best practices, then report findings before making any changes.

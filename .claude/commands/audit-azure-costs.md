@@ -1,3 +1,9 @@
+---
+description: Audit Azure infrastructure and CI/CD configuration for cost optimisation against early-stage startup principles.
+argument-hint: [--env dev|prod|all] [--live]
+allowed-tools: Bash(az *) Bash(git *) Read Glob
+---
+
 # audit-azure-costs
 
 Audit the Azure infrastructure and CI/CD configuration for cost optimisation, benchmarked against
