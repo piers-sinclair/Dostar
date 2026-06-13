@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { ApiError } from '../api/client';
 import { mapProblemDetailsErrors } from './mapProblemDetailsErrors';
 
 describe('mapProblemDetailsErrors', () => {
@@ -32,6 +33,28 @@ describe('mapProblemDetailsErrors', () => {
         mapProblemDetailsErrors(new Error('network failure'), setError);
 
         expect(setError).toHaveBeenCalledWith('root', { message: 'An unexpected error occurred.' });
+    });
+
+    it('maps field errors from ApiError body with problem details errors', () => {
+        const setError = vi.fn();
+
+        mapProblemDetailsErrors(
+            new ApiError(400, 'An unexpected error occurred.', { errors: { Title: ['Too long'] } }),
+            setError
+        );
+
+        expect(setError).toHaveBeenCalledWith('title', { message: 'Too long' });
+    });
+
+    it('uses ApiError message as root error when body has no field errors', () => {
+        const setError = vi.fn();
+
+        mapProblemDetailsErrors(
+            new ApiError(503, 'Service unavailable', { detail: 'Service unavailable' }),
+            setError
+        );
+
+        expect(setError).toHaveBeenCalledWith('root', { message: 'Service unavailable' });
     });
 
     it('maps multiple field errors, using the first message per field', () => {
