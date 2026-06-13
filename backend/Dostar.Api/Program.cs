@@ -39,6 +39,7 @@ builder.Services.AddOpenApi(V1DocumentName, options =>
     options.AddDocumentTransformer(ReplaceVersionPlaceholderInPaths));
 builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new ApiVersion(1, 0);

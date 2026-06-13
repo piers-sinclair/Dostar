@@ -9,10 +9,11 @@ public class TodoService(TodosDbContext db) : ITodoService
             .Select(t => new TodoDto(t.Id, t.Title, t.IsCompleted, t.CreatedAt))
             .ToListAsync(cancellationToken);
 
-    public async Task<TodoDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<TodoDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var todo = await db.Todos.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
-        return todo is null ? null : ToDto(todo);
+        if (todo is null) throw new NotFoundException($"Todo {id} not found.");
+        return ToDto(todo);
     }
 
     public async Task<TodoDto> CreateAsync(string title, CancellationToken cancellationToken = default)
@@ -30,22 +31,22 @@ public class TodoService(TodosDbContext db) : ITodoService
         return ToDto(todo);
     }
 
-    public async Task<TodoDto?> UpdateAsync(Guid id, string title, bool isCompleted, CancellationToken cancellationToken = default)
+    public async Task<TodoDto> UpdateAsync(Guid id, string title, bool isCompleted, CancellationToken cancellationToken = default)
     {
         var todo = await db.Todos.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
-        if (todo is null) return null;
+        if (todo is null) throw new NotFoundException($"Todo {id} not found.");
         todo.Title = title;
         todo.IsCompleted = isCompleted;
         await db.SaveChangesAsync(cancellationToken);
         return ToDto(todo);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var deleted = await db.Todos
             .Where(t => t.Id == id)
             .ExecuteDeleteAsync(cancellationToken);
-        return deleted > 0;
+        if (deleted == 0) throw new NotFoundException($"Todo {id} not found.");
     }
 
     private static TodoDto ToDto(Todo todo) =>

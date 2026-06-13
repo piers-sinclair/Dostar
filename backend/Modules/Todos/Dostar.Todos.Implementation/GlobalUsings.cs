@@ -1,5 +1,6 @@
 global using System.Diagnostics.CodeAnalysis;
 global using Dostar.SharedKernel;
+global using Dostar.SharedKernel.Exceptions;
 global using Dostar.Todos.Contracts;
 global using FluentValidation;
 global using Dostar.Todos.Implementation.Application;
