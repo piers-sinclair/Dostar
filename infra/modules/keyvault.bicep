@@ -35,7 +35,6 @@ param swaDeploymentToken string = ''
 
 var keyVaultName = 'kv-${workload}-${env}-${region}-${instance}'
 
-
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
   location: location
@@ -48,7 +47,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: 90
-    // Purge protection can never be disabled once enabled — omit in dev rather than set false
+    // Purge protection is irreversible once enabled — omit entirely in dev rather than set to false,
+    // because setting false on an existing vault that had it enabled would fail.
     enablePurgeProtection: env == 'prod' ? true : null
     publicNetworkAccess: 'Enabled'
   }

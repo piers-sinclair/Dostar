@@ -67,6 +67,7 @@ CLAUDE.md               ← this file
 | `/integration-tests` | `.claude/commands/integration-tests.md` | Add integration tests for a module endpoint |
 | `/playwright` | `.claude/commands/playwright.md` | Write a Playwright UI test for a user journey |
 | `/create-issue` | `.claude/commands/create-issue.md` | Create a GitHub issue with labels and milestone |
+| `/bicep-quality` | `.claude/commands/bicep-quality.md` | Audit Bicep files for naming, structure, and Azure best practices |
 
 > Future (build after M9): `/scaffold-page`
 

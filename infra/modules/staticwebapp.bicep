@@ -17,15 +17,15 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-var abbrev = 'stapp'
-var resourceNameValue = '${abbrev}-${workload}-${env}-${region}-${instance}'
+var swaName = 'stapp-${workload}-${env}-${region}-${instance}'
+var swaSku = env == 'prod' ? 'Standard' : 'Free'
 
 resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
-  name: resourceNameValue
+  name: swaName
   location: location
   sku: {
-    name: env == 'prod' ? 'Standard' : 'Free'
-    tier: env == 'prod' ? 'Standard' : 'Free'
+    name: swaSku
+    tier: swaSku
   }
   properties: {}
 }

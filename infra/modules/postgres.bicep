@@ -47,7 +47,6 @@ param enableHa bool = false
 var serverName = 'psql-${workload}-${env}-${region}-${instance}'
 var databaseName = workload
 
-// Derive tier from SKU prefix so callers only need to set skuName.
 var skuTier = startsWith(skuName, 'Standard_B')
   ? 'Burstable'
   : startsWith(skuName, 'Standard_E') ? 'MemoryOptimized' : 'GeneralPurpose'

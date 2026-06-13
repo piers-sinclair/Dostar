@@ -58,33 +58,19 @@ param alertEmailAddress string = ''
 @description('Container image to deploy. Defaults to a public placeholder on first deploy. Subsequent infra-only deploys should pass the currently-running image so the backend is not reset to the placeholder.')
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
-var abbrev = {
-  resourceGroup: 'rg'
-  appServicePlan: 'asp'
-  appService: 'app'
-  staticWebApp: 'stapp'
-  postgresFlexibleServer: 'psql'
-  keyVault: 'kv'
-  storageAccount: 'st'
-  logAnalyticsWorkspace: 'log'
-  applicationInsights: 'appi'
-  containerRegistry: 'cr'
-  managedIdentity: 'id'
-  virtualNetwork: 'vnet'
-  subnet: 'snet'
-}
+var rgName = 'rg-${workload}-${env}-${region}-${instance}'
 
-func resourceName(abbr string, workloadName string, environment string, regionCode string, instanceNumber string) string =>
-  '${abbr}-${workloadName}-${environment}-${regionCode}-${instanceNumber}'
-
-resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
-  name: resourceName(abbrev.resourceGroup, workload, env, region, instance)
-  location: location
+module rg 'modules/resource-group.bicep' = {
+  name: 'resource-group'
+  params: {
+    location: location
+    name: rgName
+  }
 }
 
 module keyvault 'modules/keyvault.bicep' = {
   name: 'keyvault'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -101,7 +87,7 @@ module keyvault 'modules/keyvault.bicep' = {
 
 module vnet 'modules/vnet.bicep' = {
   name: 'vnet'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -113,7 +99,7 @@ module vnet 'modules/vnet.bicep' = {
 
 module acr 'modules/acr.bicep' = {
   name: 'acr'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -125,7 +111,7 @@ module acr 'modules/acr.bicep' = {
 
 module appinsights 'modules/appinsights.bicep' = {
   name: 'appinsights'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -135,11 +121,9 @@ module appinsights 'modules/appinsights.bicep' = {
   }
 }
 
-// AcrPull role assignment is inside containerapp.bicep to avoid a circular dependency
-// (acr.id → containerapp.principalId → acr)
-module containerapp 'modules/containerapp.bicep' = {
-  name: 'containerapp'
-  scope: rg
+module containerEnvironment 'modules/container-environment.bicep' = {
+  name: 'container-environment'
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -148,6 +132,19 @@ module containerapp 'modules/containerapp.bicep' = {
     instance: instance
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
     logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
+  }
+}
+
+module containerapp 'modules/containerapp.bicep' = {
+  name: 'containerapp'
+  scope: resourceGroup(rg.outputs.name)
+  params: {
+    location: location
+    workload: workload
+    env: env
+    region: region
+    instance: instance
+    managedEnvironmentId: containerEnvironment.outputs.managedEnvironmentId
     appInsightsConnectionString: appinsights.outputs.connectionString
     postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
     frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
@@ -161,7 +158,7 @@ module containerapp 'modules/containerapp.bicep' = {
 
 module postgres 'modules/postgres.bicep' = {
   name: 'postgres'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -180,7 +177,7 @@ module postgres 'modules/postgres.bicep' = {
 
 module alerting 'modules/alerting.bicep' = if (env == 'prod') {
   name: 'alerting'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: location
     workload: workload
@@ -189,12 +186,13 @@ module alerting 'modules/alerting.bicep' = if (env == 'prod') {
     instance: instance
     logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
     alertEmailAddress: alertEmailAddress
+    containerAppId: containerapp.outputs.containerAppId
   }
 }
 
 module staticWebApp 'modules/staticwebapp.bicep' = {
   name: 'staticwebapp'
-  scope: rg
+  scope: resourceGroup(rg.outputs.name)
   params: {
     location: staticWebAppLocation
     workload: workload
@@ -238,7 +236,7 @@ output appInsightsConnectionString string = appinsights.outputs.connectionString
 output appInsightsInstrumentationKey string = appinsights.outputs.instrumentationKey
 
 @description('Resource group name. Used to scope subsequent operations.')
-output AZURE_RESOURCE_GROUP string = rg.name
+output AZURE_RESOURCE_GROUP string = rg.outputs.name
 
 @description('ACR login server endpoint. Used to push and pull container images.')
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = acr.outputs.loginServer
