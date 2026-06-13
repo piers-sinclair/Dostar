@@ -48,7 +48,7 @@ frontend/               ← React + Vite; standalone, separate toolchain
 tests/                  ← cross-cutting tests only (UI tests, multi-module); currently empty
 infra/                  ← Bicep templates
 .claude/
-  commands/             ← Claude Code skills (scaffold-module, playwright, etc.)
+  skills/               ← Claude Code skills (scaffold-module, playwright, etc.)
 Dostar.slnx             ← .NET solution at repo root
 CLAUDE.md               ← this file
 ```
@@ -59,18 +59,18 @@ CLAUDE.md               ← this file
 
 | Skill | File | Purpose |
 |-------|------|---------|
-| `/add-package` | `.claude/commands/add-package.md` | Add NuGet/npm package with licence check |
-| `/scaffold-module` | `.claude/commands/scaffold-module.md` | AI-powered: scaffold full backend module (Contracts + Implementation + tests) from a description |
-| `/scaffold-feature` | `.claude/commands/scaffold-feature.md` | AI-powered: scaffold full frontend feature (hooks + components + MSW handlers + tests) from a description |
-| `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
-| `/code-quality` | `.claude/commands/code-quality.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
-| `/audit-azure-costs` | `.claude/commands/audit-azure-costs.md` | Audit Azure infra + CI/CD for startup cost optimisation |
-| `/integration-tests` | `.claude/commands/integration-tests.md` | Add integration tests for a module endpoint |
-| `/playwright` | `.claude/commands/playwright.md` | Write a Playwright UI test for a user journey |
-| `/create-issue` | `.claude/commands/create-issue.md` | Create a GitHub issue with labels and milestone |
-| `/bicep-quality` | `.claude/commands/bicep-quality.md` | Audit Bicep files for naming, structure, and Azure best practices |
+| `/add-package` | `.claude/skills/add-package/SKILL.md` | Add NuGet/npm package with licence check |
+| `/scaffold-module` | `.claude/skills/scaffold-module/SKILL.md` | AI-powered: scaffold full backend module (Contracts + Implementation + tests) from a description |
+| `/scaffold-feature` | `.claude/skills/scaffold-feature/SKILL.md` | AI-powered: scaffold full frontend feature (hooks + components + MSW handlers + tests) from a description |
+| `/add-migration` | `.claude/skills/add-migration/SKILL.md` | Add EF Core migration for a module with the correct flags |
+| `/code-quality` | `.claude/skills/code-quality/SKILL.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
+| `/audit-azure-costs` | `.claude/skills/audit-azure-costs/SKILL.md` | Audit Azure infra + CI/CD for startup cost optimisation |
+| `/integration-tests` | `.claude/skills/integration-tests/SKILL.md` | Add integration tests for a module endpoint |
+| `/playwright` | `.claude/skills/playwright/SKILL.md` | Write a Playwright UI test for a user journey |
+| `/create-issue` | `.claude/skills/create-issue/SKILL.md` | Create a GitHub issue with labels and milestone |
+| `/bicep-quality` | `.claude/skills/bicep-quality/SKILL.md` | Audit Bicep files for naming, structure, and Azure best practices |
 
-**No installation required** — Claude Code automatically loads every `.md` file in `.claude/commands/` as a slash command. Open Claude Code in this repository and type `/` to see the full list. See the [Claude Code custom commands documentation](https://docs.anthropic.com/en/docs/claude-code/slash-commands) for the full skill format reference.
+**No installation required** — Claude Code automatically loads every `SKILL.md` in `.claude/skills/` as a slash command. Open Claude Code in this repository and type `/` to see the full list. See the [Claude Code custom commands documentation](https://docs.anthropic.com/en/docs/claude-code/slash-commands) for the full skill format reference.
 
 **External CLI prerequisites** — some skills invoke tools that must be on your `PATH`:
 
@@ -93,7 +93,7 @@ CLAUDE.md               ← this file
 - **Backend HTTP port**: `5000` (the `http` launch profile in `launchSettings.json`).
 - **API docs (dev)**: Scalar UI at `http://localhost:5000/scalar/v1`.
 - **.NET projects**: always created via CLI (`dotnet new`, `dotnet sln add`), never by hand.
-- **AI agents**: Claude Code skills in `.claude/commands/`, not a .NET project.
+- **AI agents**: Claude Code skills in `.claude/skills/`, not a .NET project.
 - **Global usings**: each project has a `GlobalUsings.cs` at its root declaring `global using` directives for namespaces used across multiple files in that project. Avoid repeating `using` statements inside individual files.
 
 ---
@@ -314,7 +314,7 @@ needed, and no extra setup for template consumers.
 - Add a new module or change the module pattern
 - Change a port, URL, or default environment setting
 - Introduce a new library or swap an existing one
-- Add a new Claude Code skill in `.claude/commands/`
+- Add a new Claude Code skill in `.claude/skills/`
 
 **Update `README.md` whenever you:**
 - Change how to run the app or tests locally
