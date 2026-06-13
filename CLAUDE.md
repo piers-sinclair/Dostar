@@ -69,6 +69,7 @@ CLAUDE.md               ← this file
 | `/playwright` | `.claude/skills/playwright/SKILL.md` | Write a Playwright UI test for a user journey |
 | `/create-issue` | `.claude/skills/create-issue/SKILL.md` | Create a GitHub issue with labels and milestone |
 | `/bicep-quality` | `.claude/skills/bicep-quality/SKILL.md` | Audit Bicep files for naming, structure, and Azure best practices |
+| `/scaffold-page` | `.claude/skills/scaffold-page/SKILL.md` | AI-powered: scaffold a routed page (route file, PageHeader, nav link, Playwright smoke test) from a description |
 
 **No installation required** — Claude Code automatically loads every `SKILL.md` in `.claude/skills/` as a slash command. Open Claude Code in this repository and type `/` to see the full list. See the [Claude Code custom commands documentation](https://docs.anthropic.com/en/docs/claude-code/slash-commands) for the full skill format reference.
 
@@ -81,8 +82,6 @@ CLAUDE.md               ← this file
 | `/bicep-quality` | `az bicep` — auto-installed on first `az bicep build` call |
 | `/create-issue` | `gh` — [GitHub CLI](https://cli.github.com/) |
 | `/playwright` | `@playwright/test` — `pnpm install` inside `tests/` |
-
-> Future (build after M9): `/scaffold-page`
 
 ---
 
