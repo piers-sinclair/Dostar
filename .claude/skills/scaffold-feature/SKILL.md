@@ -118,8 +118,10 @@ import {
     type UseMutationResult,
     type UseQueryResult,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { apiClient } from '@/shared/api/client';
 import type { <Name>Dto, Create<Name>Request } from '@/shared/api/generated';
+import { getApiError } from '@/shared/lib/getApiError';
 
 const <NAME>S_API_PATH = '/api/<plural-name>';
 const <NAME>S_QUERY_KEY = ['<plural-name>'] as const;
@@ -163,14 +165,18 @@ export function useDelete<Name>(): UseMutationResult<void, Error, string, Optimi
             );
             return { previous };
         },
-        onError: (_err, _id, ctx) => rollback<PluralName>(ctx, client),
+        onError: (err, _id, ctx) => {
+            rollback<PluralName>(ctx, client);
+            toast.error(getApiError(err));
+        },
         onSettled: () => invalidate<PluralName>(client),
     });
 }
 ```
 
 Add `useUpdate<Name>` with optimistic update using the same pattern as `useUpdateTodo` in
-`frontend/src/features/todos/hooks/useTodos.ts` if the feature supports update.
+`frontend/src/features/todos/hooks/useTodos.ts` if the feature supports update. Include
+`toast.error(getApiError(err))` in `onError` alongside the rollback call.
 
 ---
 
@@ -220,6 +226,7 @@ describe('<Name>List', () => {
     it('shows error message when the API fails', async () => { /* server.use override + error text check */ });
     it('removes a <name> from the list after a successful delete', async () => { /* server.use override + waitFor */ });
     it('restores a <name> when the delete API call fails', async () => { /* server.use override + optimistic rollback check */ });
+    it('shows a toast error when the delete API call fails', async () => { /* server.use override + findByText on toast message */ });
 });
 ```
 
