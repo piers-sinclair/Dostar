@@ -29,7 +29,7 @@ Dostar uses [Conventional Commits](https://www.conventionalcommits.org/). This f
 
 **Examples:**
 ```
-feat(todos): add priority field to Todo model
+feat(orders): add status field to Order model
 fix(ci): correct SWA deployment token lookup
 docs: update README with architecture diagram
 ci: add release-please workflow
