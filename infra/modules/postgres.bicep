@@ -53,7 +53,7 @@ var skuTier = startsWith(skuName, 'Standard_B')
 
 // Required by PostgreSQL Flexible Server VNet integration.
 // Name must follow the pattern: <serverName>.private.postgres.database.azure.com
-resource privateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+resource privateDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
   name: '${serverName}.private.postgres.database.azure.com'
   location: 'global'
 }

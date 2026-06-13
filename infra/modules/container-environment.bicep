@@ -24,7 +24,7 @@ param logAnalyticsWorkspaceId string
 
 var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 
-resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource managedEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: caeName
   location: location
   properties: {
@@ -39,9 +39,10 @@ resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
 // Diagnostic settings route CAE logs to Log Analytics without listKeys().
 // listKeys() returns a write-only value that ARM can never read back, so inline
 // appLogsConfiguration triggers a CAE update on every deploy — slow with VNet integration.
-resource caeDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+// 2021-05-01-preview is the latest available API version for diagnosticSettings — no stable GA version exists for this resource type.
+resource managedEnvironmentDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'cae-to-log-analytics'
-  scope: cae
+  scope: managedEnvironment
   properties: {
     workspaceId: logAnalyticsWorkspaceId
     logs: [
@@ -53,4 +54,4 @@ resource caeDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-previe
 }
 
 @description('Resource ID of the Container Apps managed environment.')
-output managedEnvironmentId string = cae.id
+output managedEnvironmentId string = managedEnvironment.id

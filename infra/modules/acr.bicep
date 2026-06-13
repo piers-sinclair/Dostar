@@ -34,11 +34,5 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   }
 }
 
-@description('The name of the Azure Container Registry.')
-output acrName string = acr.name
-
 @description('The login server hostname of the ACR (e.g. crdostardevaue001.azurecr.io).')
 output loginServer string = acr.properties.loginServer
-
-@description('The resource ID of the ACR (used to scope the AcrPull role assignment in the Container App module).')
-output acrId string = acr.id

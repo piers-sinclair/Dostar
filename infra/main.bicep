@@ -59,6 +59,7 @@ param alertEmailAddress string = ''
 param containerImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
 var rgName = 'rg-${workload}-${env}-${region}-${instance}'
+var postgresConnStr = 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
 
 module rg 'modules/resource-group.bicep' = {
   name: 'resource-group'
@@ -68,7 +69,7 @@ module rg 'modules/resource-group.bicep' = {
   }
 }
 
-module keyvault 'modules/keyvault.bicep' = {
+module keyVault 'modules/keyvault.bicep' = {
   name: 'keyvault'
   scope: resourceGroup(rgName)
   dependsOn: [rg]
@@ -79,9 +80,7 @@ module keyvault 'modules/keyvault.bicep' = {
     region: region
     instance: instance
     postgresAdminPassword: postgresAdminPassword
-    postgresServerFqdn: postgres.outputs.serverFqdn
-    postgresDatabaseName: postgres.outputs.databaseName
-    postgresAdminUsername: postgresAdminUsername
+    postgresConnectionString: postgresConnStr
     swaDeploymentToken: staticWebApp.outputs.deploymentToken
   }
 }
@@ -112,7 +111,7 @@ module acr 'modules/acr.bicep' = {
   }
 }
 
-module appinsights 'modules/appinsights.bicep' = {
+module appInsights 'modules/appinsights.bicep' = {
   name: 'appinsights'
   scope: resourceGroup(rgName)
   dependsOn: [rg]
@@ -136,11 +135,11 @@ module containerEnvironment 'modules/container-environment.bicep' = {
     region: region
     instance: instance
     containerAppSubnetId: vnet.outputs.containerAppSubnetId
-    logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
+    logAnalyticsWorkspaceId: appInsights.outputs.logAnalyticsWorkspaceId
   }
 }
 
-module containerapp 'modules/containerapp.bicep' = {
+module containerApp 'modules/containerapp.bicep' = {
   name: 'containerapp'
   scope: resourceGroup(rgName)
   dependsOn: [rg]
@@ -151,8 +150,8 @@ module containerapp 'modules/containerapp.bicep' = {
     region: region
     instance: instance
     managedEnvironmentId: containerEnvironment.outputs.managedEnvironmentId
-    appInsightsConnectionString: appinsights.outputs.connectionString
-    postgresConnectionString: 'Host=${postgres.outputs.serverFqdn};Port=5432;Database=${postgres.outputs.databaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
+    appInsightsConnectionString: appInsights.outputs.connectionString
+    postgresConnectionString: postgresConnStr
     frontendOrigin: 'https://${staticWebApp.outputs.hostname}'
     containerCpu: containerCpu
     containerMemory: containerMemory
@@ -192,9 +191,9 @@ module alerting 'modules/alerting.bicep' = if (env == 'prod') {
     env: env
     region: region
     instance: instance
-    logAnalyticsWorkspaceId: appinsights.outputs.logAnalyticsWorkspaceId
+    logAnalyticsWorkspaceId: appInsights.outputs.logAnalyticsWorkspaceId
     alertEmailAddress: alertEmailAddress
-    containerAppId: containerapp.outputs.containerAppId
+    containerAppId: containerApp.outputs.containerAppId
   }
 }
 
@@ -212,7 +211,7 @@ module staticWebApp 'modules/staticwebapp.bicep' = {
 }
 
 @description('The URI of the Key Vault.')
-output keyVaultUri string = keyvault.outputs.keyVaultUri
+output keyVaultUri string = keyVault.outputs.keyVaultUri
 
 @description('Resource ID of the Container Apps subnet.')
 output containerAppSubnetId string = vnet.outputs.containerAppSubnetId
@@ -227,10 +226,10 @@ output staticWebAppHostname string = staticWebApp.outputs.hostname
 output acrLoginServer string = acr.outputs.loginServer
 
 @description('FQDN of the Container App (backend API ingress).')
-output containerAppFqdn string = containerapp.outputs.fqdn
+output containerAppFqdn string = containerApp.outputs.fqdn
 
 @description('Principal ID of the Container App system-assigned managed identity.')
-output containerAppPrincipalId string = containerapp.outputs.principalId
+output containerAppPrincipalId string = containerApp.outputs.principalId
 
 @description('Fully qualified domain name of the PostgreSQL Flexible Server.')
 output postgresServerFqdn string = postgres.outputs.serverFqdn
@@ -239,10 +238,12 @@ output postgresServerFqdn string = postgres.outputs.serverFqdn
 output postgresDatabaseName string = postgres.outputs.databaseName
 
 @description('Application Insights connection string. Set as APPLICATIONINSIGHTS_CONNECTION_STRING in the app runtime environment.')
-output appInsightsConnectionString string = appinsights.outputs.connectionString
+@secure()
+output appInsightsConnectionString string = appInsights.outputs.connectionString
 
 @description('Application Insights instrumentation key (legacy — prefer connectionString for new workloads).')
-output appInsightsInstrumentationKey string = appinsights.outputs.instrumentationKey
+@secure()
+output appInsightsInstrumentationKey string = appInsights.outputs.instrumentationKey
 
 @description('Resource group name. Used to scope subsequent operations.')
 output AZURE_RESOURCE_GROUP string = rg.outputs.name
