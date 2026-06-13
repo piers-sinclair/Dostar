@@ -89,12 +89,17 @@ This creates a private GitHub repo, sets it as the `origin` remote, and pushes y
 
 The template deploys to Azure Container Apps (backend), Azure Static Web Apps (frontend), and Azure PostgreSQL (database). CI/CD is fully automated via GitHub Actions.
 
-**Prerequisites:** Azure CLI and GitHub CLI installed, with Azure Subscription Owner and GitHub repo admin access.
+**Prerequisites:** Azure CLI and GitHub CLI installed and authenticated (`az login` / `gh auth login`), with Azure Subscription Owner and GitHub repo admin access.
 
 1. **Export variables** (run once per terminal session):
+
    ```bash
    export SUBSCRIPTION_ID="<your-azure-subscription-id>"
+   ```
+   ```bash
    export REPO="your-org/your-repo"
+   ```
+   ```bash
    export APP_NAME="your-app-name"
    ```
 
@@ -173,11 +178,37 @@ The template deploys to Azure Container Apps (backend), Azure Static Web Apps (f
 
 5. **Allow GitHub Actions to create PRs**: GitHub repo → **Settings → Actions → General** → check **"Allow GitHub Actions to create and approve pull requests"**.
 
-6. **Run infra deploy**: GitHub Actions → **Infra — deploy** → **Run workflow**. Wait ~10 minutes.
+6. **Spin up infra**: Run these two GitHub Actions workflows in order:
+   - **Infra — deploy** → **Run workflow** — provisions all Azure resources (~10 min).
+   - **Bootstrap RBAC (dev)** → **Run workflow** — grants the Container App identity access to Key Vault and the database.
 
-7. **Run Bootstrap RBAC**: GitHub Actions → **Bootstrap RBAC (dev)** → **Run workflow**.
+---
 
-After this one-time setup, pushing to `main` auto-deploys to dev. Merging a Release PR deploys to prod. See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environment lifecycle management, and the security checklist.
+**Dev deploys continuously** — every merge to `main` triggers build, test, and deploy to the dev environment automatically.
+
+**Prod deploys on demand** — the release pipeline opens a Release PR when ready; merging it promotes to prod with one click. To deploy to prod manually: Actions → **CD — release to prod** → **Run workflow**.
+
+See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environment lifecycle management, and the security checklist.
+
+### Tearing down
+
+To remove all Azure resources (e.g. to pause billing or decommission the app):
+
+```bash
+# List your resource groups to confirm names
+az group list --query "[?starts_with(name,'rg-$APP_NAME')].name" -o tsv
+```
+```bash
+# Delete each environment (cascades to all resources inside — runs in background)
+az group delete --name rg-$APP_NAME-dev-aue-001 --yes --no-wait
+az group delete --name rg-$APP_NAME-prod-aue-001 --yes --no-wait
+```
+```bash
+# Delete the Azure identity
+az ad app delete --id "$APP_ID"
+```
+
+Resource groups cascade-delete everything inside them (Container App, PostgreSQL, Key Vault, Application Insights). GitHub secrets and the repo are unaffected. Re-running the **Spin up infra** step recreates everything from scratch.
 
 ## VS Code tasks
 
