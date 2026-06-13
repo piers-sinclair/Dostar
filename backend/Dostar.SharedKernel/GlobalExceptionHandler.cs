@@ -16,11 +16,7 @@ public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetails
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
-            ProblemDetails =
-            {
-                Status = statusCode,
-                Extensions = { ["traceId"] = Activity.Current?.Id ?? httpContext.TraceIdentifier }
-            }
+            ProblemDetails = { Status = statusCode }
         });
     }
 }
