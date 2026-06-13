@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.0](https://github.com/piers-sinclair/Dostar/compare/v0.6.0...v0.7.0) (2026-06-13)
+
+
+### Features
+
+* **backend:** add validation failure and correlation ID integration tests (Closes [#386](https://github.com/piers-sinclair/Dostar/issues/386)) ([#405](https://github.com/piers-sinclair/Dostar/issues/405)) ([125f1b8](https://github.com/piers-sinclair/Dostar/commit/125f1b8f5229c8d9e125f78c6cd901c3a2a356b9))
+* **frontend:** add dostar sentinel comments around TodoList in routes/index.tsx ([#407](https://github.com/piers-sinclair/Dostar/issues/407)) ([99c51c9](https://github.com/piers-sinclair/Dostar/commit/99c51c9e6ce7e02dd16f166109eef78bed72b19e))
+
+
+### Bug Fixes
+
+* **security:** upgrade esbuild to 0.28.1 to resolve Dependabot alerts [#1](https://github.com/piers-sinclair/Dostar/issues/1) and [#2](https://github.com/piers-sinclair/Dostar/issues/2) ([#404](https://github.com/piers-sinclair/Dostar/issues/404)) ([47f7c26](https://github.com/piers-sinclair/Dostar/commit/47f7c26e232b5935f94ec6a65569757cc8f16111))
+
+
+### Documentation
+
+* add as-is disclaimer to README ([#406](https://github.com/piers-sinclair/Dostar/issues/406)) ([eaf6d78](https://github.com/piers-sinclair/Dostar/commit/eaf6d784f99e08773b203d97abfecb36f9853cb9))
+* **claude:** document dostar sentinel comments in routes/index.tsx ([#408](https://github.com/piers-sinclair/Dostar/issues/408)) ([a1fa4a0](https://github.com/piers-sinclair/Dostar/commit/a1fa4a0def66b7dbce18b30421da01848e0005a6))
+* **security:** soften liability language in SECURITY.md ([#402](https://github.com/piers-sinclair/Dostar/issues/402)) ([4204a8c](https://github.com/piers-sinclair/Dostar/commit/4204a8ce3e1e9821a532427da7cefaf36ef72ce8))
+
 ## [0.6.0](https://github.com/piers-sinclair/Dostar/compare/v0.5.0...v0.6.0) (2026-06-13)
 
 
