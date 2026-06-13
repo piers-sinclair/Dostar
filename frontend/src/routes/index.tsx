@@ -9,7 +9,9 @@ export const Route = createFileRoute('/')({
 function IndexPage(): JSX.Element {
     return (
         <div className="mx-auto max-w-lg space-y-6">
+            {/* dostar:feature:todos:start */}
             <TodoList />
+            {/* dostar:feature:todos:end */}
         </div>
     );
 }
