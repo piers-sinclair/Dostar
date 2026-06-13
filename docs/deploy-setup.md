@@ -274,10 +274,10 @@ Check the health endpoint (HTTP 200 = app is up):
 curl https://<FQDN>/healthz/live
 ```
 
-Smoke-test the API (empty array `[]` = app + DB healthy; HTTP 500 = DB connection problem):
+Check readiness (HTTP 200 = app is ready and all registered health checks pass, including database connectivity):
 
 ```bash
-curl https://<FQDN>/api/v1/todos
+curl https://<FQDN>/healthz/ready
 ```
 
 > The deployed dev environment runs with `ASPNETCORE_ENVIRONMENT=Development`, so Scalar is available at `https://<FQDN>/scalar/v1`. Browse it in a browser. It is not available in prod.
@@ -321,7 +321,7 @@ Work through this list before exposing your deployment to users.
 
 | # | Check | Why |
 |---|-------|-----|
-| 1 | **Change the `workload` parameter** from `dostar` to your project name in both `.bicepparam` files | Prevents resource-name collisions if multiple teams use the template in the same subscription |
+| 1 | **Change the `workload` parameter** from `dostar` to your project name in both `.bicepparam` files — _already done if you ran `dostar new-project`_ | Prevents resource-name collisions if multiple teams use the template in the same subscription |
 | 2 | **Set `AZURE_POSTGRES_ADMIN_USERNAME`** to a value unique to your deployment (not a dictionary word) | Reduces credential-guessing risk if the VNet is ever misconfigured |
 | 3 | **Set `AZURE_POSTGRES_ADMIN_PASSWORD`** to a randomly generated value (step 2.10 above) | Required — no default exists |
 | 4 | **Add authentication** before exposing the API to end users | The template ships without auth by design; see [auth.md](auth.md) |
