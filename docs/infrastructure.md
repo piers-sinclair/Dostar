@@ -8,26 +8,44 @@ Dostar uses [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bic
 
 ```
 infra/
-  main.bicep                      ← subscription-scoped entry point; orchestrates all modules
-  main.parameters.dev.bicepparam  ← dev environment parameter values
-  main.parameters.prod.bicepparam ← prod environment parameter values
+  main.bicep                         ← subscription-scoped orchestrator; module calls only
+  main.parameters.dev.bicepparam     ← dev environment parameter values
+  main.parameters.prod.bicepparam    ← prod environment parameter values
   modules/
-    abbreviations.bicep           ← resource type abbreviation map (CAF conventions)
-    keyvault.bicep                ← Key Vault with RBAC and managed identity integration
-    staticwebapp.bicep            ← Azure Static Web Apps for the React frontend
-    vnet.bicep                    ← VNet and subnets for network isolation
+    resource-group.bicep             ← resource group
+    acr.bicep                        ← Azure Container Registry
+    appinsights.bicep                ← Application Insights + Log Analytics Workspace + workbook
+    alerting.bicep                   ← alerting orchestrator (prod only)
+    alerting/
+      action-group.bicep             ← email action group for P1 notifications
+      error-rate.bicep               ← KQL alert: API error rate
+      latency.bicep                  ← KQL alert: P99 request latency
+      db-connectivity.bicep          ← KQL alert: PostgreSQL connectivity failures
+      container-restarts.bicep       ← metric alert: container restart count
+    container-environment.bicep      ← Container Apps managed environment + diagnostics
+    containerapp.bicep               ← Container App (identity, ingress, env vars, probes)
+    keyvault.bicep                   ← Key Vault with RBAC
+    postgres.bicep                   ← PostgreSQL Flexible Server + private DNS zone
+    staticwebapp.bicep               ← Azure Static Web Apps for the React frontend
+    vnet.bicep                       ← VNet, subnets, and NSGs for network isolation
 ```
 
 ---
 
 ## Overview
 
-| Resource        | Bicep module                 | Purpose                                |
-| --------------- | ---------------------------- | -------------------------------------- |
-| Resource Group  | `main.bicep`                 | Container for all resources            |
-| Key Vault       | `modules/keyvault.bicep`     | Secret management with RBAC            |
-| Virtual Network | `modules/vnet.bicep`         | Network isolation for backend services |
-| Static Web App  | `modules/staticwebapp.bicep` | Hosts the Vite-built React frontend    |
+| Resource                        | Bicep module                              | Purpose                                            |
+| ------------------------------- | ----------------------------------------- | -------------------------------------------------- |
+| Resource Group                  | `modules/resource-group.bicep`            | Container for all resources                        |
+| Key Vault                       | `modules/keyvault.bicep`                  | Secret management with RBAC                        |
+| Virtual Network                 | `modules/vnet.bicep`                      | Network isolation for backend and database         |
+| Container Apps Environment      | `modules/container-environment.bicep`     | Managed environment with VNet and diagnostics      |
+| Container App                   | `modules/containerapp.bicep`              | Backend API with ingress, identity, and probes     |
+| Azure Container Registry        | `modules/acr.bicep`                       | Docker image registry                              |
+| PostgreSQL Flexible Server      | `modules/postgres.bicep`                  | Managed PostgreSQL with private networking         |
+| Application Insights            | `modules/appinsights.bicep`               | Observability: traces, metrics, workbook dashboard |
+| Static Web App                  | `modules/staticwebapp.bicep`              | Hosts the Vite-built React frontend                |
+| Alerting (prod only)            | `modules/alerting.bicep`                  | Orchestrates all P1 alert rules                    |
 
 ---
 
@@ -49,19 +67,13 @@ All resources follow the pattern:
 
 **Full example:** `app-dostar-prod-aue-001`
 
-The convention is implemented as a user-defined function in `infra/main.bicep`:
-
-```bicep
-func resourceName(abbr string, workloadName string, environment string, regionCode string, instanceNumber string) string =>
-  '${abbr}-${workloadName}-${environment}-${regionCode}-${instanceNumber}'
-```
+Each module constructs its own resource names using this pattern as a string interpolation — for example `'ca-${workload}-${env}-${region}-${instance}'` in `containerapp.bicep`.
 
 ---
 
 ## Resource type abbreviations
 
-Abbreviations are defined in `infra/modules/abbreviations.bicep` following the
-[Azure CAF naming conventions](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations).
+Abbreviations follow the [Azure CAF naming conventions](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations).
 
 | Resource type              | Abbreviation |
 | -------------------------- | ------------ |
@@ -328,7 +340,7 @@ A liveness probe failure (container restart) triggers the **[P1] Container Resta
 
 ### Alerts
 
-All alerts are scoped to **prod only** — dev uses scale-to-zero and is not customer-facing, so alert noise outweighs the signal. Alerts are provisioned by `infra/modules/alerting.bicep`.
+All alerts are scoped to **prod only** — dev uses scale-to-zero and is not customer-facing, so alert noise outweighs the signal. Alerts are orchestrated by `infra/modules/alerting.bicep`, with each alert rule in its own module under `infra/modules/alerting/`.
 
 | Alert | Mechanism | Condition | Severity | Action |
 | ----- | --------- | --------- | -------- | ------ |

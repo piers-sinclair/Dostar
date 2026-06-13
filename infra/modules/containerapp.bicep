@@ -16,12 +16,8 @@ param region string
 @description('Three-digit instance number.')
 param instance string
 
-@description('Resource ID of the subnet delegated to Container Apps.')
-param containerAppSubnetId string
-
-
-@description('Resource ID of the Log Analytics workspace used for container log ingestion.')
-param logAnalyticsWorkspaceId string
+@description('Resource ID of the Container Apps managed environment.')
+param managedEnvironmentId string
 
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
 param appInsightsConnectionString string = ''
@@ -50,41 +46,13 @@ param minReplicas int = 0
 @minValue(1)
 param maxReplicas int = 3
 
-var caeName = 'cae-${workload}-${env}-${region}-${instance}'
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
 
 // ACR name uses the same deterministic formula as acr.bicep — no cross-module reference needed
+// to avoid a circular dependency (containerApp.principalId → acrPullRoleAssignment → acr.id → containerApp).
 var acrNameRaw = 'cr${workload}${env}${region}${instance}'
 var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
 var acrLoginServer = '${acrName}.azurecr.io'
-
-resource cae 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: caeName
-  location: location
-  properties: {
-    vnetConfiguration: {
-      infrastructureSubnetId: containerAppSubnetId
-      internal: false
-    }
-    zoneRedundant: false
-  }
-}
-
-// Diagnostic settings route CAE logs to Log Analytics without listKeys().
-// listKeys() returns a write-only value that ARM can never read back, so inline
-// appLogsConfiguration triggers a CAE update on every deploy — slow with VNet integration.
-resource caeDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  name: 'cae-to-log-analytics'
-  scope: cae
-  properties: {
-    workspaceId: logAnalyticsWorkspaceId
-    logs: [
-      { category: 'ContainerAppConsoleLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
-      { category: 'ContainerAppSystemLogs', enabled: true, retentionPolicy: { enabled: false, days: 0 } }
-    ]
-    metrics: []
-  }
-}
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: caName
@@ -93,7 +61,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    managedEnvironmentId: cae.id
+    managedEnvironmentId: managedEnvironmentId
     configuration: {
       ingress: {
         external: true
@@ -103,8 +71,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
       // secrets.value is write-only in the Container Apps ARM API (masked on GET), so ARM always
       // detects a diff and re-PUTs the Container App on every deploy. This is an accepted
-      // trade-off: the re-PUT is fast (~30 s, creates a new revision) and causes no downtime,
-      // unlike the CAE VNet reprovisioning fixed in the diagnostic-settings change above.
+      // trade-off: the re-PUT is fast (~30 s, creates a new revision) and causes no downtime.
       // The alternative (Key Vault URI reference + managed-identity RBAC) would be fully
       // idempotent but introduces an RBAC propagation race on first deploy that breaks the
       // template's "just works" promise for new users.
@@ -227,3 +194,6 @@ output fqdn string = containerApp.properties.configuration.ingress.fqdn
 
 @description('The name of the Container App.')
 output containerAppName string = containerApp.name
+
+@description('The resource ID of the Container App.')
+output containerAppId string = containerApp.id
