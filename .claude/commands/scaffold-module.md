@@ -326,31 +326,32 @@ Edit `backend/Dostar.Api/Program.cs`:
 ## Step 11 — Create the unit test project
 
 ```bash
-dotnet new xunit -n Dostar.<Name>.Tests \
-  -o tests/Dostar.<Name>.Tests \
+dotnet new xunit -n Dostar.<Name>.UnitTests \
+  -o backend/Modules/<Name>/Dostar.<Name>.UnitTests \
   --framework net10.0
 dotnet sln Dostar.slnx add \
-  tests/Dostar.<Name>.Tests/Dostar.<Name>.Tests.csproj \
-  --solution-folder tests
-dotnet add tests/Dostar.<Name>.Tests/Dostar.<Name>.Tests.csproj \
+  backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj \
+  --solution-folder backend
+dotnet add backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj \
   reference \
   backend/Modules/<Name>/Dostar.<Name>.Implementation/Dostar.<Name>.Implementation.csproj
-dotnet add tests/Dostar.<Name>.Tests/Dostar.<Name>.Tests.csproj package Shouldly
-dotnet add tests/Dostar.<Name>.Tests/Dostar.<Name>.Tests.csproj package NSubstitute
-dotnet add tests/Dostar.<Name>.Tests/Dostar.<Name>.Tests.csproj package Microsoft.EntityFrameworkCore.InMemory
-dotnet add tests/Dostar.<Name>.Tests/Dostar.<Name>.Tests.csproj package coverlet.collector
+dotnet add backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj package Shouldly
+dotnet add backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj package AutoFixture
+dotnet add backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj package NSubstitute
+dotnet add backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj package Microsoft.EntityFrameworkCore.InMemory
+dotnet add backend/Modules/<Name>/Dostar.<Name>.UnitTests/Dostar.<Name>.UnitTests.csproj package coverlet.collector
 ```
 
-Edit `Dostar.<Name>.Tests.csproj` to match the canonical pattern from
-`tests/Dostar.Todos.Tests/Dostar.Todos.Tests.csproj`:
+Edit `Dostar.<Name>.UnitTests.csproj` to match the canonical pattern from
+`backend/Modules/Todos/Dostar.Todos.UnitTests/Dostar.Todos.UnitTests.csproj`:
 - Add `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` in `<PropertyGroup>`
 - Add `<IsPackable>false</IsPackable>` in `<PropertyGroup>`
 - Add an item group `<Using Include="Xunit" />`
 
 Delete the generated `UnitTest1.cs`.
 
-Create `tests/Dostar.<Name>.Tests/<Name>ServiceTests.cs`, following the exact pattern in
-`tests/Dostar.Todos.Tests/TodoServiceTests.cs`:
+Create `backend/Modules/<Name>/Dostar.<Name>.UnitTests/<Name>ServiceTests.cs`, following the exact pattern in
+`backend/Modules/Todos/Dostar.Todos.UnitTests/TodoServiceTests.cs`:
 - Explicit `using` directives at the top of the file (no GlobalUsings in test projects)
 - Static `CreateDbContext()` helper using `UseInMemoryDatabase(Guid.NewGuid().ToString())`
 - `await using var db = CreateDbContext();` in every test
@@ -372,7 +373,7 @@ Create `tests/Dostar.<Name>.Tests/<Name>ServiceTests.cs`, following the exact pa
 
 ```bash
 dotnet build
-dotnet test tests/Dostar.<Name>.Tests
+dotnet test backend/Modules/<Name>/Dostar.<Name>.UnitTests
 ```
 
 Both must pass with **0 warnings** and **0 failures**. Fix any issues before reporting success.

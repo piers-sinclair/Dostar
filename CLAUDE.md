@@ -60,7 +60,8 @@ CLAUDE.md               ← this file
 | Skill | File | Purpose |
 |-------|------|---------|
 | `/add-package` | `.claude/commands/add-package.md` | Add NuGet/npm package with licence check |
-| `/scaffold-module` | `.claude/commands/scaffold-module.md` | Scaffold a full feature module (Contracts + Implementation + unit tests) |
+| `/scaffold-module` | `.claude/commands/scaffold-module.md` | AI-powered: scaffold full backend module (Contracts + Implementation + tests) from a description |
+| `/scaffold-feature` | `.claude/commands/scaffold-feature.md` | AI-powered: scaffold full frontend feature (hooks + components + MSW handlers + tests) from a description |
 | `/add-migration` | `.claude/commands/add-migration.md` | Add EF Core migration for a module with the correct flags |
 | `/code-quality` | `.claude/commands/code-quality.md` | Audit code quality (SOLID, DRY, nullability, async, naming, etc.) |
 | `/audit-azure-costs` | `.claude/commands/audit-azure-costs.md` | Audit Azure infra + CI/CD for startup cost optimisation |
