@@ -249,6 +249,12 @@ Must pass with **0 TypeScript errors**. Fix any issues before reporting success.
 
 ---
 
+## Next step
+
+Run `/scaffold-page` to wire this feature into the router — adding the route file, nav link, and a Playwright smoke test stub.
+
+---
+
 ## Conventions reminder
 
 - Feature folder name: kebab-case plural (e.g. `products`, `order-items`).
