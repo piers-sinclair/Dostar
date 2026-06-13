@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.6.0](https://github.com/piers-sinclair/Dostar/compare/v0.5.0...v0.6.0) (2026-06-13)
+
+
+### Features
+
+* **agents:** add /scaffold-page skill and docs/routing.md (Closes [#383](https://github.com/piers-sinclair/Dostar/issues/383)) ([#401](https://github.com/piers-sinclair/Dostar/issues/401)) ([5b09415](https://github.com/piers-sinclair/Dostar/commit/5b094153f2cf25708028f77dfca0824f720a3d8b))
+* **agents:** update scaffold skills for NotFoundException, LoggerMessage, and toast patterns (Closes [#388](https://github.com/piers-sinclair/Dostar/issues/388)) ([#400](https://github.com/piers-sinclair/Dostar/issues/400)) ([54c3aeb](https://github.com/piers-sinclair/Dostar/commit/54c3aebe4d6ba68af9c8797455c88b7ff9686d00))
+* **backend:** add GlobalExceptionHandler and domain exception types ([#391](https://github.com/piers-sinclair/Dostar/issues/391)) ([2d5ebad](https://github.com/piers-sinclair/Dostar/commit/2d5ebad9b497cb508fa47001ce4312335954ede8))
+* **backend:** add ILogger injection pattern to Todos module ([#393](https://github.com/piers-sinclair/Dostar/issues/393)) ([19b5053](https://github.com/piers-sinclair/Dostar/commit/19b5053cdc6d53ce459e7a7016dcc74cac7a1ca7))
+* **frontend:** add global API error interceptor in apiClient ([#397](https://github.com/piers-sinclair/Dostar/issues/397)) ([af4053a](https://github.com/piers-sinclair/Dostar/commit/af4053a35018f18865fcf4f27a8feca38ac11a27))
+* **frontend:** add global ErrorBoundary with fallback UI ([#395](https://github.com/piers-sinclair/Dostar/issues/395)) ([508120d](https://github.com/piers-sinclair/Dostar/commit/508120d29a03dfc3a228fa762287953e7a7a37ba))
+* **frontend:** add global toast notification system for mutation errors (Closes [#381](https://github.com/piers-sinclair/Dostar/issues/381)) ([#396](https://github.com/piers-sinclair/Dostar/issues/396)) ([0abe693](https://github.com/piers-sinclair/Dostar/commit/0abe693eff4d1e5ac7400b195cf7d376617cf461))
+* **frontend:** add success toast on CreateTodoForm submit ([#399](https://github.com/piers-sinclair/Dostar/issues/399)) ([7cdf08a](https://github.com/piers-sinclair/Dostar/commit/7cdf08a62cb040778591c8131cc99139e6a58a02)), closes [#387](https://github.com/piers-sinclair/Dostar/issues/387)
+* **frontend:** add TanStack Router with two-level shell layout ([#392](https://github.com/piers-sinclair/Dostar/issues/392)) ([08d6795](https://github.com/piers-sinclair/Dostar/commit/08d679519f69acd19c7f383a298e2145c7920f6a))
+
 ## [0.5.0](https://github.com/piers-sinclair/Dostar/compare/v0.4.0...v0.5.0) (2026-06-13)
 
 
