@@ -1,3 +1,9 @@
+---
+description: Audit code for quality issues (SOLID, DRY, naming, async, EF Core, TypeScript strictness) and report all findings before making any changes.
+argument-hint: [path]
+allowed-tools: Bash(git *) Read Glob Grep
+---
+
 # code-quality
 
 Audit code for quality issues across a defined set of principles and report findings before making any changes.

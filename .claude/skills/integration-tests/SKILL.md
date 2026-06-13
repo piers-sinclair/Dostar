@@ -1,3 +1,9 @@
+---
+description: Add integration tests for a Dostar module endpoint using WebApplicationFactory and Testcontainers.
+argument-hint: <Module> <description>
+allowed-tools: Bash(dotnet *) Read Write Edit Glob Grep
+---
+
 # integration-tests
 
 Add integration tests for a Dostar module endpoint.

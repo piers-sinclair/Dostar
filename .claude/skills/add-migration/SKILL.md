@@ -1,3 +1,9 @@
+---
+description: Add an EF Core migration for a Dostar module using the correct project and startup-project flags.
+argument-hint: <MigrationName> [--module <Name>]
+allowed-tools: Bash(dotnet *) Read Glob
+---
+
 # add-migration
 
 Add an EF Core migration for a Dostar module using the correct flags for this project's structure.

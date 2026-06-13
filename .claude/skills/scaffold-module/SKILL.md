@@ -1,3 +1,9 @@
+---
+description: Scaffold a complete Dostar backend module (Contracts, Implementation, UnitTests) from a plain-English description.
+argument-hint: <module description>
+allowed-tools: Bash(dotnet *) Read Write Edit Glob Grep
+---
+
 # scaffold-module
 
 Scaffold a complete Dostar feature module from a plain-English description.

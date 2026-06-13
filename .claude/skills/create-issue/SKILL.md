@@ -1,3 +1,9 @@
+---
+description: Create a GitHub issue in the piers-sinclair/Dostar repository with labels and an optional milestone.
+argument-hint: <title> [--body <text>] [--label <label>] [--milestone <title>]
+allowed-tools: Bash(gh *)
+---
+
 # create-issue
 
 Create a GitHub issue in the `piers-sinclair/Dostar` repository with labels and an optional milestone.

@@ -1,3 +1,9 @@
+---
+description: Scaffold a complete frontend feature (hooks, components, MSW handlers, tests) from a plain-English description. Requires the backend module to already exist and the orval API client to be regenerated first.
+argument-hint: <feature description>
+allowed-tools: Bash(pnpm *) Read Write Edit Glob Grep
+---
+
 # scaffold-feature
 
 Scaffold a complete frontend feature from a plain-English description.
