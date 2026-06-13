@@ -1,7 +1,7 @@
 namespace Dostar.Todos.Implementation.Application;
 
 [ExcludeFromCodeCoverage]
-public class TodoService(TodosDbContext db) : ITodoService
+public partial class TodoService(TodosDbContext db, ILogger<TodoService> logger) : ITodoService
 {
     public async Task<IEnumerable<TodoDto>> GetAllAsync(CancellationToken cancellationToken = default) =>
         await db.Todos
@@ -12,7 +12,11 @@ public class TodoService(TodosDbContext db) : ITodoService
     public async Task<TodoDto> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var todo = await db.Todos.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
-        if (todo is null) throw new NotFoundException($"Todo {id} not found.");
+        if (todo is null)
+        {
+            LogTodoNotFound(logger, id);
+            throw new NotFoundException($"Todo {id} not found.");
+        }
         return ToDto(todo);
     }
 
@@ -28,6 +32,7 @@ public class TodoService(TodosDbContext db) : ITodoService
         };
         db.Todos.Add(todo);
         await db.SaveChangesAsync(cancellationToken);
+        LogTodoCreated(logger, todo.Id);
         return ToDto(todo);
     }
 
@@ -51,4 +56,10 @@ public class TodoService(TodosDbContext db) : ITodoService
 
     private static TodoDto ToDto(Todo todo) =>
         new(todo.Id, todo.Title, todo.IsCompleted, todo.CreatedAt);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Todo created with id {TodoId}")]
+    private static partial void LogTodoCreated(ILogger logger, Guid todoId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Todo not found with id {TodoId}")]
+    private static partial void LogTodoNotFound(ILogger logger, Guid todoId);
 }

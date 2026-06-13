@@ -138,6 +138,51 @@ group.MapPost("/", handler)
 
 No additional package references are needed — `FluentValidation` flows through `Dostar.SharedKernel`.
 
+## Logging
+
+Inject `ILogger<TService>` via the primary constructor and define log methods using the `[LoggerMessage]` source-generation pattern. This compiles to a zero-allocation static helper — no string interpolation at the call site.
+
+```csharp
+public partial class WidgetService(WidgetDbContext db, ILogger<WidgetService> logger) : IWidgetService
+{
+    public async Task<WidgetDto> CreateAsync(string name, CancellationToken cancellationToken = default)
+    {
+        // ... create widget ...
+        LogWidgetCreated(logger, widget.Id);
+        return ToDto(widget);
+    }
+
+    public async Task<WidgetDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var widget = await db.Widgets.AsNoTracking().FirstOrDefaultAsync(w => w.Id == id, cancellationToken);
+        if (widget is null)
+        {
+            LogWidgetNotFound(logger, id);
+            return null;
+        }
+        return ToDto(widget);
+    }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Widget created with id {WidgetId}")]
+    private static partial void LogWidgetCreated(ILogger logger, Guid widgetId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Widget not found with id {WidgetId}")]
+    private static partial void LogWidgetNotFound(ILogger logger, Guid widgetId);
+}
+```
+
+**Rules:**
+- Mark the service class `partial` — required by the source generator.
+- Log methods are `private static partial void` — the generator emits the implementation.
+- Pass `ILogger` (not `ILogger<T>`) into the log methods; the `<T>` binding lives only in the constructor.
+- No DI registration needed — `ILogger<T>` is supplied automatically by ASP.NET Core's logging infrastructure.
+- Add `global using Microsoft.Extensions.Logging;` to `GlobalUsings.cs` in the `.Implementation` project.
+
+**What to log:**
+- `Information` — successful mutations (record created/updated/deleted with the new id)
+- `Warning` — not-found lookups (log the requested id)
+- `Error` — unexpected failures (caught at the endpoint or middleware layer, not in the service)
+
 ## Tests
 
 Unit and integration tests are colocated with their module under `backend/Modules/<Name>/`:
