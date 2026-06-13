@@ -15,7 +15,9 @@ export function mapProblemDetailsErrors<T extends FieldValues>(
         }
     } else {
         const msg =
-            error instanceof ApiError ? error.message : p?.detail ?? 'An unexpected error occurred.';
+            error instanceof ApiError
+                ? error.message
+                : (p?.detail ?? 'An unexpected error occurred.');
         setError('root', { message: msg });
     }
 }
