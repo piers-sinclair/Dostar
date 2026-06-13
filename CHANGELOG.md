@@ -1,5 +1,51 @@
 # Changelog
 
+## [0.5.0](https://github.com/piers-sinclair/Dostar/compare/v0.4.0...v0.5.0) (2026-06-13)
+
+
+### Features
+
+* **agents:** add /scaffold-feature skill and fix /scaffold-module test paths ([#372](https://github.com/piers-sinclair/Dostar/issues/372)) ([a4f01ec](https://github.com/piers-sinclair/Dostar/commit/a4f01ecefba8ba25ed635d68c132e3e4d2675d72)), closes [#371](https://github.com/piers-sinclair/Dostar/issues/371)
+* **devcontainer:** add health check panel and improve error visibility ([#347](https://github.com/piers-sinclair/Dostar/issues/347)) ([9d8fa0f](https://github.com/piers-sinclair/Dostar/commit/9d8fa0ff3817bae1081114ea2daac9bef2762787)), closes [#339](https://github.com/piers-sinclair/Dostar/issues/339)
+* **devcontainer:** show setup progress status on attach ([#348](https://github.com/piers-sinclair/Dostar/issues/348)) ([fae8937](https://github.com/piers-sinclair/Dostar/commit/fae89375d0c05bee3528942ce5cdd3d453f1ca23))
+* issue 339 devcontainer health check ([#349](https://github.com/piers-sinclair/Dostar/issues/349)) ([28f0940](https://github.com/piers-sinclair/Dostar/commit/28f0940869d3d0a9962bc68a3598754745c64b74))
+* restructure frontend to use feature-based folder organisation ([#345](https://github.com/piers-sinclair/Dostar/issues/345)) ([e2b5f42](https://github.com/piers-sinclair/Dostar/commit/e2b5f42e390ae3cf59514c35b18a9fa976efcd56))
+
+
+### Bug Fixes
+
+* add curl timeouts to smoke tests to prevent indefinite hangs ([#350](https://github.com/piers-sinclair/Dostar/issues/350)) ([9a81ecc](https://github.com/piers-sinclair/Dostar/commit/9a81ecc76891157b83fdeb1d64f7ca32e2d12884))
+* **cd:** remove invalid skip_api_build input from SWA deploy action ([#360](https://github.com/piers-sinclair/Dostar/issues/360)) ([72438f0](https://github.com/piers-sinclair/Dostar/commit/72438f02347a672f24f4af0a67045120b003a437))
+* **devcontainer:** add sudo to lefthook symlink so it can write to /usr/local/bin ([#342](https://github.com/piers-sinclair/Dostar/issues/342)) ([f550146](https://github.com/piers-sinclair/Dostar/commit/f550146b29c658b41e7ffc978b4f1f93b466f4f6))
+* **devcontainer:** derive Docker Compose network name dynamically ([#339](https://github.com/piers-sinclair/Dostar/issues/339)) ([a19b9da](https://github.com/piers-sinclair/Dostar/commit/a19b9dab715623eeb064b52c76ea1fdbe922eaad)), closes [#338](https://github.com/piers-sinclair/Dostar/issues/338)
+* **devcontainer:** explicitly run lefthook install after symlink setup ([#366](https://github.com/piers-sinclair/Dostar/issues/366)) ([cd9dad2](https://github.com/piers-sinclair/Dostar/commit/cd9dad2302d8b57959815e5aa82af52be7030c18))
+* **devcontainer:** fix health command and protect dostar tool references from substitution ([#363](https://github.com/piers-sinclair/Dostar/issues/363)) ([a68cff8](https://github.com/piers-sinclair/Dostar/commit/a68cff861dd64c5075f74aadf10a4652b010e870))
+* **devcontainer:** improve postgres network setup reliability and health diagnostics ([#364](https://github.com/piers-sinclair/Dostar/issues/364)) ([5273bd7](https://github.com/piers-sinclair/Dostar/commit/5273bd7c4f0af005c27c2833f64cdc61c7fb10f0))
+* **devcontainer:** install Dostar CLI in postCreate.sh ([#340](https://github.com/piers-sinclair/Dostar/issues/340)) ([9b1f9c2](https://github.com/piers-sinclair/Dostar/commit/9b1f9c245545db4514605b6a021b5d39f7e1e88c)), closes [#336](https://github.com/piers-sinclair/Dostar/issues/336)
+* **devcontainer:** make pnpm install fault-tolerant when git repo is missing ([#341](https://github.com/piers-sinclair/Dostar/issues/341)) ([a512dc5](https://github.com/piers-sinclair/Dostar/commit/a512dc5b6a867be4947e5d4eb82915d396b88375)), closes [#337](https://github.com/piers-sinclair/Dostar/issues/337)
+* **devcontainer:** symlink lefthook to native binary instead of pnpm shim ([#346](https://github.com/piers-sinclair/Dostar/issues/346)) ([a9f25bc](https://github.com/piers-sinclair/Dostar/commit/a9f25bcc71042609d254441554238a7f2c7f50e6))
+* handle curl non-zero exit in smoke test loop ([#352](https://github.com/piers-sinclair/Dostar/issues/352)) ([1283bf2](https://github.com/piers-sinclair/Dostar/commit/1283bf25f6cb8d25c5aef106e6d878d0ca9b1e7e))
+* **infra:** add dependsOn rg to all resource-group-scoped modules ([#368](https://github.com/piers-sinclair/Dostar/issues/368)) ([231dd38](https://github.com/piers-sinclair/Dostar/commit/231dd38460b243fab4fdbc15b5c10f157e365cd8)), closes [#361](https://github.com/piers-sinclair/Dostar/issues/361)
+* **infra:** remove smoke test from infra-deploy ([#356](https://github.com/piers-sinclair/Dostar/issues/356)) ([005803f](https://github.com/piers-sinclair/Dostar/commit/005803fdb649cb82112ccab6aaa00cee9ec51738))
+* **infra:** replace Container App inline secret with Key Vault URI reference ([#359](https://github.com/piers-sinclair/Dostar/issues/359)) ([a0408f1](https://github.com/piers-sinclair/Dostar/commit/a0408f10b0ae0d6b5cf49b4fe13f98e357cc5070)), closes [#355](https://github.com/piers-sinclair/Dostar/issues/355)
+* **infra:** revert KV secret reference, document write-only field trade-offs ([#362](https://github.com/piers-sinclair/Dostar/issues/362)) ([e3ff031](https://github.com/piers-sinclair/Dostar/commit/e3ff03176ffff8ed15c4bea7486acd8f07d2bf72)), closes [#355](https://github.com/piers-sinclair/Dostar/issues/355)
+* **infra:** show ARM deployment progress in CI logs ([#358](https://github.com/piers-sinclair/Dostar/issues/358)) ([e4b8e01](https://github.com/piers-sinclair/Dostar/commit/e4b8e013f34f41d4b31f8207244269980c4de439))
+* **infra:** skip smoke test in infra-deploy when called from infra-spinup + fix CAE listKeys idempotency ([#354](https://github.com/piers-sinclair/Dostar/issues/354)) ([a8894de](https://github.com/piers-sinclair/Dostar/commit/a8894de051c3ad5e2deffa74c59d8ea13fcf781f))
+* **infra:** use rgName var in module scopes instead of rg.outputs.name ([#367](https://github.com/piers-sinclair/Dostar/issues/367)) ([0edbe9c](https://github.com/piers-sinclair/Dostar/commit/0edbe9cb14a91bcdcb734b802a4d71b9d9bd62bf))
+* Modify CLI installation instructions in README ([#332](https://github.com/piers-sinclair/Dostar/issues/332)) ([76a11f8](https://github.com/piers-sinclair/Dostar/commit/76a11f81525e45870a40c6d624b078faf1f49d2d))
+* remove fixed host port binding for PostgreSQL ([#370](https://github.com/piers-sinclair/Dostar/issues/370)) ([32a856e](https://github.com/piers-sinclair/Dostar/commit/32a856e7cb0d6b3737cf098d143a5b661fab21d6))
+* remove spurious provider registration step that stalled infra deploys ([#353](https://github.com/piers-sinclair/Dostar/issues/353)) ([7898d9a](https://github.com/piers-sinclair/Dostar/commit/7898d9a84a149858877c300bd70de9cc16746f90))
+* **vscode:** default Run and Debug picker to API + Frontend compound ([#375](https://github.com/piers-sinclair/Dostar/issues/375)) ([551b0f3](https://github.com/piers-sinclair/Dostar/commit/551b0f3938dadef8ec5b00edffe38f1d990eec9a))
+
+
+### Documentation
+
+* clarify three core goals in README and CLAUDE.md ([#334](https://github.com/piers-sinclair/Dostar/issues/334)) ([d91cb5b](https://github.com/piers-sinclair/Dostar/commit/d91cb5bc45d25d21831aa180581fdbb2cc2e7e55))
+* **readme:** improve deploy UX — split exports, spin up infra, teardown, dev/prod story ([#376](https://github.com/piers-sinclair/Dostar/issues/376)) ([e724bd2](https://github.com/piers-sinclair/Dostar/commit/e724bd2ea5e67e746cc214173db574e61ed9943d))
+* replace Todos smoke-test endpoint and note CLI handles workload rename ([#377](https://github.com/piers-sinclair/Dostar/issues/377)) ([d964769](https://github.com/piers-sinclair/Dostar/commit/d9647695e3e2c60d1ada3255302c0b7c660f2ab9))
+* replace Todos-specific commit example with generic domain example ([#378](https://github.com/piers-sinclair/Dostar/issues/378)) ([39901e4](https://github.com/piers-sinclair/Dostar/commit/39901e40a690c1dca0e0f496f4f9f23a99b6e433))
+* **skills:** add YAML frontmatter to all Claude Code skills ([#379](https://github.com/piers-sinclair/Dostar/issues/379)) ([ad94fa0](https://github.com/piers-sinclair/Dostar/commit/ad94fa0fcc60fa78863dcca1b69acd8dfc24874e))
+
 ## [0.4.0](https://github.com/piers-sinclair/Dostar/compare/v0.3.0...v0.4.0) (2026-06-12)
 
 
