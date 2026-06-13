@@ -1,10 +1,11 @@
 import path from 'path';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { TanStackRouterVite } from '@tanstack/router-vite-plugin';
 import { coverageConfigDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
-    plugins: [react(), tailwindcss()],
+    plugins: [TanStackRouterVite(), react(), tailwindcss()],
     resolve: {
         alias: { '@': path.resolve(__dirname, './src') },
     },
@@ -25,6 +26,7 @@ export default defineConfig({
             exclude: [
                 ...coverageConfigDefaults.exclude,
                 'src/main.tsx',
+                'src/routeTree.gen.ts',
                 'src/test/**',
                 'src/shared/api/generated/**',
             ],
