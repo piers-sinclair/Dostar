@@ -178,9 +178,7 @@ The template deploys to Azure Container Apps (backend), Azure Static Web Apps (f
 
 5. **Allow GitHub Actions to create PRs**: GitHub repo → **Settings → Actions → General** → check **"Allow GitHub Actions to create and approve pull requests"**.
 
-6. **Spin up infra**: Run these two GitHub Actions workflows in order:
-   - **Infra — deploy** → **Run workflow** — provisions all Azure resources (~10 min).
-   - **Bootstrap RBAC (dev)** → **Run workflow** — grants the Container App identity access to Key Vault and the database.
+6. **Spin up**: GitHub Actions → **Infra — spin up** → **Run workflow** (select `dev`). This single workflow provisions all Azure resources, bootstraps RBAC, and deploys the backend and frontend in sequence (~15 min). URLs are printed in the workflow summary when complete.
 
 ---
 
@@ -192,23 +190,9 @@ See [docs/deploy-setup.md](docs/deploy-setup.md) for verification steps, environ
 
 ### Tearing down
 
-To remove all Azure resources (e.g. to pause billing or decommission the app):
+To remove an environment (e.g. to pause billing or decommission the app): GitHub Actions → **Infra — tear down** → **Run workflow**, select the environment, and type `teardown` to confirm. The workflow deletes the resource group, which cascades to all resources inside it (Container App, PostgreSQL, Key Vault, Application Insights).
 
-```bash
-# List your resource groups to confirm names
-az group list --query "[?starts_with(name,'rg-$APP_NAME')].name" -o tsv
-```
-```bash
-# Delete each environment (cascades to all resources inside — runs in background)
-az group delete --name rg-$APP_NAME-dev-aue-001 --yes --no-wait
-az group delete --name rg-$APP_NAME-prod-aue-001 --yes --no-wait
-```
-```bash
-# Delete the Azure identity
-az ad app delete --id "$APP_ID"
-```
-
-Resource groups cascade-delete everything inside them (Container App, PostgreSQL, Key Vault, Application Insights). GitHub secrets and the repo are unaffected. Re-running the **Spin up infra** step recreates everything from scratch.
+GitHub secrets and the repo are unaffected. Re-running **Infra — spin up** recreates everything from scratch.
 
 ## VS Code tasks
 
