@@ -212,6 +212,18 @@ The `dostar` CLI lives in [piers-sinclair/Dostar.Cli](https://github.com/piers-s
 >
 > When making such changes, open an issue on [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) if a CLI update is needed.
 
+### Sentinel comments in `routes/index.tsx`
+
+`dostar add-feature <Name>` and `dostar remove-feature <Name>` automatically edit `frontend/src/routes/index.tsx`. Each feature's wiring is wrapped in sentinel comments that the CLI uses to locate and remove it:
+
+```tsx
+{/* dostar:feature:orders:start */}
+<OrderList />
+{/* dostar:feature:orders:end */}
+```
+
+**Do not put custom code inside a sentinel block** — `remove-feature` deletes everything between the markers, inclusive. Customise the surrounding layout (the `<div>` wrapper, spacing classes, etc.) freely; only the sentinel block itself is managed by the CLI.
+
 ---
 
 ## Working on a GitHub issue
