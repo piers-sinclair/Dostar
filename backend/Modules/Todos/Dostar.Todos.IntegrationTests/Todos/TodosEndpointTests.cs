@@ -1,3 +1,5 @@
+using Dostar.Todos.Implementation.Infrastructure;
+
 namespace Dostar.Todos.IntegrationTests.Todos;
 
 public class TodosEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>, IAsyncLifetime

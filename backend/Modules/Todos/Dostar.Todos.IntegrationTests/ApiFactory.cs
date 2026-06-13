@@ -1,3 +1,5 @@
+using Dostar.Todos.Implementation.Infrastructure;
+
 namespace Dostar.Todos.IntegrationTests;
 
 public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime

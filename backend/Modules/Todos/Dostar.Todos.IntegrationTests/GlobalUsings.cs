@@ -2,7 +2,6 @@ global using System.Net;
 global using System.Net.Http.Json;
 global using System.Text.Json;
 global using Dostar.Todos.Contracts;
-global using Dostar.Todos.Implementation.Infrastructure;
 global using Microsoft.AspNetCore.Hosting;
 global using Microsoft.AspNetCore.Mvc.Testing;
 global using Microsoft.EntityFrameworkCore;
