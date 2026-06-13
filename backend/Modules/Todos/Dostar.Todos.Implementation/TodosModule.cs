@@ -37,12 +37,10 @@ public class TodosModule : IEndpointModule
             .WithName(GetTodosOperationId);
 
         group.MapGet(IdRoute, async (Guid id, ITodoService service, CancellationToken ct) =>
-        {
-            var todo = await service.GetByIdAsync(id, ct);
-            return todo is null ? Results.NotFound() : Results.Ok(todo);
-        }).Produces<TodoDto>()
-          .Produces(StatusCodes.Status404NotFound)
-          .WithName(GetTodoOperationId);
+            Results.Ok(await service.GetByIdAsync(id, ct)))
+            .Produces<TodoDto>()
+            .Produces(StatusCodes.Status404NotFound)
+            .WithName(GetTodoOperationId);
 
         group.MapPost(RootRoute, async (CreateTodoRequest request, ITodoService service, LinkGenerator links, HttpContext ctx, CancellationToken ct) =>
         {
@@ -55,18 +53,16 @@ public class TodosModule : IEndpointModule
           .WithName(CreateTodoOperationId);
 
         group.MapPut(IdRoute, async (Guid id, UpdateTodoRequest request, ITodoService service, CancellationToken ct) =>
-        {
-            var todo = await service.UpdateAsync(id, request.Title, request.IsCompleted, ct);
-            return todo is null ? Results.NotFound() : Results.Ok(todo);
-        }).Produces<TodoDto>()
-          .Produces(StatusCodes.Status404NotFound)
-          .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
-          .WithName(UpdateTodoOperationId);
+            Results.Ok(await service.UpdateAsync(id, request.Title, request.IsCompleted, ct)))
+            .Produces<TodoDto>()
+            .Produces(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<ValidationFilter<UpdateTodoRequest>>()
+            .WithName(UpdateTodoOperationId);
 
         group.MapDelete(IdRoute, async (Guid id, ITodoService service, CancellationToken ct) =>
         {
-            var deleted = await service.DeleteAsync(id, ct);
-            return deleted ? Results.NoContent() : Results.NotFound();
+            await service.DeleteAsync(id, ct);
+            return Results.NoContent();
         }).Produces(StatusCodes.Status204NoContent)
           .Produces(StatusCodes.Status404NotFound)
           .WithName(DeleteTodoOperationId);
