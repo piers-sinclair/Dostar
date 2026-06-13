@@ -13,6 +13,7 @@ param containerAppId string
 @description('Resource ID of the action group to notify on alert.')
 param actionGroupId string
 
+// 2018-03-01 is the current stable GA API version for metricAlerts — no newer GA version exists.
 resource restartAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   name: 'alert-restart-${workload}-${env}'
   location: 'global'

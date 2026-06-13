@@ -20,6 +20,7 @@ param instance string
 param managedEnvironmentId string
 
 @description('Application Insights connection string (optional — leave empty to skip wiring).')
+@secure()
 param appInsightsConnectionString string = ''
 
 @description('Frontend origin allowed by the production CORS policy (e.g. https://stapp-dostar-dev-aue-001.azurestaticapps.net). Leave empty to disable cross-origin access.')
@@ -47,12 +48,54 @@ param minReplicas int = 0
 param maxReplicas int = 3
 
 var caName = 'ca-${workload}-${env}-${region}-${instance}'
+var containerPort = 8080
+var liveProbe = '/healthz/live'
+var readyProbe = '/healthz/ready'
 
 // ACR name uses the same deterministic formula as acr.bicep — no cross-module reference needed
 // to avoid a circular dependency (containerApp.principalId → acrPullRoleAssignment → acr.id → containerApp).
 var acrNameRaw = 'cr${workload}${env}${region}${instance}'
 var acrName = length(acrNameRaw) <= 50 ? acrNameRaw : substring(acrNameRaw, 0, 50)
 var acrLoginServer = '${acrName}.azurecr.io'
+
+var startupProbe = {
+  type: 'Startup'
+  httpGet: {
+    path: liveProbe
+    port: containerPort
+    scheme: 'HTTP'
+  }
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 18
+}
+
+var livenessProbe = {
+  type: 'Liveness'
+  httpGet: {
+    path: liveProbe
+    port: containerPort
+    scheme: 'HTTP'
+  }
+  initialDelaySeconds: 0
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+}
+
+var readinessProbe = {
+  type: 'Readiness'
+  httpGet: {
+    path: readyProbe
+    port: containerPort
+    scheme: 'HTTP'
+  }
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+}
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: caName
@@ -65,7 +108,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     configuration: {
       ingress: {
         external: true
-        targetPort: 8080
+        targetPort: containerPort
         transport: 'auto'
         allowInsecure: false
       }
@@ -106,7 +149,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             [
               {
                 name: 'ASPNETCORE_URLS'
-                value: 'http://+:8080'
+                value: 'http://+:${containerPort}'
               }
               {
                 name: 'ASPNETCORE_ENVIRONMENT'
@@ -138,44 +181,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
                 ]
               : []
           )
-          probes: [
-            {
-              type: 'Startup'
-              httpGet: {
-                path: '/healthz/live'
-                port: 8080
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 0
-              periodSeconds: 10
-              timeoutSeconds: 5
-              failureThreshold: 18
-            }
-            {
-              type: 'Liveness'
-              httpGet: {
-                path: '/healthz/live'
-                port: 8080
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 0
-              periodSeconds: 30
-              timeoutSeconds: 5
-              failureThreshold: 3
-            }
-            {
-              type: 'Readiness'
-              httpGet: {
-                path: '/healthz/ready'
-                port: 8080
-                scheme: 'HTTP'
-              }
-              initialDelaySeconds: 0
-              periodSeconds: 10
-              timeoutSeconds: 5
-              failureThreshold: 3
-            }
-          ]
+          probes: [startupProbe, livenessProbe, readinessProbe]
         }
       ]
       scale: {

@@ -20,14 +20,9 @@ param instance string
 @secure()
 param postgresAdminPassword string
 
-@description('Fully qualified domain name of the PostgreSQL Flexible Server.')
-param postgresServerFqdn string
-
-@description('Name of the PostgreSQL database.')
-param postgresDatabaseName string
-
-@description('Administrator username for the PostgreSQL Flexible Server.')
-param postgresAdminUsername string
+@description('PostgreSQL connection string assembled in main.bicep. Stored as a secret so operators can use it directly.')
+@secure()
+param postgresConnectionString string
 
 @description('SWA deployment token. Pass from staticWebApp.outputs.deploymentToken. Leave empty to skip.')
 @secure()
@@ -54,6 +49,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
+// secret.value is write-only in the Key Vault ARM API — ARM always detects a diff and re-PUTs
+// secrets on every deploy. The re-PUT is idempotent (same value = no change in vault) and fast.
 resource postgresPasswordSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'postgres-admin-password'
   parent: keyVault
@@ -66,10 +63,9 @@ resource postgresConnectionStringSecret 'Microsoft.KeyVault/vaults/secrets@2023-
   name: 'postgres-connection-string'
   parent: keyVault
   properties: {
-    value: 'Host=${postgresServerFqdn};Port=5432;Database=${postgresDatabaseName};Username=${postgresAdminUsername};Password=${postgresAdminPassword};Ssl Mode=Require;Trust Server Certificate=true'
+    value: postgresConnectionString
   }
 }
-
 
 resource swaDeploymentTokenSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(swaDeploymentToken)) {
   name: 'swa-deployment-token'

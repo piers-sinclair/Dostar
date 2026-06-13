@@ -23,7 +23,7 @@ resource errorRateAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   location: location
   properties: {
     displayName: '[P1] High Error Rate'
-    description: 'Fires when API error rate exceeds 10% over 5 minutes. Check AppRequests in Log Analytics for failing endpoints and recent deployments.'
+    description: 'Fires when API error rate exceeds ${errorRateThresholdPct}% over 5 minutes. Check AppRequests in Log Analytics for failing endpoints and recent deployments.'
     severity: 0
     enabled: true
     scopes: [logAnalyticsWorkspaceId]

@@ -74,7 +74,7 @@ var workbookContent = '''
 }
 '''
 
-resource workbook 'microsoft.insights/workbooks@2023-06-01' = {
+resource workbook 'Microsoft.Insights/workbooks@2023-06-01' = {
   name: guid(resourceGroup().id, 'api-observability-dashboard')
   location: location
   kind: 'shared'

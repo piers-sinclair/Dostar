@@ -23,7 +23,7 @@ resource latencyAlert 'Microsoft.Insights/scheduledQueryRules@2022-06-15' = {
   location: location
   properties: {
     displayName: '[P1] High P99 Latency'
-    description: 'Fires when P99 latency exceeds 2000ms over 5 minutes. Check AppRequests for slow endpoints and AppDependencies for slow DB queries.'
+    description: 'Fires when P99 latency exceeds ${latencyThresholdMs}ms over 5 minutes. Check AppRequests for slow endpoints and AppDependencies for slow DB queries.'
     severity: 0
     enabled: true
     scopes: [logAnalyticsWorkspaceId]

@@ -18,77 +18,19 @@ param instance string
 
 var vnetName = 'vnet-${workload}-${env}-${region}-${instance}'
 
-resource nsgContainerApp 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
-  name: 'nsg-${workload}-${env}-${region}-${instance}-containerapp'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'Allow-VNet-Inbound'
-        properties: {
-          priority: 100
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: '*'
-          sourceAddressPrefix: 'VirtualNetwork'
-          sourcePortRange: '*'
-          destinationAddressPrefix: 'VirtualNetwork'
-          destinationPortRange: '*'
-          description: 'Allow intra-VNet traffic.'
-        }
-      }
-      {
-        name: 'Deny-All-Inbound'
-        properties: {
-          priority: 4096
-          direction: 'Inbound'
-          access: 'Deny'
-          protocol: '*'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRange: '*'
-          description: 'Deny all other inbound traffic.'
-        }
-      }
-    ]
+module nsgContainerApp 'networking/nsg.bicep' = {
+  name: 'nsg-containerapp'
+  params: {
+    name: 'nsg-${workload}-${env}-${region}-${instance}-containerapp'
+    location: location
   }
 }
 
-resource nsgPostgres 'Microsoft.Network/networkSecurityGroups@2024-01-01' = {
-  name: 'nsg-${workload}-${env}-${region}-${instance}-postgres'
-  location: location
-  properties: {
-    securityRules: [
-      {
-        name: 'Allow-VNet-Inbound'
-        properties: {
-          priority: 100
-          direction: 'Inbound'
-          access: 'Allow'
-          protocol: '*'
-          sourceAddressPrefix: 'VirtualNetwork'
-          sourcePortRange: '*'
-          destinationAddressPrefix: 'VirtualNetwork'
-          destinationPortRange: '*'
-          description: 'Allow intra-VNet traffic.'
-        }
-      }
-      {
-        name: 'Deny-All-Inbound'
-        properties: {
-          priority: 4096
-          direction: 'Inbound'
-          access: 'Deny'
-          protocol: '*'
-          sourceAddressPrefix: '*'
-          sourcePortRange: '*'
-          destinationAddressPrefix: '*'
-          destinationPortRange: '*'
-          description: 'Deny all other inbound traffic.'
-        }
-      }
-    ]
+module nsgPostgres 'networking/nsg.bicep' = {
+  name: 'nsg-postgres'
+  params: {
+    name: 'nsg-${workload}-${env}-${region}-${instance}-postgres'
+    location: location
   }
 }
 
@@ -108,7 +50,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         properties: {
           addressPrefix: '10.0.0.0/23'
           networkSecurityGroup: {
-            id: nsgContainerApp.id
+            id: nsgContainerApp.outputs.id
           }
           delegations: [
             {
@@ -125,7 +67,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-01-01' = {
         properties: {
           addressPrefix: '10.0.2.0/24'
           networkSecurityGroup: {
-            id: nsgPostgres.id
+            id: nsgPostgres.outputs.id
           }
           delegations: [
             {

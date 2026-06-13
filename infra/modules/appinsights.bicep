@@ -20,7 +20,7 @@ var lawName = 'log-${workload}-${env}-${region}-${instance}'
 var appiName = 'appi-${workload}-${env}-${region}-${instance}'
 var retentionDays = env == 'prod' ? 90 : 30
 
-resource law 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: lawName
   location: location
   properties: {
@@ -39,7 +39,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   kind: 'web'
   properties: {
     Application_Type: 'web'
-    WorkspaceResourceId: law.id
+    WorkspaceResourceId: logAnalyticsWorkspace.id
     RetentionInDays: retentionDays
     publicNetworkAccessForIngestion: 'Enabled'
     publicNetworkAccessForQuery: 'Enabled'
@@ -55,13 +55,12 @@ module workbook 'observability-workbook.bicep' = {
 }
 
 @description('Application Insights connection string. Pass to APPLICATIONINSIGHTS_CONNECTION_STRING in the app runtime environment.')
+@secure()
 output connectionString string = appInsights.properties.ConnectionString
 
 @description('Application Insights instrumentation key (legacy — prefer connectionString for new workloads).')
+@secure()
 output instrumentationKey string = appInsights.properties.InstrumentationKey
 
 @description('Resource ID of the Log Analytics Workspace.')
-output logAnalyticsWorkspaceId string = law.id
-
-@description('Resource ID of the Application Insights component.')
-output appInsightsId string = appInsights.id
+output logAnalyticsWorkspaceId string = logAnalyticsWorkspace.id
