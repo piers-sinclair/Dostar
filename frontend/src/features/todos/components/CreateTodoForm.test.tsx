@@ -51,6 +51,16 @@ describe('CreateTodoForm', () => {
         expect(await screen.findByRole('alert')).toHaveTextContent('Title is too long');
     });
 
+    it('shows a success toast after a successful submission', async () => {
+        const user = userEvent.setup();
+        renderWithProviders(<CreateTodoForm />);
+
+        await user.type(screen.getByPlaceholderText('What needs doing?'), 'Buy milk');
+        await user.click(screen.getByRole('button', { name: 'Add' }));
+
+        expect(await screen.findByText('Todo created')).toBeInTheDocument();
+    });
+
     it('shows a root error when the API returns a non-field problem details', async () => {
         const user = userEvent.setup();
         server.use(
