@@ -29,8 +29,7 @@
   "postAttachCommand": "bash .devcontainer/postAttach.sh",
   "forwardPorts": [
     5000,
-    5173,
-    5432
+    5173
   ],
   "portsAttributes": {
     "5000": {
@@ -40,10 +39,6 @@
     "5173": {
       "label": "Frontend (Vite)",
       "onAutoForward": "notify"
-    },
-    "5432": {
-      "label": "PostgreSQL",
-      "onAutoForward": "silent"
     }
   },
   "customizations": {
