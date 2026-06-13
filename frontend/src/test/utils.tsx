@@ -5,12 +5,13 @@ import {
     RouterContextProvider,
 } from '@tanstack/react-router';
 import { render, type RenderOptions } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { Toaster } from '@/shared/components/ui/sonner';
+import { createQueryClient } from '@/shared/api/queryClient';
 
 function createTestQueryClient() {
-    return new QueryClient({
+    return createQueryClient({
         defaultOptions: {
             queries: { retry: false, gcTime: 0 },
             mutations: { retry: false },
