@@ -29,7 +29,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
 function FallbackUI({ error }: { error: Error }): JSX.Element {
     return (
-        <main role="alert" className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8">
+        <main
+            role="alert"
+            className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8"
+        >
             <h1 className="text-2xl font-bold text-foreground">Something went wrong</h1>
             {import.meta.env.DEV && (
                 <pre className="max-w-xl overflow-auto rounded bg-muted p-4 text-sm text-muted-foreground">
