@@ -46,8 +46,11 @@ echo ""
 echo "  $PROJECT environment"
 echo "$SEP"
 
+_COMPOSE_PROJECT=$(basename "$ROOT" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9')
 if timeout 2 bash -c 'echo > /dev/tcp/db/5432' 2>/dev/null; then
   printf "  %-14s ✓\n" "PostgreSQL"
+elif docker compose -p "$_COMPOSE_PROJECT" ps --quiet db 2>/dev/null | grep -q .; then
+  printf "  %-14s ✗  →  docker network connect %s_default \$(cat /etc/hostname)\n" "PostgreSQL" "$_COMPOSE_PROJECT"
 else
   printf "  %-14s ✗  →  docker compose up -d\n" "PostgreSQL"
 fi
