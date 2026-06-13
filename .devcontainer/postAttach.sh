@@ -57,6 +57,11 @@ fi
 
 check_tool "dostar"   "dotnet tool install -g Dostar.Cli"  dostar   --version  # @no-substitute
 check_tool "lefthook" "lefthook install"                    lefthook version
+if [ -f "$ROOT/.git/hooks/pre-commit" ]; then
+  printf "  %-14s ✓\n" "git hooks"
+else
+  printf "  %-14s ✗  →  lefthook install\n" "git hooks"
+fi
 check_tool ".NET SDK" "(reinstall devcontainer)"            dotnet   --version
 check_tool "Node"     "(reinstall devcontainer)"            node     --version
 

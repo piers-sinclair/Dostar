@@ -45,6 +45,7 @@ cd ..
 echo "[postCreate] Setting up git hooks..."
 sudo ln -sf "$(node -e "const {getExePath}=require('$(pwd)/frontend/node_modules/lefthook/get-exe.js'); process.stdout.write(getExePath())")" /usr/local/bin/lefthook || \
   echo "WARNING: lefthook symlink failed — run: lefthook install"
+lefthook install || echo "WARNING: lefthook install failed — run: lefthook install"
 
 echo "[postCreate] Configuring shell..."
 bash .devcontainer/shell-profile.sh
