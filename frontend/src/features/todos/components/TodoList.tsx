@@ -1,6 +1,7 @@
 import { useState, type JSX } from 'react';
 
 import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Checkbox } from '@/shared/components/ui/checkbox';
@@ -21,18 +22,29 @@ export function TodoList(): JSX.Element {
     const updateTodo = useUpdateTodo();
 
     const queryErrorMessage = getApiError(queryError);
-    const mutationErrorMessage = getApiError(deleteTodo.error ?? updateTodo.error);
 
     function startEdit(id: string, title: string) {
         setEditingId(id);
         setEditValue(title);
     }
 
+    function handleDelete(id: string) {
+        deleteTodo.mutate(id, {
+            onError: (error) => toast.error(getApiError(error)),
+        });
+    }
+
+    function handleUpdate(variables: { id: string; title: string; isCompleted: boolean }) {
+        updateTodo.mutate(variables, {
+            onError: (error) => toast.error(getApiError(error)),
+        });
+    }
+
     function commitEdit(id: string, isCompleted: boolean, originalTitle: string) {
         const trimmed = editValue.trim();
         setEditingId(null);
         if (!trimmed || trimmed === originalTitle) return;
-        updateTodo.mutate({ id, title: trimmed, isCompleted });
+        handleUpdate({ id, title: trimmed, isCompleted });
     }
 
     function cancelEdit() {
@@ -48,7 +60,6 @@ export function TodoList(): JSX.Element {
                 <CreateTodoForm />
                 {isLoading && <p className="text-muted-foreground">Loading…</p>}
                 {queryErrorMessage && <p className="text-destructive">{queryErrorMessage}</p>}
-                {mutationErrorMessage && <p className="text-destructive">{mutationErrorMessage}</p>}
                 <ul className="space-y-2">
                     {todos?.map((todo) => {
                         const isUpdating =
@@ -64,7 +75,7 @@ export function TodoList(): JSX.Element {
                                     checked={todo.isCompleted}
                                     disabled={isBusy}
                                     onCheckedChange={() =>
-                                        updateTodo.mutate({
+                                        handleUpdate({
                                             id: todo.id,
                                             title: todo.title,
                                             isCompleted: !todo.isCompleted,
@@ -106,7 +117,7 @@ export function TodoList(): JSX.Element {
                                     size="sm"
                                     aria-label={`Delete "${todo.title}"`}
                                     disabled={isBusy}
-                                    onClick={() => deleteTodo.mutate(todo.id)}
+                                    onClick={() => handleDelete(todo.id)}
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>

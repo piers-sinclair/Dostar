@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
 import { ErrorBoundary } from '@/shared/components/common/ErrorBoundary';
+import { Toaster } from '@/shared/components/ui/sonner';
 
 export const Route = createRootRoute({
     component: RootLayout,
@@ -18,6 +19,7 @@ function RootLayout(): JSX.Element {
                     <Outlet />
                 </ErrorBoundary>
             </main>
+            <Toaster />
             {import.meta.env.DEV && <TanStackRouterDevtools />}
         </>
     );
