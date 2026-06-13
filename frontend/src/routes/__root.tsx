@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/router-devtools';
+import { ErrorBoundary } from '@/shared/components/common/ErrorBoundary';
 
 export const Route = createRootRoute({
     component: RootLayout,
@@ -13,7 +14,9 @@ function RootLayout(): JSX.Element {
                 <h1 className="text-lg font-semibold text-foreground">Dostar</h1>
             </nav>
             <main className="min-h-screen bg-background p-8">
-                <Outlet />
+                <ErrorBoundary>
+                    <Outlet />
+                </ErrorBoundary>
             </main>
             {import.meta.env.DEV && <TanStackRouterDevtools />}
         </>
