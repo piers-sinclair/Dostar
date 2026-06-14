@@ -3,16 +3,20 @@
 ## High-level overview
 
 ```mermaid
-graph LR
+graph TB
     Browser -->|HTTPS| SWA[Azure Static Web Apps\nReact + Vite]
     SWA -->|/api proxy| API[Azure Container App\n.NET 10 Minimal API]
-    ACR[Azure Container Registry] -->|AcrPull\nmanaged identity| API
     API -->|EF Core\nprivate VNet| DB[(PostgreSQL\nFlexible Server)]
     API -.-|Key Vault Secrets User\nmanaged identity| KV[Azure Key Vault]
     API -->|OpenTelemetry| APPI[Application Insights]
+
+    GHA[GitHub Actions\nOIDC SP] -->|AcrPush| ACR[Azure Container Registry]
+    GHA -->|Bicep deploy| RG[Azure Resource Group]
+    GHA -->|SWA deploy token\nfrom Key Vault| SWA
+    ACR -->|AcrPull\nmanaged identity| API
 ```
 
-The browser talks only to Static Web Apps. SWA proxies `/api` requests to the Container App — the API is never exposed to the browser directly. The API reads secrets from Key Vault at runtime via managed identity (no credentials in config), and all PostgreSQL traffic stays inside the VNet.
+The browser talks only to Static Web Apps. SWA proxies `/api` requests to the Container App — the API is never exposed to the browser directly. The API pulls secrets from Key Vault at runtime via managed identity (no credentials in config). All PostgreSQL traffic stays inside the VNet. GitHub Actions authenticates to Azure via OIDC — no long-lived credentials.
 
 ---
 
@@ -24,7 +28,7 @@ graph TB
         GHA[GitHub Actions\nOIDC SP]
     end
 
-    subgraph Azure Subscription
+    subgraph AzureSub[Azure Subscription]
         subgraph RG[Resource Group]
             subgraph VNet[Virtual Network 10.0.0.0/16]
                 subgraph SubnetCA[snet-containerapp 10.0.0.0/23]
@@ -59,7 +63,7 @@ graph TB
 
     Browser -->|HTTPS| SWA
     SWA -->|/api proxy| CA
-    GHA -->|OIDC federated credential| Azure Subscription
+    GHA -->|OIDC federated credential| AzureSub
     GHA -->|AcrPush| ACR
     ACR -->|AcrPull managed identity| CA
     ACR -->|AcrPull token TTL 1h| MJ
@@ -107,7 +111,9 @@ flowchart TD
 
     CI --> Merge[Merge to main]
 
+    Merge -->|every push| RP[release-please]
     Merge --> PathFilter{Changed paths}
+
     PathFilter -->|backend/** or Dockerfile| CDB[CD — backend\ndeploy to dev]
     PathFilter -->|frontend/**| CDF[CD — frontend\ndeploy to dev]
     PathFilter -->|infra/**| IDeploy[Infra — deploy\nto dev]
@@ -116,15 +122,11 @@ flowchart TD
     MJ2 --> BuildPush[Build + push API image\nto ACR]
     BuildPush --> Deploy[Update Container App\nimage]
 
-    subgraph ReleasePR[Release PR — auto-created by release-please]
-        RP[Merge to release to prod]
-    end
-
-    Deploy -.->|release-please| ReleasePR
+    RP -.->|if feat or fix commits| ReleasePR[Release PR\nauto-created]
     ReleasePR -->|manual merge| ProdDeploy[CD — deploy to prod]
 ```
 
-Prod deploys require a manual PR merge. To deploy to prod without waiting for a release PR, go to **Actions → CD — release to prod → Run workflow**.
+Release-please runs on every push to `main` regardless of which paths changed. It opens or updates a Release PR when `feat:` or `fix:` commits have accumulated since the last release. Prod deploys require manually merging that Release PR. To deploy to prod on demand, go to **Actions → CD — release to prod → Run workflow**.
 
 ---
 
@@ -142,6 +144,6 @@ flowchart LR
     RGDelete --> ReSpinUp[Re-run spin up\nto recreate from scratch]
 ```
 
-Spin up sequences four reusable workflows. Tear down deletes the resource group; every resource inside it (Container App, PostgreSQL, Key Vault, Application Insights) is removed automatically. GitHub secrets and the repo are unaffected.
+Spin up sequences four reusable workflows in order. Tear down deletes the resource group; every resource inside it (Container App, PostgreSQL, Key Vault, Application Insights) is removed automatically. GitHub secrets and the repo are unaffected.
 
 See [environment-lifecycle.md](environment-lifecycle.md) for step-by-step instructions and cost estimates.
