@@ -10,7 +10,6 @@ function invalidateTodos(client: QueryClient) {
     return client.invalidateQueries({ queryKey: getGetTodosQueryKey() });
 }
 
-// Cache invalidation on success is the only business logic needed for create
 export function useCreateTodo() {
     const client = useQueryClient();
     return useMutation({
@@ -19,7 +18,6 @@ export function useCreateTodo() {
     });
 }
 
-// Optimistic deletion: remove from cache immediately, rollback on error
 export function useDeleteTodo() {
     const client = useQueryClient();
     return useMutation<void, Error, string, OptimisticContext>({
@@ -40,7 +38,6 @@ export function useDeleteTodo() {
     });
 }
 
-// Optimistic update: patch cache immediately, rollback on error
 export function useUpdateTodo() {
     const client = useQueryClient();
     return useMutation<TodoDto, Error, UpdateTodoVariables, OptimisticContext>({
