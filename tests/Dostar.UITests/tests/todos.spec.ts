@@ -68,7 +68,7 @@ test.beforeEach(async ({ page }) => {
         }
     });
 
-    await page.goto("/");
+    await page.goto("/todos");
 });
 
 test("displays the page heading and todo list card", async ({ page }) => {
