@@ -73,7 +73,7 @@ test.beforeEach(async ({ page }) => {
 
 test("displays the page heading and todo list card", async ({ page }) => {
     await expect(page.getByRole("heading", { name: "Dostar" })).toBeVisible();
-    await expect(page.getByText("Todos")).toBeVisible();
+    await expect(page.getByRole("main").getByText("Todos")).toBeVisible();
 });
 
 test("renders existing todos from the API", async ({ page }) => {
