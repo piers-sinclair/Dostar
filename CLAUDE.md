@@ -157,6 +157,44 @@ to test infrastructure — the glob picks up new handler files on the next test 
 `components.json` aliases are set to `src/shared/...` so `npx shadcn add` generates components
 into `src/shared/components/ui/` automatically.
 
+### API hooks pattern
+
+All feature hooks live in `features/<name>/hooks/` and use three things from `@/shared/api/generated`:
+
+- **Types** — `CreateTodoRequest`, `TodoDto`, etc. (always correct)
+- **URL helpers** — `getGetTodosUrl()`, `getCreateTodoUrl()`, etc. (generated from the OpenAPI spec, update automatically)
+- **Query key helpers** — `getGetTodosQueryKey()` (use for cache invalidation and `queryKey`)
+
+The generated **query and mutation hooks** (`useGetTodos`, `useCreateTodo`, etc.) cannot be used directly because they expect the custom mutator to return a `{ data, status, headers }` envelope, but `apiClient` returns the plain JSON body. Use `apiClient` for all HTTP calls with the correct payload type:
+
+```typescript
+import { getGetTodosUrl, getGetTodosQueryKey, getCreateTodoUrl } from '@/shared/api/generated';
+import type { CreateTodoRequest, TodoDto } from '@/shared/api/generated';
+import { apiClient } from '@/shared/api/client';
+
+export function useTodos() {
+    return useQuery({
+        queryKey: getGetTodosQueryKey(),
+        queryFn: () => apiClient<TodoDto[]>(getGetTodosUrl()),
+    });
+}
+
+export function useCreateTodo() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (req: CreateTodoRequest) =>
+            apiClient<TodoDto>(getCreateTodoUrl(), { method: 'POST', data: req }),
+        onSuccess: () => client.invalidateQueries({ queryKey: getGetTodosQueryKey() }),
+    });
+}
+```
+
+Write a feature hook for every endpoint you consume. Add `onMutate`/`onError`/`onSettled` only when you need optimistic updates — otherwise `onSuccess: invalidate` is enough.
+
+`features/todos/hooks/useTodos.ts` is the reference implementation.
+
+**Do not scaffold a `hooks/` folder** — create it manually when you write your first hook for a feature. `pnpm generate:api` regenerates `@/shared/api/generated` whenever the backend OpenAPI spec changes.
+
 ---
 
 ## Testing

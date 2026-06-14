@@ -223,6 +223,44 @@ cd frontend && pnpm generate:api                                # regenerates fr
 
 Commit both files together with your backend change. CI validates that the committed artefacts match the source and will fail if they are out of sync.
 
+## Frontend API hooks
+
+Hooks follow a two-tier pattern.
+
+All feature hooks live in `features/<name>/hooks/` and pull three things from `@/shared/api/generated`:
+
+- **Types** — `CreateTodoRequest`, `TodoDto`, etc.
+- **URL helpers** — `getGetTodosUrl()`, `getCreateTodoUrl()`, etc. (auto-update when the spec changes)
+- **Query key helpers** — `getGetTodosQueryKey()` (for `queryKey` and cache invalidation)
+
+The generated query/mutation hooks (`useGetTodos`, `useCreateTodo`, etc.) can't be used directly — they expect the custom mutator to return a `{ data, status, headers }` envelope, but `apiClient` returns the plain JSON body. Use `apiClient` for all HTTP calls with the correct payload type:
+
+```typescript
+import { getGetTodosUrl, getGetTodosQueryKey, getCreateTodoUrl } from '@/shared/api/generated';
+import type { CreateTodoRequest, TodoDto } from '@/shared/api/generated';
+import { apiClient } from '@/shared/api/client';
+
+export function useTodos() {
+    return useQuery({
+        queryKey: getGetTodosQueryKey(),
+        queryFn: () => apiClient<TodoDto[]>(getGetTodosUrl()),
+    });
+}
+
+export function useCreateTodo() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (req: CreateTodoRequest) =>
+            apiClient<TodoDto>(getCreateTodoUrl(), { method: 'POST', data: req }),
+        onSuccess: () => client.invalidateQueries({ queryKey: getGetTodosQueryKey() }),
+    });
+}
+```
+
+Add `onMutate`/`onError`/`onSettled` only when you need optimistic updates; `onSuccess: invalidate` is sufficient for most mutations. `features/todos/hooks/useTodos.ts` is the reference implementation.
+
+The `hooks/` folder is not scaffolded by `dostar add-feature` — create it manually when you write your first hook for a feature.
+
 ## F5 launch configurations
 
 Configurations are in `.vscode/launch.json` and selected from the **Run and Debug** panel (`Ctrl+Shift+D`). Both run migrations before starting — no separate migration step needed.
