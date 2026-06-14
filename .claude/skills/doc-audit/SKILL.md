@@ -163,6 +163,7 @@ Flag:
 - A doc that references a concept or tool without linking to where it's defined or documented
 - A doc with no "next steps", "see also", or "related" section when logical follow-up paths exist
 - Orphaned docs — not linked from any other file in the repo (check with `grep -r`)
+- Docs unreachable from the root document (README) — every doc should be reachable via a chain of links starting at README, even if not linked directly. A doc linked only from another orphan is itself effectively orphaned. Build the link graph: README → direct links → their links, and flag any doc not in the resulting set.
 - Duplicate navigation (the same links repeated in 3+ places) — consolidate into one navigation source
 
 ### 10. Cognitive overhead
