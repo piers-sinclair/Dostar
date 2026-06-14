@@ -12,7 +12,9 @@ function RootLayout(): JSX.Element {
     return (
         <>
             <nav className="flex items-center gap-6 border-b bg-background px-8 py-4">
-                <h1 className="text-lg font-semibold text-foreground">Dostar</h1>
+                <Link to="/" className="text-lg font-semibold text-foreground hover:opacity-80">
+                    Dostar
+                </Link>
                 {/* dostar:feature:todos:start */}
                 <Link
                     to="/todos"
