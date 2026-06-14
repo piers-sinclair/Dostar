@@ -3,8 +3,6 @@ name: Infra — what-if
 on:
   pull_request:
     branches: [main]
-    paths:
-      - 'infra/**'
 
 permissions:
   id-token: write
@@ -12,8 +10,30 @@ permissions:
   pull-requests: write
 
 jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      infra: ${{ steps.filter.outputs.infra }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check infra paths
+        id: filter
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -qE '^infra/'; then
+            echo "infra=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "infra=false" >> "$GITHUB_OUTPUT"
+          fi
+
   whatif:
-    name: Bicep what-if (dev)
+    name: Bicep what-if (run)
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -89,4 +109,24 @@ jobs:
             gh api --method PATCH "repos/$REPO/issues/comments/$COMMENT_ID" -f body="$BODY"
           else
             gh api --method POST "repos/$REPO/issues/$PR/comments" -f body="$BODY"
+          fi
+
+  infra-checks:
+    name: Bicep what-if
+    needs: [changes, whatif]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check result
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          WHATIF_RESULT: ${{ needs.whatif.result }}
+        run: |
+          if [[ "$CHANGES_RESULT" == "failure" || "$CHANGES_RESULT" == "cancelled" ]]; then
+            echo "::error::Path detection failed ($CHANGES_RESULT)"
+            exit 1
+          fi
+          if [[ "$WHATIF_RESULT" == "failure" || "$WHATIF_RESULT" == "cancelled" ]]; then
+            echo "::error::Bicep what-if failed ($WHATIF_RESULT)"
+            exit 1
           fi
