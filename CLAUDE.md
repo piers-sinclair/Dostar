@@ -226,17 +226,21 @@ The `dostar` CLI lives in [piers-sinclair/Dostar.Cli](https://github.com/piers-s
 >
 > When making such changes, open an issue on [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) if a CLI update is needed.
 
-### Sentinel comments in `routes/index.tsx`
+### Sentinel comments
 
-`dostar add-feature <Name>` and `dostar remove-feature <Name>` automatically edit `frontend/src/routes/index.tsx`. Each feature's wiring is wrapped in sentinel comments that the CLI uses to locate and remove it:
+`dostar add-feature <Name>` and `dostar remove-feature <Name>` manage two files automatically:
+
+**`frontend/src/routes/__root.tsx`** — each feature gets a sentinel-wrapped `<Link>` in the nav:
 
 ```tsx
 {/* dostar:feature:orders:start */}
-<OrderList />
+<Link to="/orders" className="text-sm text-muted-foreground hover:text-foreground [&.active]:text-foreground [&.active]:font-medium">Orders</Link>
 {/* dostar:feature:orders:end */}
 ```
 
-**Do not put custom code inside a sentinel block** — `remove-feature` deletes everything between the markers, inclusive. Customise the surrounding layout (the `<div>` wrapper, spacing classes, etc.) freely; only the sentinel block itself is managed by the CLI.
+**`frontend/src/routes/<name>.tsx`** — a TanStack Router route file is created (and deleted on remove). It is not sentinel-wrapped; `remove-feature` deletes the whole file.
+
+**Do not put custom code inside a sentinel block** — `remove-feature` deletes everything between the markers, inclusive. The nav layout (`<h1>`, nav classes, etc.) is yours to customise freely; only the sentinel blocks are managed by the CLI.
 
 ---
 
