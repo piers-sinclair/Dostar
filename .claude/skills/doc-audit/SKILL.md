@@ -163,7 +163,22 @@ Flag:
 - A doc that references a concept or tool without linking to where it's defined or documented
 - A doc with no "next steps", "see also", or "related" section when logical follow-up paths exist
 - Orphaned docs — not linked from any other file in the repo (check with `grep -r`)
+- Docs unreachable from the root document (README) — every doc should be reachable via a chain of links starting at README, even if not linked directly. A doc linked only from another orphan is itself effectively orphaned. Build the link graph: README → direct links → their links, and flag any doc not in the resulting set.
 - Duplicate navigation (the same links repeated in 3+ places) — consolidate into one navigation source
+
+### 10. Cognitive overhead
+
+Every doc you add is debt the reader must pay. Documentation that doesn't earn its place actively harms developer experience by increasing the amount of material a new developer must process before they can do anything useful.
+
+Flag:
+- **Docs that shouldn't exist at all** — if a file has no clear audience and no clear action the reader can take after reading it, suggest deleting it
+- **Sections that document the obvious** — content that restates what well-named code, comments, or the framework already makes clear (e.g. explaining what a standard CRUD endpoint does when the code is self-evident)
+- **"Just-in-case" context dumps** — background, history, or rationale sections that no reader in a realistic workflow would need (move to a PR description or ADR if it must be preserved)
+- **Docs written for a past state of the project** — whole documents that describe a design, workflow, or decision that no longer applies and are kept only because nobody deleted them
+- **Defensive over-documentation** — explaining every edge case, caveat, and exception up front before the reader has done anything; most caveats only matter after the reader hits them
+- **Parallel docs that should be one** — two docs covering the same audience and goal at different levels of detail; consolidate into one with progressive disclosure rather than maintaining two
+
+When suggesting deletion, state clearly what the reader loses and whether that information exists elsewhere. Deletion is only appropriate when the doc provides zero unique value.
 
 ---
 
