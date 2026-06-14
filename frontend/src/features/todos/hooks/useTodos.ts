@@ -17,10 +17,6 @@ function invalidateTodos(client: QueryClient) {
     return client.invalidateQueries({ queryKey: getGetTodosQueryKey() });
 }
 
-// orval hooks can't be used directly — apiClient returns the plain JSON body,
-// not the { data, status, headers } envelope the generated hooks expect.
-// Use apiClient with orval's URL/queryKey helpers instead.
-
 export function useTodos() {
     return useQuery({
         queryKey: getGetTodosQueryKey(),
@@ -28,7 +24,6 @@ export function useTodos() {
     });
 }
 
-// Cache invalidation on success is the only business logic needed for create
 export function useCreateTodo() {
     const client = useQueryClient();
     return useMutation({
@@ -38,7 +33,6 @@ export function useCreateTodo() {
     });
 }
 
-// Optimistic deletion: remove from cache immediately, rollback on error
 export function useDeleteTodo() {
     const client = useQueryClient();
     return useMutation<void, Error, string, OptimisticContext>({
@@ -59,7 +53,6 @@ export function useDeleteTodo() {
     });
 }
 
-// Optimistic update: patch cache immediately, rollback on error
 export function useUpdateTodo() {
     const client = useQueryClient();
     return useMutation<TodoDto, Error, UpdateTodoVariables, OptimisticContext>({
