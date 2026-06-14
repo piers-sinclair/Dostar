@@ -227,29 +227,39 @@ Commit both files together with your backend change. CI validates that the commi
 
 Hooks follow a two-tier pattern.
 
-**Use orval-generated hooks** (`@/shared/api/generated`) by default. After `pnpm generate:api`, typed query and mutation hooks exist for every endpoint. For simple reads, use them directly with a `select` to unwrap the response envelope:
+All feature hooks live in `features/<name>/hooks/` and pull three things from `@/shared/api/generated`:
+
+- **Types** — `CreateTodoRequest`, `TodoDto`, etc.
+- **URL helpers** — `getGetTodosUrl()`, `getCreateTodoUrl()`, etc. (auto-update when the spec changes)
+- **Query key helpers** — `getGetTodosQueryKey()` (for `queryKey` and cache invalidation)
+
+The generated query/mutation hooks (`useGetTodos`, `useCreateTodo`, etc.) can't be used directly — they expect the custom mutator to return a `{ data, status, headers }` envelope, but `apiClient` returns the plain JSON body. Use `apiClient` for all HTTP calls with the correct payload type:
 
 ```typescript
-import { useGetTodos } from '@/shared/api/generated';
+import { getGetTodosUrl, getGetTodosQueryKey, getCreateTodoUrl } from '@/shared/api/generated';
+import type { CreateTodoRequest, TodoDto } from '@/shared/api/generated';
+import { apiClient } from '@/shared/api/client';
 
-const { data: todos } = useGetTodos({ query: { select: (res) => res.data } });
-```
-
-**Write a feature hook** (`features/<name>/hooks/`) only when you need business logic the generated hook doesn't provide — cache invalidation after a mutation, optimistic updates with rollback, or composing multiple calls. Feature hooks use orval's generated plain functions (`getTodos`, `createTodo`, etc.) for transport and add the custom logic on top:
-
-```typescript
-import { createTodo, getGetTodosQueryKey } from '@/shared/api/generated';
+export function useTodos() {
+    return useQuery({
+        queryKey: getGetTodosQueryKey(),
+        queryFn: () => apiClient<TodoDto[]>(getGetTodosUrl()),
+    });
+}
 
 export function useCreateTodo() {
     const client = useQueryClient();
     return useMutation({
-        mutationFn: (req: CreateTodoRequest) => createTodo(req).then((res) => res.data),
+        mutationFn: (req: CreateTodoRequest) =>
+            apiClient<TodoDto>(getCreateTodoUrl(), { method: 'POST', data: req }),
         onSuccess: () => client.invalidateQueries({ queryKey: getGetTodosQueryKey() }),
     });
 }
 ```
 
-`features/todos/hooks/useTodos.ts` is the reference implementation. The `hooks/` folder is not scaffolded by `dostar add-feature` — create it manually when you write your first custom hook.
+Add `onMutate`/`onError`/`onSettled` only when you need optimistic updates; `onSuccess: invalidate` is sufficient for most mutations. `features/todos/hooks/useTodos.ts` is the reference implementation.
+
+The `hooks/` folder is not scaffolded by `dostar add-feature` — create it manually when you write your first hook for a feature.
 
 ## F5 launch configurations
 

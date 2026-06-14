@@ -5,8 +5,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Input } from '@/shared/components/ui/input';
-import { useGetTodos } from '@/shared/api/generated';
-import { useDeleteTodo, useUpdateTodo } from '@/features/todos/hooks/useTodos';
+import { useDeleteTodo, useTodos, useUpdateTodo } from '@/features/todos/hooks/useTodos';
 import { cn } from '@/shared/lib/utils';
 import { CreateTodoForm } from './CreateTodoForm';
 
@@ -16,7 +15,7 @@ export function TodoList(): JSX.Element {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editValue, setEditValue] = useState('');
 
-    const { data: todos, isLoading } = useGetTodos({ query: { select: (res) => res.data } });
+    const { data: todos, isLoading } = useTodos();
     const deleteTodo = useDeleteTodo();
     const updateTodo = useUpdateTodo();
 
