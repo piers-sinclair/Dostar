@@ -251,7 +251,53 @@ Must pass with **0 TypeScript errors**. Fix any issues before reporting success.
 
 ## Next step
 
-Run `/scaffold-page` to wire this feature into the router — adding the route file, nav link, and a Playwright smoke test stub.
+Run `dostar add-feature <Name>` (the CLI tool) to create the TanStack Router route file and the sentinel-wrapped nav link. The CLI sentinel pattern is required so `dostar remove-feature` can clean up the nav link later — never add nav links manually.
+
+After the CLI runs, flesh out the generated `frontend/src/routes/<segment>.tsx` to import your feature's primary component and `PageHeader`:
+
+```tsx
+import type { JSX } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { <Name>List } from '@/features/<feature>/components/<Name>List';
+
+export const Route = createFileRoute('/<segment>')({
+    component: <Name>Page,
+});
+
+function <Name>Page(): JSX.Element {
+    return (
+        <div className="mx-auto max-w-lg space-y-6">
+            <PageHeader title="<PascalCaseName>" />
+            <<Name>List />
+        </div>
+    );
+}
+```
+
+If `frontend/src/shared/components/common/PageHeader.tsx` does not yet exist, create it:
+
+```tsx
+import type { JSX } from 'react';
+
+interface PageHeaderProps {
+    title: string;
+    description?: string;
+}
+
+export function PageHeader({ title, description }: PageHeaderProps): JSX.Element {
+    return (
+        <div className="space-y-1">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">{title}</h2>
+            {description && (
+                <p className="text-sm text-muted-foreground">{description}</p>
+            )}
+        </div>
+    );
+}
+```
+
+Run `/playwright` to add a UI smoke test for the new page once it is wired up.
 
 ---
 
