@@ -383,6 +383,14 @@ needed, and no extra setup for template consumers.
 - Introduce a new library or swap an existing one
 - Add a new Claude Code skill in `.claude/skills/`
 
+**Update `dostar.manifest.json` whenever you:**
+- Add or rename a Bicep parameter in `infra/main.bicep`
+- Change the module folder/project naming conventions (`backend/Modules/`)
+- Change the feature folder or route file conventions (`frontend/src/features/`, `frontend/src/routes/`)
+- Change the sentinel comment format (`dostar:feature:*:start/end`)
+- Add a new file that contains project-name tokens and requires special CLI handling
+- Change the nav import source (`@tanstack/react-router`)
+
 **Update `README.md` whenever you:**
 - Change how to run the app or tests locally
 - Add or remove CLI commands
