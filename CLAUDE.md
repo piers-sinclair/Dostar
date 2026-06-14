@@ -157,6 +157,43 @@ to test infrastructure — the glob picks up new handler files on the next test 
 `components.json` aliases are set to `src/shared/...` so `npx shadcn add` generates components
 into `src/shared/components/ui/` automatically.
 
+### API hooks pattern
+
+Hooks follow a two-tier pattern — use orval by default, add a feature hook only when you need business logic the generated hook cannot provide.
+
+**Tier 1 — orval-generated hooks** (`@/shared/api/generated`): auto-generated from the OpenAPI spec after `pnpm orval`. Use these directly in components for simple reads:
+
+```typescript
+import { useGetTodos } from '@/shared/api/generated';
+
+const { data } = useGetTodos({ query: { select: (res) => res.data } });
+```
+
+The `select` unwraps the response envelope (`{ data, status, headers }`) to get the typed payload directly.
+
+**Tier 2 — feature hooks** (`features/<name>/hooks/`): hand-written wrappers for mutations and queries that need business logic. Create only when you need:
+- **Cache invalidation** after a mutation (`onSuccess: client.invalidateQueries(...)`)
+- **Optimistic updates** with rollback (`onMutate` + `onError` + `onSettled`)
+- Composing multiple API calls into one hook
+
+Feature hooks use orval's generated plain functions (`getTodos`, `createTodo`, etc.) internally for the transport layer and add business logic on top:
+
+```typescript
+import { createTodo, getGetTodosQueryKey } from '@/shared/api/generated';
+
+export function useCreateTodo() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (req: CreateTodoRequest) => createTodo(req).then((res) => res.data),
+        onSuccess: () => client.invalidateQueries({ queryKey: getGetTodosQueryKey() }),
+    });
+}
+```
+
+The `features/todos/hooks/useTodos.ts` file is the reference implementation showing both patterns.
+
+**Do not scaffold a `hooks/` folder** — create it only when you write a custom hook. `pnpm orval` regenerates `@/shared/api/generated` whenever the backend OpenAPI spec changes.
+
 ---
 
 ## Testing

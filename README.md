@@ -223,6 +223,34 @@ cd frontend && pnpm generate:api                                # regenerates fr
 
 Commit both files together with your backend change. CI validates that the committed artefacts match the source and will fail if they are out of sync.
 
+## Frontend API hooks
+
+Hooks follow a two-tier pattern.
+
+**Use orval-generated hooks** (`@/shared/api/generated`) by default. After `pnpm generate:api`, typed query and mutation hooks exist for every endpoint. For simple reads, use them directly with a `select` to unwrap the response envelope:
+
+```typescript
+import { useGetTodos } from '@/shared/api/generated';
+
+const { data: todos } = useGetTodos({ query: { select: (res) => res.data } });
+```
+
+**Write a feature hook** (`features/<name>/hooks/`) only when you need business logic the generated hook doesn't provide — cache invalidation after a mutation, optimistic updates with rollback, or composing multiple calls. Feature hooks use orval's generated plain functions (`getTodos`, `createTodo`, etc.) for transport and add the custom logic on top:
+
+```typescript
+import { createTodo, getGetTodosQueryKey } from '@/shared/api/generated';
+
+export function useCreateTodo() {
+    const client = useQueryClient();
+    return useMutation({
+        mutationFn: (req: CreateTodoRequest) => createTodo(req).then((res) => res.data),
+        onSuccess: () => client.invalidateQueries({ queryKey: getGetTodosQueryKey() }),
+    });
+}
+```
+
+`features/todos/hooks/useTodos.ts` is the reference implementation. The `hooks/` folder is not scaffolded by `dostar add-feature` — create it manually when you write your first custom hook.
+
 ## F5 launch configurations
 
 Configurations are in `.vscode/launch.json` and selected from the **Run and Debug** panel (`Ctrl+Shift+D`). Both run migrations before starting — no separate migration step needed.
