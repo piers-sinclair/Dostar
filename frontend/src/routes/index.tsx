@@ -66,7 +66,7 @@ function IndexPage(): JSX.Element {
                     </CardHeader>
                     <CardContent className="space-y-1">
                         <p className="text-xs text-muted-foreground">
-                            <code>dostar add-feature Orders --type list</code>
+                            <code>dostar add-feature Orders</code>
                         </p>
                         <p className="text-xs text-muted-foreground">
                             then <code>/scaffold-feature</code> in Claude Code
