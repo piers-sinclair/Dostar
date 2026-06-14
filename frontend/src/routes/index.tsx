@@ -78,13 +78,16 @@ function IndexPage(): JSX.Element {
                         <CardTitle>Remove when done</CardTitle>
                         <CardDescription>
                             Clean up the Todos example once you have replaced it with your own
-                            features.
+                            features. Remove the frontend and backend separately.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <code className="text-xs text-muted-foreground">
-                            dostar remove-feature todos
-                        </code>
+                    <CardContent className="space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                            <code>dostar remove-feature todos</code>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            <code>dostar remove-module Todos</code>
+                        </p>
                     </CardContent>
                 </Card>
             </div>
