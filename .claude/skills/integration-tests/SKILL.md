@@ -8,6 +8,8 @@ allowed-tools: Bash(dotnet *) Read Write Edit Glob Grep
 
 Add integration tests for a Dostar module endpoint.
 
+**Regression testing:** when invoked after discovering a bug in an endpoint, write the failing test first (reproducing the bug), then fix the implementation. The test must fail before the fix and pass after.
+
 ## Usage
 
 ```

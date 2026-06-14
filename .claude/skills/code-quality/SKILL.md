@@ -24,6 +24,7 @@ Audit code for quality issues across a defined set of principles and report find
 3. **Audit** each file against every category below
 4. **Report** all findings grouped by category, with severity, file reference, what was found, and a suggested fix
 5. **Ask the user** which findings (if any) they want applied — do not touch any file until they confirm
+6. **For any bug or logic error finding the user confirms:** write a failing test that reproduces the bug *before* applying the fix (TDD regression rule). Choose the layer that matches the bug: unit test for business logic, integration test for HTTP/DB behaviour. The test must fail on the unfixed code and pass after.
 
 ## Severity levels
 

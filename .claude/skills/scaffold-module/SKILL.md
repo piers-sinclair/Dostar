@@ -24,6 +24,8 @@ Also derive a **kebab-case plural route prefix** (e.g. `products`, `order-items`
 
 Execute every step in order, then run `dotnet build` to confirm 0 warnings.
 
+**TDD note:** when extending an existing module (adding a method or fixing a bug), write the failing test first (Step 11), then implement to make it pass. For a brand-new scaffold both are created together, but the unit tests in Step 11 still define the expected behaviour before `dotnet test` validates it.
+
 ---
 
 ## Step 1 — Infer the module shape
