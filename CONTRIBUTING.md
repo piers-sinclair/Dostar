@@ -164,6 +164,23 @@ Update `README.md` whenever you:
 - Add or remove CLI commands
 - Update the stack or repo structure
 
+## Cross-repo secrets
+
+### `CLI_COMPAT_PAT` — CLI compatibility CI
+
+`ci-cli-compat.yml` fires a `repository_dispatch` event to [piers-sinclair/Dostar.Cli](https://github.com/piers-sinclair/Dostar.Cli) on every push to `main`. This triggers an end-to-end test in the CLI repo that scaffolds a project from the latest template and verifies it builds and passes tests.
+
+The dispatch requires a token with write access to Dostar.Cli. To set this up:
+
+1. Go to [GitHub → Settings → Developer settings → Fine-grained personal access tokens](https://github.com/settings/personal-access-tokens/new).
+2. Set **Resource owner** to the account that owns `Dostar.Cli` (`piers-sinclair`).
+3. Set **Repository access** to `piers-sinclair/Dostar.Cli` only.
+4. Under **Permissions → Repository permissions**, set **Contents** to **Read and write** (this is the minimum scope needed to trigger `repository_dispatch`).
+5. Generate the token and copy it.
+6. In this repo ([piers-sinclair/Dostar](https://github.com/piers-sinclair/Dostar)), go to **Settings → Secrets and variables → Actions** and add a new repository secret named **`CLI_COMPAT_PAT`** with the token value.
+
+The `client_payload` sent with the dispatch includes the triggering commit SHA and repo name so the CLI workflow can post a commit status back to this repo.
+
 ## Questions?
 
 Open a [GitHub issue](https://github.com/piers-sinclair/Dostar/issues) or start a discussion.

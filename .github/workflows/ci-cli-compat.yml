@@ -1,0 +1,35 @@
+# Fires a repository_dispatch to piers-sinclair/Dostar.Cli on every push to main.
+#
+# The CLI repo picks up the event, scaffolds a fresh project from the latest
+# template, runs dotnet build + dotnet test on the output, and reports the
+# result back as a commit status on this SHA.
+#
+# Required secret: CLI_COMPAT_PAT — a fine-grained PAT with Contents: write
+# permission on piers-sinclair/Dostar.Cli (needed to trigger
+# repository_dispatch). See CONTRIBUTING.md for setup steps.
+
+name: CI — CLI compatibility
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  dispatch:
+    name: Trigger CLI compatibility check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch template-updated event to Dostar.Cli
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.CLI_COMPAT_PAT }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'piers-sinclair',
+              repo: 'Dostar.Cli',
+              event_type: 'template-updated',
+              client_payload: {
+                sha: context.sha,
+                repo: context.repo.owner + '/' + context.repo.repo,
+              },
+            });

@@ -364,6 +364,7 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 | `infra-deploy.yml` | push to `main` (`infra/**`) | Deploy Bicep to **dev** |
 | `release-please.yml` | push to `main` | Opens/updates Release PR; on merge calls `cd-release.yml` |
 | `cd-release.yml` | `workflow_call` from release-please, or `workflow_dispatch` | Deploy backend + frontend to **prod** |
+| `ci-cli-compat.yml` | push to `main` | Fires `repository_dispatch` to Dostar.Cli to verify template compatibility |
 
 **Why `workflow_call` instead of `push: tags`:** GitHub does not trigger workflows from events
 authored by `GITHUB_TOKEN`. Since release-please uses `GITHUB_TOKEN` to push the release tag,
