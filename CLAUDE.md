@@ -199,6 +199,20 @@ var request = _fixture.Build<CreateTodoRequest>().With(x => x.Title, new string(
 
 Each test must be fully self-contained — no shared mutable state between tests.
 
+### TDD approach
+
+Write tests **before or alongside** implementation — not after. The test is the specification: it fails first, then the implementation makes it pass.
+
+**Regression tests are mandatory for every bug or unexpected behaviour.** Add a failing test that reproduces the bug *before* applying the fix. The failing test proves the bug exists; the green state after the fix guarantees it cannot silently return.
+
+Choose the test layer that matches where the bug lives:
+
+| Bug location | Test layer | Project |
+|---|---|---|
+| Validator, service method, domain logic | Unit | `<Module>.UnitTests` |
+| HTTP endpoint, request/response shape, DB behaviour | Integration | `<Module>.IntegrationTests` |
+| UI rendering, form interaction, navigation | UI | Playwright or Vitest component test |
+
 ---
 
 ## CLI tool
