@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.8.0](https://github.com/piers-sinclair/Dostar/compare/v0.7.0...v0.8.0) (2026-06-14)
+
+
+### Features
+
+* **frontend:** add welcome page and Dostar nav link to home ([#414](https://github.com/piers-sinclair/Dostar/issues/414)) ([c5c8945](https://github.com/piers-sinclair/Dostar/commit/c5c8945c769de98d0dfda8922b8b776e38764e6e))
+* **frontend:** establish orval-first hooks pattern and document it ([#420](https://github.com/piers-sinclair/Dostar/issues/420)) ([ce15b01](https://github.com/piers-sinclair/Dostar/commit/ce15b015b25359be4bd41076976ced6496ec187a))
+* **frontend:** migrate todos to dedicated route and wire nav link in __root.tsx ([#412](https://github.com/piers-sinclair/Dostar/issues/412)) ([19dd92b](https://github.com/piers-sinclair/Dostar/commit/19dd92bc91ee448c108bbb03bb37b31c019dfe07))
+* **frontend:** set dark mode as the default theme ([#417](https://github.com/piers-sinclair/Dostar/issues/417)) ([0b5e435](https://github.com/piers-sinclair/Dostar/commit/0b5e435f0c31f7666aea93f72b5d32af10360021))
+
+
+### Bug Fixes
+
+* **frontend:** remove stale --type list from welcome page add-feature example ([#419](https://github.com/piers-sinclair/Dostar/issues/419)) ([a4beda7](https://github.com/piers-sinclair/Dostar/commit/a4beda768fb1605e841bf76c892f49fd1ea778c7))
+* **frontend:** show both remove-feature and remove-module commands on home page ([#416](https://github.com/piers-sinclair/Dostar/issues/416)) ([e739a26](https://github.com/piers-sinclair/Dostar/commit/e739a26efb96d8908e19464c4b3578f33d7352ef))
+
+
+### Documentation
+
+* add architecture.md with topology, CI/CD and spin-up diagrams ([#418](https://github.com/piers-sinclair/Dostar/issues/418)) ([a62d3dc](https://github.com/piers-sinclair/Dostar/commit/a62d3dcdfb2c3c2da159d6c196606b4fd8b07c1e))
+* **claude:** add TDD guidance to CLAUDE.md and relevant skills ([#410](https://github.com/piers-sinclair/Dostar/issues/410)) ([25c0a81](https://github.com/piers-sinclair/Dostar/commit/25c0a81593935e543346d1686af144451033e29e)), closes [#409](https://github.com/piers-sinclair/Dostar/issues/409)
+
 ## [0.7.0](https://github.com/piers-sinclair/Dostar/compare/v0.6.0...v0.7.0) (2026-06-13)
 
 
