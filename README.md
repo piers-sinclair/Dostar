@@ -19,10 +19,13 @@ Skip weeks of boilerplate. Dostar gives you a production-ready fullstack app —
 graph LR
     Browser -->|HTTPS| SWA[Azure Static Web Apps\nReact + Vite]
     SWA -->|/api proxy| API[Azure Container App\n.NET 10 Minimal API]
-    API -->|EF Core| DB[(Azure PostgreSQL\nFlexible Server)]
-    API -.-|secrets| KV[Azure Key Vault]
-    SWA -.-|SWA token| KV
+    ACR[Azure Container Registry] -->|AcrPull\nmanaged identity| API
+    API -->|EF Core\nprivate VNet| DB[(PostgreSQL\nFlexible Server)]
+    API -.-|Key Vault Secrets User\nmanaged identity| KV[Azure Key Vault]
+    API -->|OpenTelemetry| APPI[Application Insights]
 ```
+
+See [docs/architecture.md](docs/architecture.md) for the full infrastructure topology, CI/CD pipeline, and security decisions.
 
 ## Stack
 
