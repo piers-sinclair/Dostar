@@ -25,9 +25,29 @@ jobs:
             echo "frontend=false" >> "$GITHUB_OUTPUT"
           fi
 
+  deps:
+    name: Dependency gate (pnpm policy check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies (strict)
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
+
   build:
-    name: Frontend — build & lint (run)
-    needs: changes
+    name: Frontend — build & lint
+    needs: [changes, deps]
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
@@ -43,7 +63,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: 22
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
@@ -63,7 +83,7 @@ jobs:
         run: pnpm build
 
   frontend-checks:
-    name: Frontend — build & lint
+    name: Frontend — final check
     needs: [changes, build]
     if: always()
     runs-on: ubuntu-latest
