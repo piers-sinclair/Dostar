@@ -55,7 +55,7 @@
     "eslint-plugin-react-x": "^5.8.16",
     "globals": "^17.6.0",
     "happy-dom": "^20.10.2",
-    "lefthook": "^1.11.14",
+    "lefthook": "^2.1.9",
     "msw": "^2.14.6",
     "orval": "^8.16.0",
     "prettier": "^3.8.4",
