@@ -75,7 +75,7 @@ jobs:
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
         with:
-          version: latest
+          version: 10
 
       - name: Set up Node
         uses: actions/setup-node@v6
