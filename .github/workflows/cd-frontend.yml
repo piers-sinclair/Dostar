@@ -31,26 +31,28 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment || 'dev' }}
+      url: ${{ steps.get-url.outputs.url }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 10
+      - name: Check required secrets
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          MISSING=()
+          [ -z "$AZURE_CLIENT_ID" ]       && MISSING+=("AZURE_CLIENT_ID")
+          [ -z "$AZURE_TENANT_ID" ]       && MISSING+=("AZURE_TENANT_ID")
+          [ -z "$AZURE_SUBSCRIPTION_ID" ] && MISSING+=("AZURE_SUBSCRIPTION_ID")
 
-      - name: Set up Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-
-      - name: Install dependencies (strict)
-        run: pnpm install --frozen-lockfile
-        working-directory: frontend
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${MISSING[*]}"
+            echo "Follow docs/deploy-setup.md to configure OIDC credentials and add these secrets."
+            exit 1
+          fi
 
       - name: Azure login (OIDC)
         uses: azure/login@v3
@@ -69,6 +71,22 @@ jobs:
             --query value -o tsv)
           echo "::add-mask::$TOKEN"
           echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: frontend
 
       - name: Get backend URL
         id: backend
@@ -110,10 +128,23 @@ jobs:
           for i in {1..10}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
             if [ "$STATUS" = "200" ]; then
-              echo "Smoke test passed"
+              echo "Smoke test passed (status $STATUS)"
               exit 0
             fi
+            echo "Attempt $i: status $STATUS — retrying in 15s"
             sleep 15
           done
-          echo "::error::Smoke test failed"
+          echo "::error::Smoke test failed after 10 attempts"
           exit 1
+
+      - name: Print environment URLs
+        if: success()
+        run: |
+          HOSTNAME="${{ steps.get-url.outputs.hostname }}"
+          {
+            echo "## Frontend deployed"
+            echo ""
+            echo "| Service | URL |"
+            echo "|---------|-----|"
+            echo "| Frontend | https://$HOSTNAME |"
+          } >> "$GITHUB_STEP_SUMMARY"
