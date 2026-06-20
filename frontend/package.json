@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "license": "MIT",
+  "pnpm": {
+    "minimumReleaseAge": "0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "eslint . --max-warnings 0 && tsc -b && vite build",
