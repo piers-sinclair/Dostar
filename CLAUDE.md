@@ -364,7 +364,6 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 | `infra-deploy.yml` | push to `main` (`infra/**`) | Deploy Bicep to **dev** |
 | `release-please.yml` | push to `main` | Opens/updates Release PR; on merge calls `cd-release.yml` |
 | `cd-release.yml` | `workflow_call` from release-please, or `workflow_dispatch` | Deploy backend + frontend to **prod** |
-| `ci-cli-compat.yml` | push to `main` | Fires `repository_dispatch` to Dostar.Cli to verify template compatibility |
 
 **Why `workflow_call` instead of `push: tags`:** GitHub does not trigger workflows from events
 authored by `GITHUB_TOKEN`. Since release-please uses `GITHUB_TOKEN` to push the release tag,
@@ -383,14 +382,6 @@ needed, and no extra setup for template consumers.
 - Change a port, URL, or default environment setting
 - Introduce a new library or swap an existing one
 - Add a new Claude Code skill in `.claude/skills/`
-
-**Update `dostar.manifest.json` whenever you:**
-- Add or rename a Bicep parameter in `infra/main.bicep`
-- Change the module folder/project naming conventions (`backend/Modules/`)
-- Change the feature folder or route file conventions (`frontend/src/features/`, `frontend/src/routes/`)
-- Change the sentinel comment format (`dostar:feature:*:start/end`)
-- Add a new file that contains project-name tokens and requires special CLI handling
-- Change the nav import source (`@tanstack/react-router`)
 
 **Update `README.md` whenever you:**
 - Change how to run the app or tests locally
