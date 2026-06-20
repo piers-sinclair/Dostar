@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.0](https://github.com/piers-sinclair/Dostar/compare/v0.8.0...v0.9.0) (2026-06-20)
+
+
+### Features
+
+* add dostar.manifest.json to declare CLI contract ([#423](https://github.com/piers-sinclair/Dostar/issues/423)) ([cec4ffe](https://github.com/piers-sinclair/Dostar/commit/cec4ffe325a0dfbab22f393c00249e61718d8f66)), closes [#343](https://github.com/piers-sinclair/Dostar/issues/343)
+* **skills:** add /doc-audit skill for documentation quality auditing ([#422](https://github.com/piers-sinclair/Dostar/issues/422)) ([0f95f1c](https://github.com/piers-sinclair/Dostar/commit/0f95f1c8bfbd86771db7aa2eba458ac18073f9da))
+* **skills:** add cognitive overhead category to /doc-audit ([#426](https://github.com/piers-sinclair/Dostar/issues/426)) ([036dc34](https://github.com/piers-sinclair/Dostar/commit/036dc348d13c73f2e522e228080cf4224c507e2f))
+
+
+### Bug Fixes
+
+* exempt EF migrations from analyzer enforcement to prevent CA1861 build errors ([#429](https://github.com/piers-sinclair/Dostar/issues/429)) ([318f55f](https://github.com/piers-sinclair/Dostar/commit/318f55f672a387a296ba64b5b866d47e4b5aa44c))
+* set minimumReleaseAge to number 0 to properly disable the supply-chain age check ([#432](https://github.com/piers-sinclair/Dostar/issues/432)) ([acdd8a4](https://github.com/piers-sinclair/Dostar/commit/acdd8a4d83ccea64281a44e3d7a9bacb1f4f6895))
+
+
+### Documentation
+
+* remove scaffold-page skill in favour of dostar add-feature CLI ([#425](https://github.com/piers-sinclair/Dostar/issues/425)) ([d52f245](https://github.com/piers-sinclair/Dostar/commit/d52f245171867b980678527395faa91d3a00407a))
+
 ## [0.8.0](https://github.com/piers-sinclair/Dostar/compare/v0.7.0...v0.8.0) (2026-06-14)
 
 
