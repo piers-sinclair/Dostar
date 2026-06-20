@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "pnpm": {
-    "minimumReleaseAge": "0"
+    "minimumReleaseAge": 0
   },
   "scripts": {
     "dev": "vite",
