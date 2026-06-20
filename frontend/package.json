@@ -4,9 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "license": "MIT",
-  "pnpm": {
-    "minimumReleaseAge": "0"
-  },
   "scripts": {
     "dev": "vite",
     "build": "eslint . --max-warnings 0 && tsc -b && vite build",
@@ -20,6 +17,7 @@
     "generate:api": "orval --config orval.config.ts && prettier --write src/shared/api/generated/"
   },
   "dependencies": {
+    "@eslint-react/core": "5.9.0",
     "@hookform/resolvers": "^5.4.0",
     "@radix-ui/react-checkbox": "^1.3.5",
     "@radix-ui/react-label": "^2.1.10",
@@ -52,10 +50,10 @@
     "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react-dom": "^5.9.1",
+    "eslint-plugin-react-dom": "5.9.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
-    "eslint-plugin-react-x": "^5.9.1",
+    "eslint-plugin-react-x": "5.9.0",
     "globals": "^17.6.0",
     "happy-dom": "^20.10.6",
     "lefthook": "^2.1.9",
