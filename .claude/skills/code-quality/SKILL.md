@@ -120,6 +120,7 @@ Flag:
 - Generic names when a specific one exists (`data`, `result`, `item`, `obj`)
 - Inconsistent casing (mixing camelCase and PascalCase for the same kind of symbol)
 - Boolean variables or properties not phrased as a question (`isActive`, `hasPermission`, not `active`, `permission`)
+- **Extension methods misused as general-purpose utilities**: a method in a `static class XxxExtensions` should attach behaviour to the type of its `this` parameter. If neither parameter is clearly the receiver (e.g. a math utility taking two `decimal` values, or a converter taking two unrelated types), it belongs in a named static class (`MathUtils`, `DateUtils`, etc.) — not an extension method, which would imply a type relationship that doesn't exist
 
 #### 9. Comments
 
@@ -220,6 +221,7 @@ Flag:
 - Assertions using `Assert.*` (xUnit) or FluentAssertions — must use **Shouldly**
 - A single `[Fact]` covering multiple unrelated scenarios (each scenario needs its own `[Fact]`)
 - `InMemoryDatabase` not using `Guid.NewGuid().ToString()` as the DB name — tests must be fully isolated
+- **Infrastructure classes missing `[ExcludeFromCodeCoverage]`**: `DbContext` subclasses and service classes whose methods call provider-specific APIs (e.g. `EF.Functions.ILike`) cannot be meaningfully unit tested — they must run against a real database. Without `[ExcludeFromCodeCoverage]`, they silently drain the 80% line-coverage threshold, making the gate misleading. Flag any such class that is covered exclusively by integration tests and is not decorated.
 
 #### 16. Access modifiers / Least Exposure (.NET)
 

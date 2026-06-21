@@ -64,6 +64,13 @@ else
 fi
 check_tool ".NET SDK" "(reinstall devcontainer)"            dotnet   --version
 check_tool "Node"     "(reinstall devcontainer)"            node     --version
+check_tool "trivy"    "bash .devcontainer/postCreate.sh"    trivy    --version
+check_tool "opengrep" "bash .devcontainer/postCreate.sh"    opengrep --version
+if [[ -x "${ROOT}/tools/coverlet" ]]; then
+  printf "  %-14s ✓\n" "coverlet"
+else
+  printf "  %-14s ✗  →  %s\n" "coverlet" "dotnet tool install coverlet.console --tool-path ./tools"
+fi
 
 echo "$SEP"
 printf "  %-14s %s\n" "setup log:" "cat .devcontainer/postCreate.log"
