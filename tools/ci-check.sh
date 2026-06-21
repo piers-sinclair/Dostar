@@ -5,14 +5,18 @@
 # Use this before opening a PR when GitHub Actions minutes are unavailable,
 # or as a manual pre-flight check before pushing.
 #
-# Prerequisites: dotnet, pnpm, trivy, opengrep must be on PATH.
+# Prerequisites: dotnet, trivy, opengrep must be on PATH.
 #   trivy:    https://trivy.dev/latest/getting-started/installation/
-#   opengrep: pip install opengrep
+#   opengrep: https://github.com/opengrep/opengrep/releases
 
 set -euo pipefail
 
 echo "=== Backend: build ==="
 dotnet build -c Release
+
+echo ""
+echo "=== Backend: install coverlet ==="
+[[ -x ./tools/coverlet ]] || dotnet tool install coverlet.console --tool-path ./tools
 
 echo ""
 echo "=== Backend: unit tests ==="
