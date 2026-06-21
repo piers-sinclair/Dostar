@@ -30,7 +30,7 @@ fi
 mapfile -t dlls < <(
   {
     find backend/Modules -path "*/bin/Release/net10.0/*.${suffix}.dll"
-    find backend -maxdepth 2 -path "*/bin/Release/net10.0/*.${suffix}.dll" ! -path "*/Modules/*"
+    find backend -path "*/bin/Release/net10.0/*.${suffix}.dll" ! -path "*/Modules/*"
   } | sort -u
 )
 
@@ -52,7 +52,12 @@ for dll in "${dlls[@]}"; do
   # Unit tests scope to Implementation only — Contracts (interfaces/DTOs) have no testable logic.
   # Integration tests scope broadly to measure the full stack.
   if [[ "$type" == "unit" ]]; then
-    include="[${module_prefix}.Implementation]*"
+    impl_dir="${project_dir}/../${module_prefix}.Implementation"
+    if [[ -d "$impl_dir" ]]; then
+      include="[${module_prefix}.Implementation]*"
+    else
+      include="[${module_prefix}]*"
+    fi
   else
     include="[${module_prefix}*]*"
   fi

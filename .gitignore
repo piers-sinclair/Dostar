@@ -90,3 +90,8 @@ infra/**/*.json
 *.ntvs*
 *.njsproj
 *.sw?
+
+# Local tool installs (installed on demand by run-tests.sh / CI)
+tools/.store/
+tools/coverlet
+TestResults/
