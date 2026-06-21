@@ -30,8 +30,28 @@ install_dotnet_tool dotnet-ef
 install_dotnet_tool Dostar.Cli
 npm install -g @anthropic-ai/claude-code || echo "WARNING: claude-code install failed — run: npm install -g @anthropic-ai/claude-code"
 
+echo "[postCreate] Installing Trivy (CVE scanner)..."
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
+  | gpg --dearmor \
+  | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
+  | sudo tee /etc/apt/sources.list.d/trivy.list
+sudo apt-get update -qq && sudo apt-get install -y trivy \
+  || echo "WARNING: trivy install failed — see https://trivy.dev/latest/getting-started/installation/"
+
+echo "[postCreate] Installing OpenGrep (SAST)..."
+latest=$(curl -sf "https://api.github.com/repos/opengrep/opengrep/releases/latest" \
+  | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+curl -fsSL "https://github.com/opengrep/opengrep/releases/download/${latest}/opengrep_manylinux_x86" \
+  -o /tmp/opengrep && chmod +x /tmp/opengrep && sudo mv /tmp/opengrep /usr/local/bin/opengrep \
+  || echo "WARNING: opengrep install failed — see https://github.com/opengrep/opengrep/releases"
+
 echo "[postCreate] Restoring backend packages..."
 dotnet restore
+
+echo "[postCreate] Installing coverlet (local test coverage tool)..."
+dotnet tool install coverlet.console --tool-path ./tools \
+  || echo "WARNING: coverlet install failed — run: dotnet tool install coverlet.console --tool-path ./tools"
 
 echo "[postCreate] Fixing permissions..."
 sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
