@@ -59,6 +59,17 @@ sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
 
+echo "[postCreate] Repairing git worktree pointers..."
+# git worktree add writes OS-absolute paths. Rewrite each .git file to a repo-relative
+# path so the worktree is usable on any OS or mount point (Linux/Windows/devcontainer).
+for wt_git in .claude/worktrees/*/.git; do
+  wt_dir=$(dirname "$wt_git")
+  # Compute depth from repo root: .claude/worktrees/<name> = 3 levels deep
+  printf 'gitdir: ../../../.git/worktrees/%s\n' "$(basename "$wt_dir")" > "$wt_git"
+done
+# Repair the reverse pointers (.git/worktrees/<name>/gitdir) to current container paths
+git worktree repair 2>/dev/null || true
+
 echo "[postCreate] Installing frontend dependencies..."
 cd frontend && pnpm install
 cd ..
