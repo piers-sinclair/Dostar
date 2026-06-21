@@ -74,7 +74,19 @@ if [ -d ".git" ]; then
   # Repair the reverse pointers (.git/worktrees/<name>/gitdir) to current container paths
   git worktree repair 2>/dev/null || true
 else
-  echo "[postCreate] Skipping worktree repair (workspace is a linked worktree, not the main repo)"
+  # Workspace is a linked worktree opened directly as a devcontainer.
+  # VS Code mounts the git root at $WORKSPACE_FOLDER via --mount-workspace-git-root.
+  # Rewrite the .git pointer to the absolute Linux path so git (and tools like
+  # lefthook) can find the repository inside the container.
+  worktree_name=$(basename "$(pwd)")
+  worktree_git_dir="${WORKSPACE_FOLDER}/.git/worktrees/${worktree_name}"
+  if [ -d "$worktree_git_dir" ]; then
+    printf 'gitdir: %s\n' "$worktree_git_dir" > .git
+    echo "[postCreate] Fixed .git pointer to: $worktree_git_dir"
+    git worktree repair 2>/dev/null || true
+  else
+    echo "[postCreate] WARNING: expected worktree git dir not found at $worktree_git_dir — git may not work"
+  fi
 fi
 
 echo "[postCreate] Installing frontend dependencies..."
