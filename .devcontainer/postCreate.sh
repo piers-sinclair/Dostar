@@ -54,6 +54,7 @@ dotnet tool install coverlet.console --tool-path ./tools \
   || echo "WARNING: coverlet install failed — run: dotnet tool install coverlet.console --tool-path ./tools"
 
 echo "[postCreate] Fixing permissions..."
+git config --global --add safe.directory /workspaces/Dostar
 sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
