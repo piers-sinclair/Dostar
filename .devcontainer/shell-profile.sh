@@ -16,7 +16,7 @@ alias api='dotnet run --project backend/Dostar.Api --launch-profile http'
 alias fe='cd frontend && pnpm dev'
 alias build='dotnet build && (cd frontend && pnpm build)'
 alias test='dotnet test'
-alias health='bash "${WORKSPACE_FOLDER}/.devcontainer/postAttach.sh"'
+alias health='bash "$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.devcontainer/postAttach.sh"'
 
 HISTSIZE=10000
 SAVEHIST=10000
