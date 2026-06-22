@@ -1,6 +1,14 @@
 {
   "name": "Dostar",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  // configure-git-mounts.sh runs on the HOST before the container is created.
+  // It generates docker-compose.yaml with the correct volume mounts, including
+  // a bind mount for the main repo's .git directory when this is a worktree.
+  "initializeCommand": "bash .devcontainer/configure-git-mounts.sh",
+  "dockerComposeFile": ".devcontainer/docker-compose.yaml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
   "features": {
     "ghcr.io/devcontainers/features/dotnet:2": {
       "version": "10.0.200"
@@ -12,21 +20,19 @@
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "mounts": [
-    "source=dostar-frontend-node-modules,target=/workspaces/Dostar/frontend/node_modules,type=volume",
-    "source=dostar-claude-config,target=/home/vscode/.claude,type=volume"
-  ],
+
   "containerEnv": {
     "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar",
     "TESTCONTAINERS_RYUK_DISABLED": "true",
     "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
-    "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1",
-    "WORKSPACE_FOLDER": "/workspaces/Dostar"
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1"
   },
+
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "postStartCommand": "bash .devcontainer/postStart.sh",
   "postAttachCommand": "bash .devcontainer/postAttach.sh",
+
   "forwardPorts": [
     5000,
     5173
@@ -41,6 +47,7 @@
       "onAutoForward": "notify"
     }
   },
+
   "customizations": {
     "vscode": {
       "extensions": [

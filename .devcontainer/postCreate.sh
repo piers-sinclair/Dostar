@@ -39,24 +39,19 @@ if [ -d ".git" ]; then
   done
   git worktree repair 2>/dev/null || true
 else
-  # Linked worktree: VS Code mounts the git root alongside the workspace via
-  # --mount-workspace-git-root. Search /workspaces/ for a repo that owns this
-  # worktree, then write its absolute container path into the .git pointer.
+  # Linked worktree: configure-git-mounts.sh (initializeCommand) mounted the main
+  # repo's .git directory at /git-root inside the container. Rewrite .git to that
+  # absolute container path so git, VS Code source control, and lefthook all work.
   worktree_name=$(basename "$(pwd)")
-  main_git_dir=""
-  for candidate in /workspaces/*/; do
-    candidate_gitdir="${candidate}.git/worktrees/${worktree_name}"
-    if [ -d "$candidate_gitdir" ]; then
-      main_git_dir="$candidate_gitdir"
-      break
-    fi
-  done
-  if [ -n "$main_git_dir" ]; then
-    printf 'gitdir: %s\n' "$main_git_dir" > .git
-    echo "[postCreate] Fixed .git pointer to: $main_git_dir"
+  git_dir="/git-root/worktrees/${worktree_name}"
+  if [ -d "$git_dir" ]; then
+    printf 'gitdir: %s\n' "$git_dir" > .git
+    echo "[postCreate] Fixed .git pointer to: $git_dir"
     git worktree repair 2>/dev/null || true
   else
-    echo "[postCreate] WARNING: main repo not found under /workspaces/ — git source control will not work. Open the main Dostar devcontainer instead."
+    echo "[postCreate] WARNING: /git-root/worktrees/${worktree_name} not found"
+    echo "[postCreate]   The git root may not have been mounted — check configure-git-mounts.sh ran"
+    echo "[postCreate]   Hint: ls /git-root/worktrees/ (if /git-root exists)"
   fi
 fi
 

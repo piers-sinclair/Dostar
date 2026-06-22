@@ -1,6 +1,8 @@
 #!/bin/bash
 
-ROOT=${WORKSPACE_FOLDER:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}
+# git rev-parse --show-toplevel correctly returns the workspace root for both
+# the main repo (/workspaces/Dostar) and linked worktrees (/workspaces/<name>).
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 PROJECT=$(basename "$ROOT")
 SEP="────────────────────────────────────────────────────"
 
@@ -57,11 +59,16 @@ fi
 
 check_tool "dostar"   "dotnet tool install -g Dostar.Cli"  dostar   --version  # @no-substitute
 check_tool "lefthook" "lefthook install"                    lefthook version
-if [ -f "$ROOT/.git/hooks/pre-commit" ]; then
+
+# Hooks live in the git common directory (shared across all worktrees).
+_git_common=$(git rev-parse --git-common-dir 2>/dev/null || echo ".git")
+[[ "$_git_common" != /* ]] && _git_common="$ROOT/$_git_common"
+if [ -f "${_git_common}/hooks/pre-commit" ]; then
   printf "  %-14s ✓\n" "git hooks"
 else
   printf "  %-14s ✗  →  lefthook install\n" "git hooks"
 fi
+
 check_tool ".NET SDK" "(reinstall devcontainer)"            dotnet   --version
 check_tool "Node"     "(reinstall devcontainer)"            node     --version
 check_tool "trivy"    "bash .devcontainer/postCreate.sh"    trivy    --version
