@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.9.1](https://github.com/piers-sinclair/Dostar/compare/v0.9.0...v0.9.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* add git safe.directory to postCreate.sh to prevent dubious ownership error in devcontainer ([#438](https://github.com/piers-sinclair/Dostar/issues/438)) ([94c4713](https://github.com/piers-sinclair/Dostar/commit/94c471398faf95094af7e04e23245c2a7bc7a70e))
+* **devcontainer:** add full git worktree support for devcontainers ([#443](https://github.com/piers-sinclair/Dostar/issues/443)) ([5b059e2](https://github.com/piers-sinclair/Dostar/commit/5b059e22e1f17641f6634293d01167f6e1f954e3))
+* **devcontainer:** repair git worktree pointers on container start ([#439](https://github.com/piers-sinclair/Dostar/issues/439)) ([ba28025](https://github.com/piers-sinclair/Dostar/commit/ba28025b7b888ba275a262dd38a67931cc5d812b))
+* health alias broken when WORKSPACE_FOLDER env var is unset ([#444](https://github.com/piers-sinclair/Dostar/issues/444)) ([b6af3a7](https://github.com/piers-sinclair/Dostar/commit/b6af3a7f379b98bdde4084103041f93ffe729538))
+* run-tests.sh misses SharedKernel tests; add ci-check.sh and gitignore fixes ([#435](https://github.com/piers-sinclair/Dostar/issues/435)) ([7b2d3c4](https://github.com/piers-sinclair/Dostar/commit/7b2d3c4f6e7df87a9a25acef095dbb97330603f4))
+
 ## [0.9.0](https://github.com/piers-sinclair/Dostar/compare/v0.8.0...v0.9.0) (2026-06-20)
 
 
