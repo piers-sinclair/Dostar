@@ -7,9 +7,10 @@
 # Problem: a worktree's .git file contains an absolute host path. That path does not
 # exist inside the container unless we explicitly bind-mount it.
 #
-# Solution: detect if we are in a worktree, find the main repo's git directory using
-# `git rev-parse --git-common-dir`, and add a bind mount for it at /git-root.
-# postCreate.sh then rewrites the .git pointer to /git-root/worktrees/<name>.
+# Solution: detect if we are in a worktree (.git is a file, not a directory), navigate
+# 3 levels up to the main repo (convention: .claude/worktrees/<name>), and bind-mount
+# the main repo's .git directory at /git-root. postCreate.sh then creates a /.git
+# symlink so the existing relative .git pointer resolves correctly in both environments.
 
 set -e
 
@@ -18,24 +19,25 @@ workspace_name=$(basename "$local_workspace")
 container_workspace="/workspaces/${workspace_name}"
 workspace_name_lower=$(echo "$workspace_name" | tr '[:upper:]' '[:lower:]')
 
-# Resolve the absolute path to the main repo's .git directory.
-# git-common-dir returns ".git" (relative) for the main repo and an absolute path
-# for a linked worktree — both let us derive the main repo name without --show-toplevel,
-# which incorrectly returns the worktree root instead of the main repo root.
-git_common_dir_raw="$(git rev-parse --git-common-dir 2>/dev/null || echo ".git")"
-case "$git_common_dir_raw" in
-    /*|[A-Za-z]:*) git_common_dir_abs="$git_common_dir_raw" ;;
-    *)             git_common_dir_abs="${local_workspace}/${git_common_dir_raw}" ;;
-esac
-main_repo_name=$(basename "$(dirname "$git_common_dir_abs")" | tr '[:upper:]' '[:lower:]')
-
 git_volume_line=""
 
 if [ -f ".git" ]; then
-    git_volume_line="      - ${git_common_dir_abs}:/git-root"
-    echo "[configure-git-mounts] Linked worktree — mounting git root at /git-root"
-    echo "[configure-git-mounts]   source: ${git_common_dir_abs}"
+    # Linked worktree: the main repo is always 3 levels up (.claude/worktrees/<name>).
+    # Navigate up directly — do not use git rev-parse, which fails if git metadata is stale.
+    main_repo_path="$(dirname "$(dirname "$(dirname "$local_workspace")")")"
+    main_git_dir="${main_repo_path}/.git"
+    if [ -d "$main_git_dir" ]; then
+        git_volume_line="      - ${main_git_dir}:/git-root"
+        main_repo_name=$(basename "$main_repo_path" | tr '[:upper:]' '[:lower:]')
+        echo "[configure-git-mounts] Linked worktree — mounting git root at /git-root"
+        echo "[configure-git-mounts]   source: ${main_git_dir}"
+    else
+        main_repo_name="$workspace_name_lower"
+        echo "[configure-git-mounts] WARNING: expected main repo .git not found at: ${main_git_dir}"
+        echo "[configure-git-mounts]   Worktree must be 3 levels deep under the main repo (.claude/worktrees/<name>)"
+    fi
 else
+    main_repo_name="$workspace_name_lower"
     echo "[configure-git-mounts] Main repository — no extra git mount needed"
 fi
 
