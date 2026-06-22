@@ -24,6 +24,47 @@ install_dotnet_tool() {
   fi
 }
 
+# Must be first: git validates the CWD's .git pointer before any subcommand,
+# even --global ones. Running from $HOME avoids that check entirely.
+echo "[postCreate] Configuring git..."
+git -C "$HOME" config --global --add safe.directory '*'
+
+echo "[postCreate] Repairing git worktree pointers..."
+if [ -d ".git" ]; then
+  # Main repo: rewrite each worktree's .git file to a repo-relative path so it
+  # resolves correctly on any OS or mount point (Linux/Windows/devcontainer).
+  for wt_git in .claude/worktrees/*/.git; do
+    wt_dir=$(dirname "$wt_git")
+    printf 'gitdir: ../../../.git/worktrees/%s\n' "$(basename "$wt_dir")" > "$wt_git"
+  done
+  git worktree repair 2>/dev/null || true
+else
+  # Linked worktree: VS Code mounts the git root alongside the workspace via
+  # --mount-workspace-git-root. Search /workspaces/ for a repo that owns this
+  # worktree, then write its absolute container path into the .git pointer.
+  worktree_name=$(basename "$(pwd)")
+  main_git_dir=""
+  for candidate in /workspaces/*/; do
+    candidate_gitdir="${candidate}.git/worktrees/${worktree_name}"
+    if [ -d "$candidate_gitdir" ]; then
+      main_git_dir="$candidate_gitdir"
+      break
+    fi
+  done
+  if [ -n "$main_git_dir" ]; then
+    printf 'gitdir: %s\n' "$main_git_dir" > .git
+    echo "[postCreate] Fixed .git pointer to: $main_git_dir"
+    git worktree repair 2>/dev/null || true
+  else
+    echo "[postCreate] WARNING: main repo not found under /workspaces/ — git source control will not work. Open the main Dostar devcontainer instead."
+  fi
+fi
+
+echo "[postCreate] Fixing permissions..."
+sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
+ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
+
 echo "[postCreate] Installing global tools..."
 az bicep install || echo "WARNING: az bicep install failed — run: az bicep install"
 install_dotnet_tool dotnet-ef
@@ -53,41 +94,8 @@ echo "[postCreate] Installing coverlet (local test coverage tool)..."
 dotnet tool install coverlet.console --tool-path ./tools \
   || echo "WARNING: coverlet install failed — run: dotnet tool install coverlet.console --tool-path ./tools"
 
-echo "[postCreate] Fixing permissions..."
-# Run git config from $HOME so git doesn't try to resolve the current directory's
-# .git pointer (which may contain an OS-absolute path when opened as a worktree).
-git -C "$HOME" config --global --add safe.directory '*'
-sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
-ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
-
-echo "[postCreate] Repairing git worktree pointers..."
-# Only repair worktree pointers when running in the main repo (not a linked worktree).
-# A linked worktree has a .git FILE; the main repo has a .git DIRECTORY.
-if [ -d ".git" ]; then
-  # git worktree add writes OS-absolute paths. Rewrite each .git file to a repo-relative
-  # path so the worktree is usable on any OS or mount point (Linux/Windows/devcontainer).
-  for wt_git in .claude/worktrees/*/.git; do
-    wt_dir=$(dirname "$wt_git")
-    printf 'gitdir: ../../../.git/worktrees/%s\n' "$(basename "$wt_dir")" > "$wt_git"
-  done
-  # Repair the reverse pointers (.git/worktrees/<name>/gitdir) to current container paths
-  git worktree repair 2>/dev/null || true
-else
-  # Workspace is a linked worktree opened directly as a devcontainer.
-  # VS Code mounts the git root at $WORKSPACE_FOLDER via --mount-workspace-git-root.
-  # Rewrite the .git pointer to the absolute Linux path so git (and tools like
-  # lefthook) can find the repository inside the container.
-  worktree_name=$(basename "$(pwd)")
-  worktree_git_dir="${WORKSPACE_FOLDER}/.git/worktrees/${worktree_name}"
-  if [ -d "$worktree_git_dir" ]; then
-    printf 'gitdir: %s\n' "$worktree_git_dir" > .git
-    echo "[postCreate] Fixed .git pointer to: $worktree_git_dir"
-    git worktree repair 2>/dev/null || true
-  else
-    echo "[postCreate] WARNING: expected worktree git dir not found at $worktree_git_dir — git may not work"
-  fi
-fi
+echo "[postCreate] Configuring shell..."
+bash .devcontainer/shell-profile.sh
 
 echo "[postCreate] Installing frontend dependencies..."
 cd frontend && pnpm install
@@ -97,8 +105,5 @@ echo "[postCreate] Setting up git hooks..."
 sudo ln -sf "$(node -e "const {getExePath}=require('$(pwd)/frontend/node_modules/lefthook/get-exe.js'); process.stdout.write(getExePath())")" /usr/local/bin/lefthook || \
   echo "WARNING: lefthook symlink failed — run: lefthook install"
 lefthook install || echo "WARNING: lefthook install failed — run: lefthook install"
-
-echo "[postCreate] Configuring shell..."
-bash .devcontainer/shell-profile.sh
 
 echo "[postCreate] Done. Full log: cat .devcontainer/postCreate.log"
