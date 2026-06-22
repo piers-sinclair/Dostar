@@ -1,10 +1,15 @@
 {
   "name": "Dostar",
 
-  // configure-git-mounts.sh runs on the HOST before the container is created.
+  // configure-git-mounts.{ps1,sh} runs on the HOST before the container is created.
   // It generates docker-compose.yaml with the correct volume mounts, including
   // a bind mount for the main repo's .git directory when this is a worktree.
-  "initializeCommand": "bash .devcontainer/configure-git-mounts.sh",
+  // Platform split: Windows can't run bash natively, so it uses the PowerShell version.
+  "initializeCommand": {
+    "windows": ["powershell", "-ExecutionPolicy", "Bypass", "-File", ".devcontainer/configure-git-mounts.ps1"],
+    "linux": ["bash", ".devcontainer/configure-git-mounts.sh"],
+    "osx": ["bash", ".devcontainer/configure-git-mounts.sh"]
+  },
   "dockerComposeFile": ".devcontainer/docker-compose.yaml",
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
