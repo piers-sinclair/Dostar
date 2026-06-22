@@ -1,6 +1,18 @@
 {
   "name": "Dostar",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  // configure-git-mounts.{sh,ps1} runs on the HOST before the container is created.
+  // It generates docker-compose.yaml, optionally bind-mounting the main repo's .git
+  // directory at /git-root when this workspace is a linked git worktree.
+  //
+  // Single-string initializeCommand with || fallback works cross-platform:
+  //   Linux/macOS: bash runs and succeeds; powershell is never called.
+  //   Windows:     bash fails (WSL unavailable); || fires; powershell runs instead.
+  "initializeCommand": "bash .devcontainer/configure-git-mounts.sh || powershell -ExecutionPolicy Bypass -File .devcontainer/configure-git-mounts.ps1",
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
   "features": {
     "ghcr.io/devcontainers/features/dotnet:2": {
       "version": "10.0.200"
@@ -12,21 +24,19 @@
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
-  "mounts": [
-    "source=dostar-frontend-node-modules,target=/workspaces/Dostar/frontend/node_modules,type=volume",
-    "source=dostar-claude-config,target=/home/vscode/.claude,type=volume"
-  ],
+
   "containerEnv": {
     "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar",
     "TESTCONTAINERS_RYUK_DISABLED": "true",
     "TESTCONTAINERS_HOST_OVERRIDE": "host.docker.internal",
-    "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1",
-    "WORKSPACE_FOLDER": "/workspaces/Dostar"
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1"
   },
+
   "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "postStartCommand": "bash .devcontainer/postStart.sh",
   "postAttachCommand": "bash .devcontainer/postAttach.sh",
+
   "forwardPorts": [
     5000,
     5173
@@ -41,6 +51,7 @@
       "onAutoForward": "notify"
     }
   },
+
   "customizations": {
     "vscode": {
       "extensions": [
