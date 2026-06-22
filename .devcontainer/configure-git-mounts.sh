@@ -4,41 +4,37 @@
 # Generates .devcontainer/docker-compose.yaml with volume mounts tailored to whether
 # this workspace is the main repository or a linked git worktree.
 #
-# The core problem with git worktrees and devcontainers: a worktree's .git file
-# contains an absolute path to the main repo's .git directory on the HOST. That
-# path does not exist inside the container unless we explicitly mount it.
+# Problem: a worktree's .git file contains an absolute host path. That path does not
+# exist inside the container unless we explicitly bind-mount it.
 #
-# Solution: detect if we are in a worktree, find the main repo's git directory
-# using `git rev-parse --git-common-dir`, and add a bind mount for it at /git-root.
+# Solution: detect if we are in a worktree, find the main repo's git directory using
+# `git rev-parse --git-common-dir`, and add a bind mount for it at /git-root.
 # postCreate.sh then rewrites the .git pointer to /git-root/worktrees/<name>.
 
 set -e
 
-workspace_name=$(basename "$(pwd)")
+local_workspace="$(pwd)"
+workspace_name=$(basename "$local_workspace")
 container_workspace="/workspaces/${workspace_name}"
+workspace_name_lower=$(echo "$workspace_name" | tr '[:upper:]' '[:lower:]')
 
-# Derive the volume name prefix from the main repo name (lowercased).
-# git rev-parse --git-common-dir returns .git (relative) for the main repo and an
-# absolute path for a worktree — either way, two levels up is the repo root.
-main_repo_name=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)" \
-  | tr '[:upper:]' '[:lower:]')
+# Resolve the absolute path to the main repo's .git directory.
+# git-common-dir returns ".git" (relative) for the main repo and an absolute path
+# for a linked worktree — both let us derive the main repo name without --show-toplevel,
+# which incorrectly returns the worktree root instead of the main repo root.
+git_common_dir_raw="$(git rev-parse --git-common-dir 2>/dev/null || echo ".git")"
+case "$git_common_dir_raw" in
+    /*|[A-Za-z]:*) git_common_dir_abs="$git_common_dir_raw" ;;
+    *)             git_common_dir_abs="${local_workspace}/${git_common_dir_raw}" ;;
+esac
+main_repo_name=$(basename "$(dirname "$git_common_dir_abs")" | tr '[:upper:]' '[:lower:]')
 
 git_volume_line=""
 
-# In a linked worktree, .git is a FILE (a pointer); in the main repo it is a DIRECTORY.
 if [ -f ".git" ]; then
-    git_common_dir="$(git rev-parse --git-common-dir)"
-
-    # git may return a relative path — resolve it to an absolute path.
-    case "$git_common_dir" in
-        /*)         ;;                                          # already absolute (Linux/Mac/WSL)
-        [A-Za-z]:*) ;;                                          # Windows absolute  (C:/...)
-        *)          git_common_dir="$(pwd)/${git_common_dir}" ;;
-    esac
-
-    git_volume_line="      - ${git_common_dir}:/git-root"
+    git_volume_line="      - ${git_common_dir_abs}:/git-root"
     echo "[configure-git-mounts] Linked worktree — mounting git root at /git-root"
-    echo "[configure-git-mounts]   source: ${git_common_dir}"
+    echo "[configure-git-mounts]   source: ${git_common_dir_abs}"
 else
     echo "[configure-git-mounts] Main repository — no extra git mount needed"
 fi
@@ -51,13 +47,14 @@ services:
     image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04
     command: sleep infinity
     volumes:
+      - ${local_workspace}:${container_workspace}
       - node-modules:${container_workspace}/frontend/node_modules
       - claude-config:/home/vscode/.claude
 ${git_volume_line}
 
 volumes:
   node-modules:
-    name: ${main_repo_name}-frontend-node-modules
+    name: ${workspace_name_lower}-frontend-node-modules
   claude-config:
     name: ${main_repo_name}-claude-config
 YAML

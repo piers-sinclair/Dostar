@@ -1,32 +1,35 @@
 # Runs on the HOST machine (initializeCommand) before the devcontainer is created.
-# Windows version of configure-git-mounts.sh — generates .devcontainer/docker-compose.yaml.
+# Windows fallback for configure-git-mounts.sh — generates .devcontainer/docker-compose.yaml.
 #
-# For linked worktrees: mounts the main repo's .git directory at /git-root inside
-# the container. postCreate.sh then rewrites the .git pointer to /git-root/worktrees/<name>.
+# Used automatically when bash is not available on the host (Windows without WSL bash).
+# The initializeCommand runs: bash configure-git-mounts.sh || powershell configure-git-mounts.ps1
 
 $ErrorActionPreference = 'Stop'
 
+$localWorkspace = (Get-Location).Path -replace '\\', '/'
 $workspaceName = Split-Path -Leaf (Get-Location)
+$workspaceNameLower = $workspaceName.ToLower()
 $containerWorkspace = "/workspaces/$workspaceName"
 
-$toplevel = git rev-parse --show-toplevel 2>$null
-if (-not $toplevel) { $toplevel = (Get-Location).Path }
-$mainRepoName = (Split-Path -Leaf $toplevel).ToLower()
+# Resolve the absolute path to the main repo's .git directory.
+# git-common-dir returns ".git" (relative) for the main repo and an absolute path
+# for a linked worktree — both let us derive the main repo name without --show-toplevel,
+# which incorrectly returns the worktree root instead of the main repo root.
+$gitCommonDirRaw = git rev-parse --git-common-dir 2>$null
+if (-not $gitCommonDirRaw) { $gitCommonDirRaw = '.git' }
+if (-not [System.IO.Path]::IsPathRooted($gitCommonDirRaw)) {
+    $gitCommonDirRaw = Join-Path (Get-Location) $gitCommonDirRaw
+}
+$gitCommonDirAbs = $gitCommonDirRaw -replace '\\', '/'
+$mainRepoName = (Split-Path -Leaf (Split-Path -Parent $gitCommonDirRaw)).ToLower()
 
 $gitVolumeLine = ''
 $gitPath = Join-Path (Get-Location) '.git'
 
 if (Test-Path $gitPath -PathType Leaf) {
-    # Linked worktree: .git is a file pointing to the main repo's git directory.
-    $gitCommonDir = git rev-parse --git-common-dir
-    if (-not [System.IO.Path]::IsPathRooted($gitCommonDir)) {
-        $gitCommonDir = Join-Path (Get-Location) $gitCommonDir
-    }
-    # Docker Compose volume paths on Windows use forward slashes (C:/repos/...).
-    $gitCommonDirFwd = $gitCommonDir -replace '\\', '/'
-    $gitVolumeLine = "      - ${gitCommonDirFwd}:/git-root"
+    $gitVolumeLine = "      - ${gitCommonDirAbs}:/git-root"
     Write-Host "[configure-git-mounts] Linked worktree -- mounting git root at /git-root"
-    Write-Host "[configure-git-mounts]   source: $gitCommonDir"
+    Write-Host "[configure-git-mounts]   source: $gitCommonDirAbs"
 } else {
     Write-Host '[configure-git-mounts] Main repository -- no extra git mount needed'
 }
@@ -39,6 +42,7 @@ $lines = @(
     '    image: mcr.microsoft.com/devcontainers/base:ubuntu-24.04'
     '    command: sleep infinity'
     '    volumes:'
+    "      - ${localWorkspace}:${containerWorkspace}"
     "      - node-modules:${containerWorkspace}/frontend/node_modules"
     '      - claude-config:/home/vscode/.claude'
 )
@@ -47,13 +51,12 @@ $lines += @(
     ''
     'volumes:'
     '  node-modules:'
-    "    name: ${mainRepoName}-frontend-node-modules"
+    "    name: ${workspaceNameLower}-frontend-node-modules"
     '  claude-config:'
     "    name: ${mainRepoName}-claude-config"
     ''
 )
 
-# Write with LF line endings and no BOM so Docker Compose (Linux) reads it cleanly.
 $outputPath = [System.IO.Path]::GetFullPath('.devcontainer/docker-compose.yaml')
 $encoding = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllText($outputPath, ($lines -join "`n"), $encoding)

@@ -39,19 +39,26 @@ if [ -d ".git" ]; then
   done
   git worktree repair 2>/dev/null || true
 else
-  # Linked worktree: configure-git-mounts.sh (initializeCommand) mounted the main
-  # repo's .git directory at /git-root inside the container. Rewrite .git to that
-  # absolute container path so git, VS Code source control, and lefthook all work.
+  # Linked worktree: configure-git-mounts.{sh,ps1} (initializeCommand) mounted the
+  # main repo's .git directory at /git-root inside the container.
+  #
+  # Rather than rewriting .git to the absolute container path /git-root/worktrees/<name>
+  # (which breaks host-side git after every rebuild), we keep .git as the same relative
+  # path used on the host (../../../.git/worktrees/<name>) and create a /.git → /git-root
+  # symlink so that path resolves correctly inside the container too:
+  #   container: ../../../.git = /.git → /git-root  →  /git-root/worktrees/<name> ✓
+  #   host:      ../../../.git = C:/repos/Dostar/.git  →  .../.git/worktrees/<name> ✓
   worktree_name=$(basename "$(pwd)")
-  git_dir="/git-root/worktrees/${worktree_name}"
-  if [ -d "$git_dir" ]; then
-    printf 'gitdir: %s\n' "$git_dir" > .git
-    echo "[postCreate] Fixed .git pointer to: $git_dir"
+  if [ -d "/git-root/worktrees/${worktree_name}" ]; then
+    sudo ln -sf /git-root /.git
+    printf 'gitdir: ../../../.git/worktrees/%s\n' "$worktree_name" > .git
+    echo "[postCreate] Created /.git → /git-root symlink"
+    echo "[postCreate] Set .git to relative path (host-compatible)"
     git worktree repair 2>/dev/null || true
   else
     echo "[postCreate] WARNING: /git-root/worktrees/${worktree_name} not found"
-    echo "[postCreate]   The git root may not have been mounted — check configure-git-mounts.sh ran"
-    echo "[postCreate]   Hint: ls /git-root/worktrees/ (if /git-root exists)"
+    echo "[postCreate]   configure-git-mounts may not have run — rebuild the container"
+    echo "[postCreate]   Hint: ls /git-root/ (if /git-root exists)"
   fi
 fi
 
