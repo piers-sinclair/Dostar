@@ -24,6 +24,49 @@ install_dotnet_tool() {
   fi
 }
 
+# Must be first: git validates the CWD's .git pointer before any subcommand,
+# even --global ones. Running from $HOME avoids that check entirely.
+echo "[postCreate] Configuring git..."
+git -C "$HOME" config --global --add safe.directory '*'
+
+echo "[postCreate] Repairing git worktree pointers..."
+if [ -d ".git" ]; then
+  # Main repo: rewrite each worktree's .git file to a repo-relative path so it
+  # resolves correctly on any OS or mount point (Linux/Windows/devcontainer).
+  for wt_git in .claude/worktrees/*/.git; do
+    wt_dir=$(dirname "$wt_git")
+    printf 'gitdir: ../../../.git/worktrees/%s\n' "$(basename "$wt_dir")" > "$wt_git"
+  done
+  git worktree repair 2>/dev/null || true
+else
+  # Linked worktree: configure-git-mounts.{sh,ps1} (initializeCommand) mounted the
+  # main repo's .git directory at /git-root inside the container.
+  #
+  # Rather than rewriting .git to the absolute container path /git-root/worktrees/<name>
+  # (which breaks host-side git after every rebuild), we keep .git as the same relative
+  # path used on the host (../../../.git/worktrees/<name>) and create a /.git → /git-root
+  # symlink so that path resolves correctly inside the container too:
+  #   container: ../../../.git = /.git → /git-root  →  /git-root/worktrees/<name> ✓
+  #   host:      ../../../.git = C:/repos/Dostar/.git  →  .../.git/worktrees/<name> ✓
+  worktree_name=$(basename "$(pwd)")
+  if [ -d "/git-root/worktrees/${worktree_name}" ]; then
+    sudo ln -sf /git-root /.git
+    printf 'gitdir: ../../../.git/worktrees/%s\n' "$worktree_name" > .git
+    echo "[postCreate] Created /.git → /git-root symlink"
+    echo "[postCreate] Set .git to relative path (host-compatible)"
+    git worktree repair 2>/dev/null || true
+  else
+    echo "[postCreate] WARNING: /git-root/worktrees/${worktree_name} not found"
+    echo "[postCreate]   configure-git-mounts may not have run — rebuild the container"
+    echo "[postCreate]   Hint: ls /git-root/ (if /git-root exists)"
+  fi
+fi
+
+echo "[postCreate] Fixing permissions..."
+sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
+ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
+
 echo "[postCreate] Installing global tools..."
 az bicep install || echo "WARNING: az bicep install failed — run: az bicep install"
 install_dotnet_tool dotnet-ef
@@ -53,11 +96,8 @@ echo "[postCreate] Installing coverlet (local test coverage tool)..."
 dotnet tool install coverlet.console --tool-path ./tools \
   || echo "WARNING: coverlet install failed — run: dotnet tool install coverlet.console --tool-path ./tools"
 
-echo "[postCreate] Fixing permissions..."
-git config --global --add safe.directory /workspaces/Dostar
-sudo chown vscode:vscode frontend/node_modules 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
-ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
+echo "[postCreate] Configuring shell..."
+bash .devcontainer/shell-profile.sh
 
 echo "[postCreate] Installing frontend dependencies..."
 cd frontend && pnpm install
@@ -67,8 +107,5 @@ echo "[postCreate] Setting up git hooks..."
 sudo ln -sf "$(node -e "const {getExePath}=require('$(pwd)/frontend/node_modules/lefthook/get-exe.js'); process.stdout.write(getExePath())")" /usr/local/bin/lefthook || \
   echo "WARNING: lefthook symlink failed — run: lefthook install"
 lefthook install || echo "WARNING: lefthook install failed — run: lefthook install"
-
-echo "[postCreate] Configuring shell..."
-bash .devcontainer/shell-profile.sh
 
 echo "[postCreate] Done. Full log: cat .devcontainer/postCreate.log"
