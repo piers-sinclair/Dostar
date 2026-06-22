@@ -31,30 +31,34 @@ git -C "$HOME" config --global --add safe.directory '*'
 
 echo "[postCreate] Repairing git worktree pointers..."
 if [ -d ".git" ]; then
-  # Main repo: rewrite each worktree's .git file to a repo-relative path so it
+  # Main repo: rewrite each linked worktree's .git file to a relative path so it
   # resolves correctly on any OS or mount point (Linux/Windows/devcontainer).
+  # Do NOT run `git worktree repair` here — it rewrites gitdir files inside
+  # .git/worktrees/ with container paths, which breaks host-side git and causes
+  # git to auto-prune the worktrees on the next fetch.
   for wt_git in .claude/worktrees/*/.git; do
+    [ -f "$wt_git" ] || continue
     wt_dir=$(dirname "$wt_git")
     printf 'gitdir: ../../../.git/worktrees/%s\n' "$(basename "$wt_dir")" > "$wt_git"
   done
-  git worktree repair 2>/dev/null || true
 else
   # Linked worktree: configure-git-mounts.{sh,ps1} (initializeCommand) mounted the
   # main repo's .git directory at /git-root inside the container.
   #
-  # Rather than rewriting .git to the absolute container path /git-root/worktrees/<name>
-  # (which breaks host-side git after every rebuild), we keep .git as the same relative
-  # path used on the host (../../../.git/worktrees/<name>) and create a /.git → /git-root
-  # symlink so that path resolves correctly inside the container too:
+  # Create /.git → /git-root so the relative .git pointer (../../../.git/worktrees/<name>)
+  # resolves correctly inside the container via the symlink:
   #   container: ../../../.git = /.git → /git-root  →  /git-root/worktrees/<name> ✓
   #   host:      ../../../.git = C:/repos/Dostar/.git  →  .../.git/worktrees/<name> ✓
+  #
+  # Do NOT run `git worktree repair` here — it overwrites /git-root/worktrees/<name>/gitdir
+  # with the container path /workspaces/<name>/.git, which breaks host-side git and causes
+  # git to auto-prune the worktree on the next fetch.
   worktree_name=$(basename "$(pwd)")
   if [ -d "/git-root/worktrees/${worktree_name}" ]; then
     sudo ln -sf /git-root /.git
     printf 'gitdir: ../../../.git/worktrees/%s\n' "$worktree_name" > .git
     echo "[postCreate] Created /.git → /git-root symlink"
     echo "[postCreate] Set .git to relative path (host-compatible)"
-    git worktree repair 2>/dev/null || true
   else
     echo "[postCreate] WARNING: /git-root/worktrees/${worktree_name} not found"
     echo "[postCreate]   configure-git-mounts may not have run — rebuild the container"

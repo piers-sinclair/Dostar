@@ -11,26 +11,28 @@ $workspaceName = Split-Path -Leaf (Get-Location)
 $workspaceNameLower = $workspaceName.ToLower()
 $containerWorkspace = "/workspaces/$workspaceName"
 
-# Resolve the absolute path to the main repo's .git directory.
-# git-common-dir returns ".git" (relative) for the main repo and an absolute path
-# for a linked worktree — both let us derive the main repo name without --show-toplevel,
-# which incorrectly returns the worktree root instead of the main repo root.
-$gitCommonDirRaw = git rev-parse --git-common-dir 2>$null
-if (-not $gitCommonDirRaw) { $gitCommonDirRaw = '.git' }
-if (-not [System.IO.Path]::IsPathRooted($gitCommonDirRaw)) {
-    $gitCommonDirRaw = Join-Path (Get-Location) $gitCommonDirRaw
-}
-$gitCommonDirAbs = $gitCommonDirRaw -replace '\\', '/'
-$mainRepoName = (Split-Path -Leaf (Split-Path -Parent $gitCommonDirRaw)).ToLower()
-
 $gitVolumeLine = ''
 $gitPath = Join-Path (Get-Location) '.git'
 
 if (Test-Path $gitPath -PathType Leaf) {
-    $gitVolumeLine = "      - ${gitCommonDirAbs}:/git-root"
-    Write-Host "[configure-git-mounts] Linked worktree -- mounting git root at /git-root"
-    Write-Host "[configure-git-mounts]   source: $gitCommonDirAbs"
+    # Linked worktree: the main repo is always 3 levels up (.claude/worktrees/<name>).
+    # Navigate up directly — do not use git rev-parse, which fails if git metadata is stale
+    # and whose errors cannot be cleanly suppressed in Windows PowerShell 5.1.
+    $mainRepoPath = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent (Get-Location)))
+    $mainGitDir = Join-Path $mainRepoPath '.git'
+    if (Test-Path $mainGitDir -PathType Container) {
+        $mainGitDirFwd = $mainGitDir -replace '\\', '/'
+        $gitVolumeLine = "      - ${mainGitDirFwd}:/git-root"
+        $mainRepoName = (Split-Path -Leaf $mainRepoPath).ToLower()
+        Write-Host "[configure-git-mounts] Linked worktree -- mounting git root at /git-root"
+        Write-Host "[configure-git-mounts]   source: $mainGitDirFwd"
+    } else {
+        $mainRepoName = $workspaceNameLower
+        Write-Host "[configure-git-mounts] WARNING: expected main repo .git not found at: $mainGitDir"
+        Write-Host "[configure-git-mounts]   Worktree must be 3 levels deep under the main repo (.claude/worktrees/<name>)"
+    }
 } else {
+    $mainRepoName = $workspaceNameLower
     Write-Host '[configure-git-mounts] Main repository -- no extra git mount needed'
 }
 
