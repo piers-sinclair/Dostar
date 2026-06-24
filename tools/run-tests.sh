@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Discovers and runs all unit or integration tests with coverlet coverage.
+# Discovers and runs backend .NET unit or integration tests.
 # Usage: bash tools/run-tests.sh <unit|integration>
 #
-# For each matching test assembly under backend/Modules/ and backend/Dostar.SharedKernel.UnitTests/:
-#   - Runs coverlet wrapping dotnet test
-#   - Scopes coverage to the module's assemblies only
-#   - Enforces 80% line coverage threshold
-#   - Service layer and infrastructure classes carry [ExcludeFromCodeCoverage] so unit tests
-#     only measure pure logic (validators, domain rules); integration tests measure full stack
+# This script is used by the backend CI workflow. It intentionally does not run
+# frontend Vitest tests or Playwright UI tests; use tools/ci-check.sh for the
+# full local preflight across backend, frontend, UI, and security checks.
 #
-# Exits non-zero if any project fails its tests or threshold.
+# For each matching test assembly under backend/Modules/ and backend/Dostar.SharedKernel.UnitTests/:
+#   - Unit tests run through coverlet, scoped to implementation assemblies, with an 80% line threshold.
+#   - Integration tests run through dotnet test without a coverage gate; they protect HTTP/DB behavior.
+#
+# Exits non-zero if any project fails its tests or, for unit tests, the coverage threshold.
 
 set -uo pipefail
 
@@ -46,25 +47,31 @@ exit_code=0
 for dll in "${dlls[@]}"; do
   dll_name=$(basename "$dll" .dll)
   project_dir="${dll%%/bin/Release/*}"
+
+  echo ""
+  echo "=== ${dll_name} ==="
+
+  if [[ "$type" == "integration" ]]; then
+    dotnet test "${project_dir}" \
+      --no-build \
+      -c Release \
+      --logger trx \
+      --results-directory "${results_dir}" \
+      || exit_code=$?
+    continue
+  fi
+
   # e.g. Dostar.Todos.UnitTests -> Dostar.Todos  -> [Dostar.Todos.Implementation]*
   # e.g. Dostar.SharedKernel.UnitTests -> Dostar.SharedKernel -> [Dostar.SharedKernel*]*
   module_prefix="${dll_name%.${suffix}}"
   # Unit tests scope to Implementation only — Contracts (interfaces/DTOs) have no testable logic.
-  # Integration tests scope broadly to measure the full stack.
-  if [[ "$type" == "unit" ]]; then
-    impl_dir="${project_dir}/../${module_prefix}.Implementation"
-    if [[ -d "$impl_dir" ]]; then
-      include="[${module_prefix}.Implementation]*"
-    else
-      include="[${module_prefix}]*"
-    fi
+  impl_dir="${project_dir}/../${module_prefix}.Implementation"
+  if [[ -d "$impl_dir" ]]; then
+    include="[${module_prefix}.Implementation]*"
   else
-    include="[${module_prefix}*]*"
+    include="[${module_prefix}]*"
   fi
   output="${results_dir}/${dll_name}/coverage.cobertura.xml"
-
-  echo ""
-  echo "=== ${dll_name} ==="
 
   ./tools/coverlet "$dll" \
     --target dotnet \

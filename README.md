@@ -37,7 +37,7 @@ See [docs/architecture.md](docs/architecture.md) for the full infrastructure top
 | IaC | Bicep |
 | Compute | Azure Container App (backend) + Azure Static Web Apps (frontend) |
 | Package manager | **pnpm** — never npm or yarn |
-| Tests | xUnit + Shouldly + NSubstitute / Testcontainers / Playwright |
+| Tests | xUnit + Shouldly + NSubstitute / Testcontainers / Vitest / Playwright |
 
 ## Quick start
 
@@ -328,8 +328,18 @@ dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.UnitTests
 # Integration tests (per module — requires Docker)
 dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.IntegrationTests
 
+# Backend test runner used by backend CI (unit or integration only)
+bash tools/run-tests.sh unit
+bash tools/run-tests.sh integration
+
+# Frontend unit tests (Vitest)
+cd frontend && pnpm test
+
 # UI tests (Playwright)
-cd tests && pnpm exec playwright test
+cd tests/Dostar.UITests && pnpm exec playwright test
+
+# Full local CI preflight
+bash tools/ci-check.sh
 ```
 
 ## Observability

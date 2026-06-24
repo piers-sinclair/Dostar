@@ -208,9 +208,11 @@ Libraries: **xUnit** + **Shouldly** + **AutoFixture** + **NSubstitute** (unit), 
 
 | Layer | Scope | Libraries | Coverage gate |
 |-------|-------|-----------|---------------|
-| Unit | Pure logic — validators, domain rules — no I/O | xUnit + AutoFixture + NSubstitute + Shouldly | None (logic is narrow) |
-| Integration | Full HTTP stack + real PostgreSQL via Testcontainers | xUnit + WebApplicationFactory + Testcontainers + Shouldly | 80% line coverage |
+| Unit | Pure logic — validators, domain rules — no I/O | xUnit + AutoFixture + NSubstitute + Shouldly | 80% line coverage |
+| Integration | Full HTTP stack + real PostgreSQL via Testcontainers | xUnit + WebApplicationFactory + Testcontainers + Shouldly | None |
 | UI | Browser behaviour against mocked API (`page.route()`) | Playwright TypeScript | None |
+
+`tools/run-tests.sh` is the backend CI runner for .NET unit and integration test assemblies only. Use `tools/ci-check.sh` for the full local preflight that also includes frontend unit tests and Playwright.
 
 ### Unit test conventions
 
@@ -357,7 +359,7 @@ Use the `/add-package` Claude skill — it fetches the licence, validates it, an
 |----------|---------|---------|
 | `ci.yml` | PR to `main` (all) | PR title check + security scans (Trivy, OpenGrep) |
 | `ci-backend.yml` | PR to `main` (`backend/**`, `tools/**`, `*.slnx`) | Backend build & test |
-| `ci-frontend.yml` | PR to `main` (`frontend/**`) | Frontend build & lint |
+| `ci-frontend.yml` | PR to `main` (`frontend/**`) | Frontend build, lint & unit tests |
 | `testing-ui.yml` | PR to `main` (`frontend/**`, `tests/Dostar.UITests/**`) | Playwright UI tests (frontend-only; API calls mocked via `page.route()`) |
 | `cd-backend.yml` | push to `main` (`backend/**`) | Deploy backend to **dev** |
 | `cd-frontend.yml` | push to `main` (`frontend/**`) | Deploy frontend to **dev** |

@@ -26,7 +26,7 @@ jobs:
           fi
 
   build:
-    name: Frontend — build & lint (run)
+    name: Frontend — build, lint & test (run)
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
@@ -59,11 +59,14 @@ jobs:
       - name: Verify generated API client is up to date
         run: pnpm generate:api && git diff --exit-code src/shared/api/generated/
 
+      - name: Unit tests
+        run: pnpm test
+
       - name: Build
         run: pnpm build
 
   frontend-checks:
-    name: Frontend — build & lint
+    name: Frontend — build, lint & test
     needs: [changes, build]
     if: always()
     runs-on: ubuntu-latest
@@ -78,6 +81,6 @@ jobs:
             exit 1
           fi
           if [[ "$BUILD_RESULT" == "failure" || "$BUILD_RESULT" == "cancelled" ]]; then
-            echo "::error::Build failed ($BUILD_RESULT)"
+            echo "::error::Frontend checks failed ($BUILD_RESULT)"
             exit 1
           fi
