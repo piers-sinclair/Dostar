@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
-# Discovers and runs all unit or integration tests.
+# Discovers and runs backend .NET unit or integration tests.
 # Usage: bash tools/run-tests.sh <unit|integration>
+#
+# This script is used by the backend CI workflow. It intentionally does not run
+# frontend Vitest tests or Playwright UI tests; use tools/ci-check.sh for the
+# full local preflight across backend, frontend, UI, and security checks.
 #
 # For each matching test assembly under backend/Modules/ and backend/Dostar.SharedKernel.UnitTests/:
 #   - Unit tests run through coverlet, scoped to implementation assemblies, with an 80% line threshold.

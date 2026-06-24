@@ -61,11 +61,11 @@ jobs:
       - name: Install coverlet
         run: dotnet tool install coverlet.console --tool-path ./tools
 
-      - name: Unit tests
+      - name: Backend unit tests
         timeout-minutes: 15
         run: bash tools/run-tests.sh unit
 
-      - name: Integration tests
+      - name: Backend integration tests
         timeout-minutes: 30
         run: bash tools/run-tests.sh integration
 

@@ -328,6 +328,10 @@ dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.UnitTests
 # Integration tests (per module — requires Docker)
 dotnet test backend/Modules/<Module>/<ProjectName>.<Module>.IntegrationTests
 
+# Backend test runner used by backend CI (unit or integration only)
+bash tools/run-tests.sh unit
+bash tools/run-tests.sh integration
+
 # Frontend unit tests (Vitest)
 cd frontend && pnpm test
 

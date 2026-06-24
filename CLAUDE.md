@@ -212,6 +212,8 @@ Libraries: **xUnit** + **Shouldly** + **AutoFixture** + **NSubstitute** (unit), 
 | Integration | Full HTTP stack + real PostgreSQL via Testcontainers | xUnit + WebApplicationFactory + Testcontainers + Shouldly | None |
 | UI | Browser behaviour against mocked API (`page.route()`) | Playwright TypeScript | None |
 
+`tools/run-tests.sh` is the backend CI runner for .NET unit and integration test assemblies only. Use `tools/ci-check.sh` for the full local preflight that also includes frontend unit tests and Playwright.
+
 ### Unit test conventions
 
 **Project location**: `backend/Modules/<Module>/Dostar.<Module>.UnitTests/` — colocated with the module, referencing `.Implementation` directly. All four module projects travel together to support microservice extraction.
