@@ -1,0 +1,75 @@
+name: Devcontainer — Build & Publish Image
+
+# Publishes ghcr.io/piers-sinclair/dostar-devcontainer when the Dockerfile
+# or this workflow changes. The image is used by all devcontainer opens to skip
+# the slow per-container feature-install step.
+#
+# Tags:
+#   latest           — always points to the most recent build from main
+#   dotnet10-node22  — stable, human-readable version tag (derived from Dockerfile ARGs)
+#   sha-<sha>        — immutable per-commit tag for pinning/debugging
+#
+# After the image is first published, set the package visibility to Public in
+# GitHub → Settings → Packages so that `docker pull` works without auth.
+# See docs/devcontainer.md for the full setup guide.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .devcontainer/Dockerfile
+      - .devcontainer/devcontainer.json
+      - .github/workflows/devcontainer-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: piers-sinclair/dostar-devcontainer
+
+jobs:
+  build-and-push:
+    name: Build and push devcontainer image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Derive version tag from Dockerfile ARGs
+        id: versions
+        run: |
+          DOTNET=$(grep '^ARG DOTNET_VERSION=' .devcontainer/Dockerfile | head -1 | cut -d= -f2)
+          NODE=$(grep '^ARG NODE_MAJOR=' .devcontainer/Dockerfile | head -1 | cut -d= -f2)
+          DOTNET_MAJOR=$(echo "$DOTNET" | cut -d. -f1)
+          echo "dotnet=${DOTNET}" >> "$GITHUB_OUTPUT"
+          echo "node=${NODE}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=dotnet${DOTNET_MAJOR}-node${NODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .devcontainer/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.versions.outputs.version_tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          build-args: |
+            DOTNET_VERSION=${{ steps.versions.outputs.dotnet }}
+            NODE_MAJOR=${{ steps.versions.outputs.node }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

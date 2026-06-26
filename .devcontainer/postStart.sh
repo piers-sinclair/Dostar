@@ -1,4 +1,24 @@
 #!/bin/bash
+exec > >(tee .devcontainer/postStart.log) 2>&1
+
+# Fix docker socket access so `docker` commands work inside the container without sudo.
+# Two cases:
+#   - Non-zero GID socket: groupmod aligns the docker group GID with the host socket.
+#   - Root-owned socket (GID 0): chmod a+rw opens it for all users (local dev only).
+# Both run every start because the socket GID is host-specific.
+if [ -S /var/run/docker.sock ]; then
+  sudo chmod a+rw /var/run/docker.sock 2>/dev/null || true
+  SOCK_GID=$(stat -c '%g' /var/run/docker.sock 2>/dev/null || echo "")
+  if [ -n "$SOCK_GID" ] && [ "$SOCK_GID" != "0" ]; then
+    CURRENT_GID=$(getent group docker | cut -d: -f3 2>/dev/null || echo "")
+    if [ "$SOCK_GID" != "$CURRENT_GID" ]; then
+      sudo groupmod -g "$SOCK_GID" docker 2>/dev/null \
+        || sudo groupadd -g "$SOCK_GID" docker 2>/dev/null \
+        || true
+      sudo usermod -aG docker vscode 2>/dev/null || true
+    fi
+  fi
+fi
 
 echo "[postStart] Starting services..."
 if ! docker compose up -d; then
@@ -55,9 +75,28 @@ if [ "$CONNECTED" = false ]; then
   exit 0
 fi
 
-sleep 1
-if timeout 5 bash -c 'echo > /dev/tcp/db/5432' 2>/dev/null; then
-  echo "[postStart] PostgreSQL is reachable ✓"
-else
-  echo "[postStart] Connected to $NETWORK but postgres is still starting — run: health"
+# Wait for PostgreSQL to accept connections before running migrations.
+PG_READY=false
+for i in $(seq 1 15); do
+  if timeout 2 bash -c 'echo > /dev/tcp/db/5432' 2>/dev/null; then
+    PG_READY=true
+    break
+  fi
+  echo "[postStart] Waiting for PostgreSQL... ($i/15)"
+  sleep 2
+done
+
+if [ "$PG_READY" = false ]; then
+  echo "WARNING: PostgreSQL did not become ready — skipping migrations"
+  echo "  Check: docker compose ps"
+  echo "  Fix:   bash tools/run-migrations.sh"
+  exit 0
+fi
+
+echo "[postStart] PostgreSQL is reachable ✓"
+
+echo "[postStart] Running database migrations..."
+if ! bash tools/run-migrations.sh; then
+  echo "WARNING: migrations failed — run: bash tools/run-migrations.sh"
+  echo "  The app may not start correctly until migrations are applied."
 fi

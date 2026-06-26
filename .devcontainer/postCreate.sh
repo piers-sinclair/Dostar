@@ -15,8 +15,15 @@ trap _finish EXIT
 touch .devcontainer/.setup-in-progress
 rm -f .devcontainer/.setup-failed
 
+# Installs a global dotnet tool only if the binary is not already on PATH.
+# Tools pre-installed in the image (dotnet-ef, dostar) are skipped automatically.
 install_dotnet_tool() {
   local tool=$1
+  local binary="${2:-$tool}"
+  if command -v "$binary" > /dev/null 2>&1; then
+    echo "[postCreate] $binary already on PATH — skipping install"
+    return 0
+  fi
   if ! dotnet tool install -g "$tool" 2>/dev/null; then
     if ! dotnet tool update -g "$tool" 2>/dev/null; then
       echo "WARNING: could not install $tool — run: dotnet tool install -g $tool"
@@ -72,29 +79,15 @@ sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 ln -sf /home/vscode/.claude/.claude.json /home/vscode/.claude.json 2>/dev/null || true
 
 echo "[postCreate] Installing global tools..."
-az bicep install || echo "WARNING: az bicep install failed — run: az bicep install"
-install_dotnet_tool dotnet-ef
-install_dotnet_tool Dostar.Cli
-npm install -g @anthropic-ai/claude-code || echo "WARNING: claude-code install failed — run: npm install -g @anthropic-ai/claude-code"
-
-echo "[postCreate] Installing Trivy (CVE scanner)..."
-wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key \
-  | gpg --dearmor \
-  | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" \
-  | sudo tee /etc/apt/sources.list.d/trivy.list
-sudo apt-get update -qq && sudo apt-get install -y trivy \
-  || echo "WARNING: trivy install failed — see https://trivy.dev/latest/getting-started/installation/"
-
-echo "[postCreate] Installing OpenGrep (SAST)..."
-latest=$(curl -sf "https://api.github.com/repos/opengrep/opengrep/releases/latest" \
-  | grep '"tag_name"' | head -1 | cut -d'"' -f4)
-curl -fsSL "https://github.com/opengrep/opengrep/releases/download/${latest}/opengrep_manylinux_x86" \
-  -o /tmp/opengrep && chmod +x /tmp/opengrep && sudo mv /tmp/opengrep /usr/local/bin/opengrep \
-  || echo "WARNING: opengrep install failed — see https://github.com/opengrep/opengrep/releases"
-
-echo "[postCreate] Restoring backend packages..."
-dotnet restore
+# dotnet-ef, gh, az, trivy, opengrep, Dostar.Cli, claude-code are pre-installed in the image.
+# Guards below are no-ops when the image is current; they catch upgrades or missing installs.
+command -v bicep > /dev/null 2>&1 \
+  || az bicep install \
+  || echo "WARNING: az bicep install failed — run: az bicep install"
+install_dotnet_tool Dostar.Cli dostar
+command -v claude > /dev/null 2>&1 \
+  || npm install -g @anthropic-ai/claude-code \
+  || echo "WARNING: claude-code install failed — run: npm install -g @anthropic-ai/claude-code"
 
 echo "[postCreate] Installing coverlet (local test coverage tool)..."
 dotnet tool install coverlet.console --tool-path ./tools \
@@ -103,9 +96,32 @@ dotnet tool install coverlet.console --tool-path ./tools \
 echo "[postCreate] Configuring shell..."
 bash .devcontainer/shell-profile.sh
 
+echo "[postCreate] Restoring backend packages..."
+dotnet restore
+
 echo "[postCreate] Installing frontend dependencies..."
 cd frontend && pnpm install
 cd ..
+
+echo "[postCreate] Installing UI test dependencies..."
+cd tests/Dostar.UITests && pnpm install --frozen-lockfile
+cd ../..
+
+echo "[postCreate] Checking Playwright browsers (Chromium)..."
+# The image bakes the browser binary into /home/vscode/.cache/ms-playwright.
+# The playwright-cache named volume seeds from that path on first container
+# create, so this check is a no-op for the typical case.
+# If the volume predates the current playwright version, the binary will be
+# missing and we download it here. Prune stale volume dirs manually if needed:
+#   docker volume rm dostar-playwright-cache
+if find /home/vscode/.cache/ms-playwright -name 'chrome' -type f 2>/dev/null | grep -q .; then
+  echo "[postCreate] Chromium already present — skipping download"
+else
+  cd tests/Dostar.UITests
+  pnpm exec playwright install chromium \
+    || echo "WARNING: playwright install chromium failed — run: cd tests/Dostar.UITests && pnpm exec playwright install chromium"
+  cd ../..
+fi
 
 echo "[postCreate] Setting up git hooks..."
 sudo ln -sf "$(node -e "const {getExePath}=require('$(pwd)/frontend/node_modules/lefthook/get-exe.js'); process.stdout.write(getExePath())")" /usr/local/bin/lefthook || \
