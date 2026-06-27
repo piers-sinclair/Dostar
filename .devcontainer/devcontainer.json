@@ -13,17 +13,10 @@
   "service": "devcontainer",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 
-  "features": {
-    "ghcr.io/devcontainers/features/dotnet:2": {
-      "version": "10.0.200"
-    },
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "lts"
-    },
-    "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
-  },
+  // All tooling (.NET, Node, pnpm, gh, az, Docker CLI, dotnet-ef, Trivy, OpenGrep,
+  // Playwright OS deps) is pre-installed in the GHCR image (ghcr.io/piers-sinclair/dostar-devcontainer).
+  // No devcontainer features needed — removing them cuts container create time significantly.
+  // See docs/devcontainer.md for what is in the image and what is not.
 
   "containerEnv": {
     "ConnectionStrings__Default": "Host=db;Port=5432;Database=dostar;Username=dostar;Password=dostar",
@@ -32,7 +25,6 @@
     "GIT_DISCOVERY_ACROSS_FILESYSTEM": "1"
   },
 
-  "onCreateCommand": "npm install -g pnpm",
   "postCreateCommand": "bash .devcontainer/postCreate.sh",
   "postStartCommand": "bash .devcontainer/postStart.sh",
   "postAttachCommand": "bash .devcontainer/postAttach.sh",

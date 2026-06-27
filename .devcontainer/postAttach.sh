@@ -71,15 +71,22 @@ fi
 
 check_tool ".NET SDK" "(reinstall devcontainer)"            dotnet   --version
 check_tool "Node"     "(reinstall devcontainer)"            node     --version
-check_tool "trivy"    "bash .devcontainer/postCreate.sh"    trivy    --version
-check_tool "opengrep" "bash .devcontainer/postCreate.sh"    opengrep --version
+check_tool "trivy"    "(rebuild devcontainer image)"        trivy    --version
+check_tool "opengrep" "(rebuild devcontainer image)"        opengrep --version
 if [[ -x "${ROOT}/tools/coverlet" ]]; then
   printf "  %-14s ✓\n" "coverlet"
 else
   printf "  %-14s ✗  →  %s\n" "coverlet" "dotnet tool install coverlet.console --tool-path ./tools"
 fi
 
+if find /home/vscode/.cache/ms-playwright -name 'chrome' -type f 2>/dev/null | grep -q .; then
+  printf "  %-14s ✓\n" "playwright"
+else
+  printf "  %-14s ✗  →  %s\n" "playwright" "cd tests/Dostar.UITests && pnpm exec playwright install chromium"
+fi
+
 echo "$SEP"
 printf "  %-14s %s\n" "setup log:" "cat .devcontainer/postCreate.log"
+printf "  %-14s %s\n" "start log:" "cat .devcontainer/postStart.log"
 printf "  %-14s %s\n" "re-check:"  "health"
 echo ""

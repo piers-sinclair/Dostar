@@ -11,13 +11,20 @@
       "problemMatcher": "$msCompile"
     },
     {
+      "label": "run: reset-db",
+      "detail": "Re-applies all migrations. Run after schema changes or to reset the database.",
+      "dependsOn": ["run: migrate"],
+      "dependsOrder": "sequence",
+      "problemMatcher": "$msCompile"
+    },
+    {
       "label": "run: backend",
       "type": "shell",
       "command": "dotnet run --project backend/Dostar.Api --launch-profile http",
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "dependsOn": "run: migrate",
+      "dependsOn": "launch: prepare",
       "isBackground": true,
       "problemMatcher": {
         "pattern": {
@@ -56,8 +63,7 @@
     },
     {
       "label": "launch: prepare",
-      "dependsOn": ["run: migrate", "build: Dostar.Api"],
-      "dependsOrder": "sequence",
+      "dependsOn": ["build: Dostar.Api"],
       "problemMatcher": "$msCompile"
     },
     {
