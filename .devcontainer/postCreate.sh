@@ -100,7 +100,7 @@ echo "[postCreate] Restoring backend packages..."
 dotnet restore
 
 echo "[postCreate] Installing frontend dependencies..."
-cd frontend && pnpm install
+cd frontend && PNPM_CONFIG_CONFIRM_MODULES_PURGE=false pnpm install
 cd ..
 
 echo "[postCreate] Installing UI test dependencies..."
